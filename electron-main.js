@@ -39,7 +39,7 @@ logToFile('==== INICIO DE ELECTRON ====');
     };
 
     async function findAvailablePort() {
-        let port = 8989;
+        let port = server_port;
         while (true) {
             if (await checkPort(port)) {
                 return port;
@@ -128,8 +128,18 @@ logToFile('==== INICIO DE ELECTRON ====');
         createWindow.serverLoaded = false;
         createWindow.serverTimeout = setTimeout(() => {
             if (!createWindow.serverLoaded) {
+               const errorHtml = `
+                    <h1 style="color:red; font-size:2em;">
+                        Error: El servidor no respondió a tiempo
+                    </h1>
+                    <h2 style="color:red; font-size:1.5em;">
+                        <p>Esto puede deberse a que otro programa ya está usando el puerto ${server_port} o hubo un fallo al iniciar Node.js.</p>
+                        <p>Revisa ..\\AppData\\Roaming\\bpsr-meter\\iniciar_log.txt para más detalles.</p>
+                    </h2>
+                `;
                 logToFile('ERROR: El servidor no respondió a tiempo.');
-                mainWindow.loadURL('data:text/html,<h2 style="color:red">Error: El servidor no respondió a tiempo.<br>Revisa iniciar_log.txt para más detalles.</h2>');
+                mainWindow.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(errorHtml)
+                );
             }
         }, 10000); // 10 segundos de espera
 
@@ -149,26 +159,32 @@ logToFile('==== INICIO DE ELECTRON ====');
         });
         serverProcess.on('close', (code) => {
             logToFile('server process exited with code ' + code);
+            if (code !== 0 && !createWindow.serverLoaded) {
+                logToFile('ERROR: El servidor terminó inesperadamente antes de iniciar.');
+            }
         });
 
+        /* Simplificado: ahora usamos variables estáticas en la función createWindow
         let serverLoaded = false;
         let serverTimeout = setTimeout(() => {
             if (!serverLoaded) {
                 logToFile('ERROR: El servidor no respondió a tiempo.');
-                mainWindow.loadURL('data:text/html,<h2 style="color:red">Error: El servidor no respondió a tiempo.<br>Revisa iniciar_log.txt para más detalles.</h2>');
+                mainWindow.loadURL('data:text/html;charset=utf-8,' +
+                encodeURIComponent('<h2 style="color:red">Error: El servidor no respondió a tiempo.<br>Revisa iniciar_log.txt para más detalles.</h2>')
+                );
+
             }
         }, 10000); // 10 segundos de espera
-
+        */
         serverProcess.stdout.on('data', (data) => {
             logToFile('server stdout: ' + data);
-            // Buscar la URL del servidor en la salida del servidor
             const match = data.toString().match(/Servidor web iniciado en (http:\/\/localhost:\d+)/);
             if (match && match[1]) {
                 const serverUrl = match[1];
                 logToFile('Cargando URL en ventana: ' + serverUrl + '/index.html');
                 mainWindow.loadURL(`${serverUrl}/index.html`);
-                serverLoaded = true;
-                clearTimeout(serverTimeout);
+                createWindow.serverLoaded = true;
+                clearTimeout(createWindow.serverTimeout);
             }
         });
 
