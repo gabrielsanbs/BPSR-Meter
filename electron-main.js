@@ -26,6 +26,25 @@ let server_port = 8989; // Puerto inicial
 let isLocked = false; // Estado inicial del candado: desbloqueado
 logToFile('==== INICIO DE ELECTRON ====');
 
+// Fuerza la ventana a comportarse como overlay incluso sobre apps en pantalla completa
+function promoteOverlayWindow(win, { focus = false } = {}) {
+    if (!win) return;
+    win.setAlwaysOnTop(true, 'screen-saver', 1);
+    if (typeof win.setVisibleOnAllWorkspaces === 'function') {
+        win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+    }
+    if (typeof win.setFullScreenable === 'function') {
+        win.setFullScreenable(false);
+    }
+    win.setSkipTaskbar(false);
+    if (typeof win.moveTop === 'function') {
+        win.moveTop();
+    }
+    if (focus) {
+        win.focus();
+    }
+}
+
     // Función para verificar si un puerto está en uso
     const checkPort = (port) => {
         return new Promise((resolve) => {
@@ -101,6 +120,16 @@ logToFile('==== INICIO DE ELECTRON ====');
             },
             icon: path.join(__dirname, 'icon.ico'),
         });
+
+        promoteOverlayWindow(mainWindow);
+
+        mainWindow.once('ready-to-show', () => {
+            promoteOverlayWindow(mainWindow, { focus: true });
+        });
+
+        mainWindow.on('show', () => promoteOverlayWindow(mainWindow));
+        mainWindow.on('focus', () => promoteOverlayWindow(mainWindow));
+        mainWindow.on('restore', () => promoteOverlayWindow(mainWindow, { focus: true }));
 
         // Iniciar el servidor Node.js, pasando el puerto como argumento
 
@@ -227,6 +256,7 @@ logToFile('==== INICIO DE ELECTRON ====');
                 // Cuando se desbloquea, procesar eventos del ratón normalmente
                 mainWindow.setIgnoreMouseEvents(false);
             }
+            promoteOverlayWindow(mainWindow);
             mainWindow.webContents.send('lock-state-changed', isLocked); // Notificar al renderizador
             console.log(`Candado: ${isLocked ? 'Cerrado' : 'Abierto'}`);
         }
