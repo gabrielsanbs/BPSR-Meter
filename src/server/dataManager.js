@@ -173,6 +173,22 @@ class StatisticData {
         }
     }
 
+    /** Ajustar rangos de tiempo para excluir periodos pausados
+     * @param {number} duration - Duración en ms que estuvo en pausa
+     */
+    adjustForPause(duration) {
+        if (this.timeRange && this.timeRange.length > 0 && this.timeRange[0]) {
+            // Avanzar el inicio del rango en la duración de la pausa para que
+            // el cálculo de DPS/HPS no cuente el tiempo pausado.
+            this.timeRange[0] += duration;
+            // Si por alguna razón el inicio sobrepasa el fin, ajustar el fin también
+            if (this.timeRange[1] && this.timeRange[0] > this.timeRange[1]) {
+                this.timeRange[1] = this.timeRange[0];
+            }
+        }
+        // No necesitamos ajustar realtimeWindow; los timestamps viejos expirarán
+        // cuando se actualicen las estadísticas tras reanudar.
+    }
 
     getTotalPerSecond() {
         if (!this.timeRange[0] || !this.timeRange[1]) {
@@ -582,6 +598,26 @@ class UserDataManager {
     updateAllRealtimeDps() {
         for (const user of this.users.values()) {
             user.updateRealtimeDps();
+        }
+    }
+
+    /** Aplicar duración de pausa a todos los usuarios para que el cálculo de DPS/HPS
+     * no incluya el tiempo que la aplicación estuvo en pausa.
+     * @param {number} durationMs - Duración en milisegundos
+     */
+    applyPauseDuration(durationMs) {
+        if (!durationMs || durationMs <= 0) return;
+        for (const user of this.users.values()) {
+            try {
+                if (user.damageStats && typeof user.damageStats.adjustForPause === 'function') {
+                    user.damageStats.adjustForPause(durationMs);
+                }
+                if (user.healingStats && typeof user.healingStats.adjustForPause === 'function') {
+                    user.healingStats.adjustForPause(durationMs);
+                }
+            } catch (e) {
+                this.logger && this.logger.error && this.logger.error('Error applying pause duration to user', user.uid, e);
+            }
         }
     }
 
