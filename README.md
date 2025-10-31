@@ -72,6 +72,13 @@ La aplicación se abrirá como una ventana superpuesta. Cuando inicies el juego,
 - **Bloquear/Desbloquear:** Haz clic en el botón del candado para bloquear o desbloquear la posición de la ventana. Cuando está bloqueada, la ventana ignorará los clics del ratón.
 - **Zoom:** Utiliza los botones `+` y `-` para aumentar o disminuir el tamaño de la interfaz.
 - **Cerrar:** Haz clic en el botón `X` para cerrar la aplicación.
+- **F10:** Haz clic en `F0` para LImpiar datos.
+- **ExitLag:** Haz clic en el botón con el icono de `ExitLag` para activar compativilidad con exitlag.
+## ExitLag Mode
+En este modo se desactiva el limpiado automatico al cambiar de instancia ya que no es compatible con exitlag.
+
+ExitLag Config: ExitLag en exit lag ve a Opciones y busca (metodo de redireccion de paquetes) asegurate que este en Antiguo-NDIS
+
 
 ## Solución de problemas
 
@@ -181,6 +188,13 @@ The application will open as an overlay window. When you start the game, it will
 - **Lock/Unlock:** Click the lock button to lock or unlock the window's position. When locked, the window will ignore mouse clicks.
 - **Zoom:** Use the `+` and `-` buttons to increase or decrease the interface size.
 - **Close:** Click the `X` button to close the application.
+- **ExitLag:** Click the button with the `ExitLag` icon to activate compatibility with ExitLag.
+## ExitLag Mode
+In this mode, the automatic clearing when changing instances is disabled as it is not compatible with ExitLag.
+
+**ExitLag Config:** In ExitLag, go to Options and look for (Packets redirection Method) make sure it is in Legacy-NDIS..
+
+
 
 ## Troubleshooting
 
