@@ -130,7 +130,7 @@ async function main() {
         },
     });
 
-    initializeApi(app, server, io, userDataManager, logger, globalSettings); // Inicializar API con globalSettings
+    initializeApi(app, server, io, userDataManager, logger, globalSettings, sniffer); // Inicializar API con globalSettings y sniffer
 
     server.listen(server_port, '0.0.0.0', () => {
         const localUrl = `http://localhost:${server_port}`;

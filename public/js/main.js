@@ -577,10 +577,76 @@ const professionMap = {
         }
     }
 
-    // Actualizar UI cada 50ms
-    setInterval(fetchDataAndRender, 50);
-    fetchDataAndRender();
-    updateLogsUI();
+    let isPaused = false;
+    let updateInterval = null;
+
+    async function setPauseState(paused) {
+        try {
+            const res = await fetch('/api/pause', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ paused }),
+            });
+            const data = await res.json();
+            console.log(data.msg);
+            isPaused = data.paused;
+            return isPaused;
+        } catch (err) {
+            console.error('Error al cambiar estado de pausa:', err);
+        }
+    }
+
+    function startUpdating() {
+        if (updateInterval) clearInterval(updateInterval);
+        updateInterval = setInterval(() => {
+            if (!isPaused) {
+                fetchDataAndRender();
+                updateLogsUI();
+            }
+        }, 50);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const pauseButton = document.getElementById('pause-logs-button');
+        if (pauseButton) {
+            pauseButton.addEventListener('click', async () => {
+                const newState = !isPaused;
+                const result = await setPauseState(newState);
+                // result (isPaused) comes from the server. When paused === true we should show the PLAY icon
+                if (result) {
+                    pauseButton.innerHTML = '<i class="fa-solid fa-play"></i>';
+                    pauseButton.title = 'Reanudar Logs';
+                } else {
+                    pauseButton.innerHTML = '<i class="fa-solid fa-pause"></i>';
+                    pauseButton.title = 'Pausar Logs';
+                }
+            });
+        }
+
+        // Consultar estado inicial desde backend
+        fetch('/api/pause')
+            .then((res) => res.json())
+            .then((data) => {
+                isPaused = data.paused;
+                if (pauseButton) {
+                    if (isPaused) {
+                        pauseButton.innerHTML = '<i class="fa-solid fa-play"></i>';
+                        pauseButton.title = 'Reanudar Logs';
+                    } else {
+                        pauseButton.innerHTML = '<i class="fa-solid fa-pause"></i>';
+                        pauseButton.title = 'Pausar Logs';
+                    }
+                }
+            })
+            .catch((err) => {
+                console.error('Error fetching pause state:', err);
+            });
+
+        startUpdating();
+        fetchDataAndRender();
+        updateLogsUI();
+    });
+
 
     // Script para eliminar el texto de depuración de VSCode
     document.addEventListener('DOMContentLoaded', () => {
