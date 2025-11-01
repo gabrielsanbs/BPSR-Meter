@@ -7,7 +7,7 @@ const professionMap = {
     '冰魔导师': { name: 'Frost Mage', icon: 'Frost Mage.png', role: 'dps' },
     '涤罪恶火·战斧': { name: 'Fire Axe', icon: 'Fire Axe.png', role: 'dps' },
     '青岚骑士': { name: 'Wind Knight', icon: 'Wind Knight.png', role: 'dps' },
-    '森语者': { name: 'Verdant Oracle', icon: 'Verdant Oracle', role: 'healer' },
+    '森语者': { name: 'Verdant Oracle', icon: 'Verdant Oracle.png', role: 'healer' },
     '雷霆一闪·手炮': { name: 'Gunner', icon: 'desconocido.png', role: 'dps' },
     '巨刃守护者': { name: 'Heavy Guardian', icon: 'baluarte_ferreo.png', role: 'tank' },
     '暗灵祈舞·仪刀/仪仗': { name: 'Spirit Dancer', icon: 'desconocido.png', role: 'dps' },
