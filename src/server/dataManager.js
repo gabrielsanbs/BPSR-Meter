@@ -67,7 +67,7 @@ function getSubProfessionBySkillId(skillId) {
             return '防盾';
         case 2406:
             return '光盾';
-        case 199902:
+        case 1922:
             return '岩盾';
         case 1930:
         case 1931:
