@@ -9,7 +9,7 @@ const fs = require('fs');
 const SETTINGS_PATH = path.join('./settings.json');
 const LOGS_DPS_PATH = path.join('./logs_dps.json');
 
-function initializeApi(app, server, io, userDataManager, logger, globalSettings) {
+function initializeApi(app, server, io, userDataManager, logger, globalSettings, sniffer) {
     app.use(cors());
     app.use(express.json());
     app.use(express.static(path.join(__dirname, '..', '..', 'public'))); // Ajustar la ruta
@@ -86,6 +86,14 @@ function initializeApi(app, server, io, userDataManager, logger, globalSettings)
     app.post('/api/pause', (req, res) => {
         const { paused } = req.body;
         globalSettings.isPaused = paused; // Actualizar el estado de pausa en globalSettings
+        // Si se pasó una referencia al sniffer, actualizar su estado interno
+        try {
+            if (sniffer && typeof sniffer.setPaused === 'function') {
+                sniffer.setPaused(paused);
+            }
+        } catch (e) {
+            logger && logger.error && logger.error('Failed to set sniffer paused state:', e);
+        }
         console.log(`¡Estadísticas ${globalSettings.isPaused ? 'pausadas' : 'reanudadas'}!`);
         res.json({
             code: 0,

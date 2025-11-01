@@ -61,10 +61,46 @@ class Sniffer {
         this.capInstance = null;
         this.packetProcessor = null;
         this.isPaused = false; // Estado de pausa para el sniffer
+        this.pauseStart = null; // Timestamp cuando se pausó
     }
 
     setPaused(paused) {
-        this.isPaused = paused;
+        try {
+            if (paused) {
+                // Entrando en pausa: registrar tiempo y limpiar colas/buffers para evitar
+                // procesar datos atrasados al reanudar.
+                this.pauseStart = Date.now();
+                this.isPaused = true;
+                // Vaciar cola de paquetes y buffers acumulados
+                try { this.eth_queue.length = 0; } catch (e) {}
+                try { this.clearTcpCache(); } catch (e) {}
+                try { this.fragmentIpCache.clear(); } catch (e) {}
+            } else {
+                // Saliendo de pausa: aplicar la duración de la pausa a los timeRanges
+                // para que el cálculo de DPS/HPS no incluya el tiempo pausado.
+                const now = Date.now();
+                let pauseDuration = 0;
+                if (this.pauseStart) {
+                    pauseDuration = now - this.pauseStart;
+                }
+                this.isPaused = false;
+                this.pauseStart = null;
+                try {
+                    if (this.userDataManager && typeof this.userDataManager.applyPauseDuration === 'function') {
+                        this.userDataManager.applyPauseDuration(pauseDuration);
+                    }
+                } catch (e) {
+                    this.logger && this.logger.error && this.logger.error('Failed to apply pause duration:', e);
+                }
+                // Asegurar que no procesamos datos atrasados que se acumularan mientras estábamos pausados
+                try { this.eth_queue.length = 0; } catch (e) {}
+                try { this.clearTcpCache(); } catch (e) {}
+            }
+        } catch (e) {
+            this.logger && this.logger.error && this.logger.error('Error changing pause state:', e);
+            // Fallback: establecer el flag básico
+            this.isPaused = !!paused;
+        }
     }
 
     clearTcpCache() {
