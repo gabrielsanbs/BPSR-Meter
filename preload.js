@@ -12,6 +12,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
     windowDragMove: (deltaX, deltaY) => ipcRenderer.send('window-drag-move', deltaX, deltaY),
     // Função para controlar setIgnoreMouseEvents quando travado
     setIgnoreMouseEvents: (ignore, options) => ipcRenderer.send('set-ignore-mouse-events', ignore, options),
+    // Controle do polling de posição do mouse
+    startMousePolling: () => ipcRenderer.send('start-mouse-polling'),
+    stopMousePolling: () => ipcRenderer.send('stop-mouse-polling'),
 });
 
 window.addEventListener('DOMContentLoaded', () => {

@@ -83,16 +83,23 @@ const professionMap = {
     const mapChangeNotice = document.getElementById('map-change-notice'); // Aviso de mudar mapa
     let mapNoticeVisible = true; // Por padrão, mostrar aviso
 
+    // Rastrear estados para controle de mouse
+    let isMouseOverHeader = false;
+    let altPressed = false;
+    
     // Permitir interacción con Alt cuando está bloqueado
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Alt') {
+            altPressed = true;
             if (document.body.classList.contains('locked')) {
                 document.body.classList.add('alt-pressed');
             }
         }
     });
+    
     document.addEventListener('keyup', (e) => {
         if (e.key === 'Alt') {
+            altPressed = false;
             document.body.classList.remove('alt-pressed');
         }
     });
@@ -171,41 +178,20 @@ const professionMap = {
                     lockButton.title = isLocked ? 'Desbloquear posición' : 'Bloquear posición';
                     document.body.classList.toggle('locked', isLocked); // Añadir/quitar clase al body
                     
-                    // Quando destravado, restaurar eventos de mouse normalmente
-                    if (!locked) {
+                    if (locked) {
+                        // Quando travado, iniciar polling no Electron
+                        window.electronAPI.startMousePolling();
+                    } else {
+                        // Quando destravado, parar polling
+                        window.electronAPI.stopMousePolling();
                         window.electronAPI.setIgnoreMouseEvents(false);
+                        isMouseOverHeader = false;
+                        altPressed = false;
+                        document.body.classList.remove('alt-pressed');
                     }
                 });
             }
         }
-
-        // Configurar listeners de mouse para o header (uma vez só)
-        let headerListenersSetup = false;
-        function setupIgnoreMouseEventsForHeader() {
-            if (headerListenersSetup) return; // Não adicionar listeners duplicados
-            
-            const header = document.querySelector('.controls');
-            if (!header || !window.electronAPI) return;
-
-            headerListenersSetup = true;
-
-            // Quando mouse ENTRA no header: DESABILITAR ignore (pode clicar nos botões)
-            header.addEventListener('mouseenter', () => {
-                if (isLocked) {
-                    window.electronAPI.setIgnoreMouseEvents(false);
-                }
-            });
-
-            // Quando mouse SAI do header: HABILITAR ignore (cliques passam pro jogo)
-            header.addEventListener('mouseleave', () => {
-                if (isLocked) {
-                    window.electronAPI.setIgnoreMouseEvents(true, { forward: true });
-                }
-            });
-        }
-        
-        // Inicializar listeners do header imediatamente
-        setupIgnoreMouseEventsForHeader();
 
         const minimizeButton = document.getElementById('minimize-button');
         if (minimizeButton) {
