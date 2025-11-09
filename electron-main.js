@@ -151,14 +151,89 @@ function promoteOverlayWindow(win, { focus = false } = {}) {
             serverPath = path.join(app.getAppPath(), 'server.js');
         }
         logToFile('Lanzando server.js en puerto ' + server_port + ' con ruta: ' + serverPath);
+        logToFile('Node.js versión: ' + process.version);
+        logToFile('Electron versión: ' + process.versions.electron);
+        logToFile('Plataforma: ' + process.platform + ' ' + process.arch);
+        
+        // Verificar si el archivo existe
+        if (!fs.existsSync(serverPath)) {
+            logToFile('ERROR CRÍTICO: server.js no encontrado en: ' + serverPath);
+            const errorHtml = `
+                <h1 style="color:red;">Erro Crítico: Arquivo server.js não encontrado</h1>
+                <p>Caminho esperado: <code>${serverPath}</code></p>
+                <p>Reinstale o programa.</p>
+            `;
+            mainWindow.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(errorHtml));
+            return;
+        }
 
         // Usar fork para lanzar el servidor como proceso hijo
         const { fork } = require('child_process');
-        serverProcess = fork(serverPath, [server_port], {
-            stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
-            execArgv: []
-        });
+        logToFile('Iniciando fork do processo Node.js...');
+        
+        try {
+            serverProcess = fork(serverPath, [server_port], {
+                stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
+                execArgv: [],
+                env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' }
+            });
+            logToFile('Processo fork iniciado com PID: ' + serverProcess.pid);
+        } catch (forkError) {
+            logToFile('ERROR CRÍTICO ao fazer fork: ' + forkError.message);
+            logToFile('Stack: ' + forkError.stack);
+            const errorHtml = `
+                <h1 style="color:red;">Erro ao iniciar processo Node.js</h1>
+                <p>Erro: <code>${forkError.message}</code></p>
+                <p>Execute como Administrador e verifique se o antivírus não está bloqueando.</p>
+            `;
+            mainWindow.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(errorHtml));
+            return;
+        }
 
+        // Mostrar tela de carregamento
+        const loadingHtml = `
+            <html>
+            <head>
+                <style>
+                    body { 
+                        margin: 0; 
+                        padding: 0; 
+                        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+                        display: flex; 
+                        align-items: center; 
+                        justify-content: center; 
+                        height: 100vh;
+                        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                        color: white;
+                    }
+                    .loader-container { text-align: center; }
+                    .spinner { 
+                        border: 8px solid #f3f3f3; 
+                        border-top: 8px solid #3498db; 
+                        border-radius: 50%; 
+                        width: 60px; 
+                        height: 60px; 
+                        animation: spin 1s linear infinite;
+                        margin: 0 auto 20px;
+                    }
+                    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+                    h1 { font-size: 2em; margin: 10px 0; }
+                    p { font-size: 1.2em; opacity: 0.9; }
+                    .status { margin-top: 20px; font-size: 0.9em; opacity: 0.7; }
+                </style>
+            </head>
+            <body>
+                <div class="loader-container">
+                    <div class="spinner"></div>
+                    <h1>🎯 BPSR Meter</h1>
+                    <p>Inicializando servidor backend...</p>
+                    <div class="status">Porta: ${server_port} | Aguardando resposta...</div>
+                </div>
+            </body>
+            </html>
+        `;
+        mainWindow.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(loadingHtml));
+        
         // Variables para controlar el arranque del servidor
         if (typeof createWindow.serverLoaded === 'undefined') createWindow.serverLoaded = false;
         if (typeof createWindow.serverTimeout === 'undefined') createWindow.serverTimeout = null;
@@ -167,37 +242,146 @@ function promoteOverlayWindow(win, { focus = false } = {}) {
             if (!createWindow.serverLoaded) {
                const errorHtml = `
                     <h1 style="color:red; font-size:2em;">
-                        Error: El servidor no respondió a tiempo
+                        Erro: Servidor não respondeu a tempo (15s)
                     </h1>
-                    <h2 style="color:red; font-size:1.5em;">
-                        <p>Esto puede deberse a que otro programa ya está usando el puerto ${server_port} o hubo un fallo al iniciar Node.js.</p>
-                        <p>Revisa ..\\AppData\\Roaming\\bpsr-meter\\iniciar_log.txt para más detalles.</p>
+                    <h2 style="color:orange; font-size:1.2em;">
+                        <p><strong>O que aconteceu?</strong></p>
+                        <p>O servidor backend (porta ${server_port}) não iniciou dentro do tempo esperado.</p>
+                        
+                        <p><strong>Causas comuns:</strong></p>
+                        <ul style="text-align:left;">
+                            <li>❌ Porta ${server_port} já está em uso (outro BPSR Meter rodando)</li>
+                            <li>❌ Npcap não instalado ou versão antiga (&lt; 1.83)</li>
+                            <li>❌ Antivírus bloqueando o programa</li>
+                            <li>❌ Sem permissões de Administrador</li>
+                            <li>❌ Dependências corrompidas</li>
+                        </ul>
+                        
+                        <p><strong>Soluções (tente nesta ordem):</strong></p>
+                        <ol style="text-align:left;">
+                            <li>✅ Feche todos os BPSR Meters abertos</li>
+                            <li>✅ Instale/Atualize Npcap: <a href="https://npcap.com/#download">npcap.com</a></li>
+                            <li>✅ Clique com botão direito → "Executar como Administrador"</li>
+                            <li>✅ Adicione exceção no Windows Defender/Antivírus</li>
+                            <li>✅ Reinicie o computador</li>
+                        </ol>
+                        
+                        <p><strong>Log detalhado:</strong></p>
+                        <code style="background:#333;padding:5px;border-radius:3px;">%AppData%\\bpsr-meter\\iniciar_log.txt</code>
+                        
+                        <p style="margin-top:20px;">
+                            <strong>Precisa de ajuda?</strong> 
+                            <a href="https://github.com/gabrielsanbs/BPSR-Meter/issues" target="_blank">
+                                Abra uma issue no GitHub
+                            </a>
+                        </p>
                     </h2>
                 `;
-                logToFile('ERROR: El servidor no respondió a tiempo.');
+                logToFile('ERROR: El servidor no respondió a tiempo después de 15 segundos.');
+                logToFile('Posibles causas: puerto en uso, Npcap no instalado, falta de permisos, antivirus bloqueando.');
                 mainWindow.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(errorHtml)
                 );
             }
-        }, 10000); // 10 segundos de espera
+        }, 15000); // 15 segundos de espera (aumentado de 10s)
+
+        // Handler de erros não capturados do processo
+        serverProcess.on('error', (error) => {
+            logToFile('ERROR en el proceso del servidor: ' + error.message);
+            logToFile('Stack: ' + error.stack);
+            const errorHtml = `
+                <h1 style="color:red;">Erro no processo do servidor</h1>
+                <p>Erro: <code>${error.message}</code></p>
+                <p>Verifique o log em <code>%AppData%\\bpsr-meter\\iniciar_log.txt</code></p>
+            `;
+            mainWindow.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(errorHtml));
+        });
 
         serverProcess.stdout.on('data', (data) => {
-            logToFile('server stdout: ' + data);
-            const match = data.toString().match(/Servidor web iniciado en (http:\/\/localhost:\d+)/);
+            const output = data.toString();
+            logToFile('server stdout: ' + output);
+            
+            // Detectar mensagem de sucesso
+            const match = output.match(/Servidor web iniciado en (http:\/\/localhost:\d+)/);
             if (match && match[1]) {
                 const serverUrl = match[1];
-                logToFile('Cargando URL en ventana: ' + serverUrl + '/index.html');
+                logToFile('✓ Servidor iniciado com sucesso! Carregando URL: ' + serverUrl + '/index.html');
                 mainWindow.loadURL(`${serverUrl}/index.html`);
                 createWindow.serverLoaded = true;
                 clearTimeout(createWindow.serverTimeout);
             }
+            
+            // Detectar outras mensagens importantes
+            if (output.includes('EADDRINUSE')) {
+                logToFile('⚠ DETECTADO: Porta já em uso!');
+            }
+            if (output.includes('Cannot find module')) {
+                logToFile('⚠ DETECTADO: Módulo faltando!');
+            }
         });
         serverProcess.stderr.on('data', (data) => {
-            logToFile('server stderr: ' + data);
+            const errorMsg = data.toString();
+            logToFile('server stderr: ' + errorMsg);
+            
+            // Detectar erros específicos
+            if (errorMsg.includes('EADDRINUSE')) {
+                logToFile(`ERRO CRÍTICO: Porta ${server_port} já está em uso por outro processo.`);
+                const errorHtml = `
+                    <h1 style="color:red; font-size:2em;">Erro: Porta ${server_port} em uso</h1>
+                    <h2 style="color:orange; font-size:1.2em;">
+                        <p>Outro programa já está usando esta porta.</p>
+                        <p><strong>Soluções:</strong></p>
+                        <ul style="text-align:left;">
+                            <li>Feche outros BPSR Meters em execução</li>
+                            <li>Reinicie o computador</li>
+                            <li>Execute: <code>netstat -ano | findstr :${server_port}</code> para identificar o processo</li>
+                        </ul>
+                        <p>Log: <code>%AppData%\\bpsr-meter\\iniciar_log.txt</code></p>
+                    </h2>
+                `;
+                mainWindow.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(errorHtml));
+            } else if (errorMsg.includes('Cannot find module')) {
+                const moduleName = errorMsg.match(/Cannot find module '([^']+)'/)?.[1] || 'desconhecido';
+                logToFile(`ERRO CRÍTICO: Dependência faltando: ${moduleName}`);
+                const errorHtml = `
+                    <h1 style="color:red; font-size:2em;">Erro: Dependência faltando</h1>
+                    <h2 style="color:orange; font-size:1.2em;">
+                        <p>Módulo não encontrado: <code>${moduleName}</code></p>
+                        <p><strong>Soluções:</strong></p>
+                        <ul style="text-align:left;">
+                            <li>Reinstale o programa baixando a versão mais recente</li>
+                            <li>Verifique se o antivírus não bloqueou arquivos</li>
+                            <li>Execute como Administrador</li>
+                        </ul>
+                        <p>Log: <code>%AppData%\\bpsr-meter\\iniciar_log.txt</code></p>
+                    </h2>
+                `;
+                mainWindow.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(errorHtml));
+            }
         });
         serverProcess.on('close', (code) => {
             logToFile('server process exited with code ' + code);
             if (code !== 0 && !createWindow.serverLoaded) {
                 logToFile('ERROR: El servidor terminó inesperadamente antes de iniciar.');
+                const errorHtml = `
+                    <h1 style="color:red; font-size:2em;">Erro: Servidor fechou inesperadamente</h1>
+                    <h2 style="color:orange; font-size:1.2em;">
+                        <p>Código de saída: ${code}</p>
+                        <p><strong>Possíveis causas:</strong></p>
+                        <ul style="text-align:left;">
+                            <li>Dependência faltando (Node.js, Npcap)</li>
+                            <li>Antivírus bloqueando o programa</li>
+                            <li>Permissões insuficientes</li>
+                        </ul>
+                        <p><strong>Soluções:</strong></p>
+                        <ul style="text-align:left;">
+                            <li>Instale Npcap 1.83+</li>
+                            <li>Execute como Administrador</li>
+                            <li>Adicione exceção no antivírus</li>
+                        </ul>
+                        <p>Log completo: <code>%AppData%\\bpsr-meter\\iniciar_log.txt</code></p>
+                    </h2>
+                `;
+                mainWindow.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(errorHtml));
             }
         });
 

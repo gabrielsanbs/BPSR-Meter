@@ -1,16 +1,53 @@
-const winston = require('winston');
-const readline = require('readline');
-const path = require('path');
-const fsPromises = require('fs').promises;
-const express = require('express');
-const http = require('http');
-const { Server } = require('socket.io');
-const zlib = require('zlib');
+// Capturar erros não tratados antes de importar módulos
+process.on('uncaughtException', (error) => {
+    console.error('ERRO NÃO TRATADO:', error.message);
+    console.error('Stack:', error.stack);
+    if (error.code === 'MODULE_NOT_FOUND') {
+        console.error('ERRO: Dependência não encontrada. Reinstale o programa.');
+    }
+    process.exit(1);
+});
 
-const { UserDataManager } = require(path.join(__dirname, 'src', 'server', 'dataManager'));
-const Sniffer = require(path.join(__dirname, 'src', 'server', 'sniffer'));
-const initializeApi = require(path.join(__dirname, 'src', 'server', 'api'));
-const PacketProcessor = require(path.join(__dirname, 'algo', 'packet')); // Asegúrate de que esta ruta sea correcta
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('REJEIÇÃO NÃO TRATADA:', reason);
+    process.exit(1);
+});
+
+// Importar dependências com verificação
+let winston, readline, path, fsPromises, express, http, Server, zlib;
+let UserDataManager, Sniffer, initializeApi, PacketProcessor;
+
+try {
+    winston = require('winston');
+    readline = require('readline');
+    path = require('path');
+    fsPromises = require('fs').promises;
+    express = require('express');
+    http = require('http');
+    Server = require('socket.io').Server;
+    zlib = require('zlib');
+    
+    console.log('✓ Dependências principais carregadas');
+} catch (error) {
+    console.error('ERRO CRÍTICO: Falha ao carregar dependências principais');
+    console.error('Módulo:', error.message);
+    console.error('Reinstale o programa ou execute: npm install');
+    process.exit(1);
+}
+
+try {
+    UserDataManager = require(path.join(__dirname, 'src', 'server', 'dataManager')).UserDataManager;
+    Sniffer = require(path.join(__dirname, 'src', 'server', 'sniffer'));
+    initializeApi = require(path.join(__dirname, 'src', 'server', 'api'));
+    PacketProcessor = require(path.join(__dirname, 'algo', 'packet'));
+    
+    console.log('✓ Módulos internos carregados');
+} catch (error) {
+    console.error('ERRO CRÍTICO: Falha ao carregar módulos internos');
+    console.error('Arquivo:', error.message);
+    console.error('Verifique se a instalação está completa.');
+    process.exit(1);
+}
 
 const VERSION = '3.0.1';
 const SETTINGS_PATH = path.join(__dirname, 'settings.json');
@@ -146,6 +183,19 @@ async function main() {
         const localUrl = `http://localhost:${server_port}`;
         console.log(`Servidor web iniciado en ${localUrl}. Puedes acceder desde esta PC usando ${localUrl}/index.html o desde otra PC usando http://[TU_IP_LOCAL]:${server_port}/index.html`);
         console.log('Servidor WebSocket iniciado');
+    }).on('error', (err) => {
+        if (err.code === 'EADDRINUSE') {
+            console.error(`ERRO CRÍTICO: Porta ${server_port} já está em uso!`);
+            console.error('Feche outros programas que estejam usando esta porta ou reinicie o computador.');
+            process.exit(1);
+        } else if (err.code === 'EACCES') {
+            console.error(`ERRO CRÍTICO: Sem permissão para usar porta ${server_port}!`);
+            console.error('Execute o programa como Administrador.');
+            process.exit(1);
+        } else {
+            console.error('ERRO CRÍTICO ao iniciar servidor:', err);
+            process.exit(1);
+        }
     });
 
     console.log('¡Bienvenido a BPSR Meter!');
