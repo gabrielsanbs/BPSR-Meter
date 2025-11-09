@@ -48,7 +48,7 @@
 
 ## English
 
-**� IMPORTANT FIXES:**
+**🔧 IMPORTANT FIXES:**
 - ✅ Locked meter now allows clicks to pass through to the game
 - ✅ Header buttons work normally when locked
 - ✅ Click-through fixed: clicks pass through the meter to the game
@@ -90,7 +90,7 @@
 
 ## Español
 
-**� CORRECCIONES IMPORTANTES:**
+**🔧 CORRECCIONES IMPORTANTES:**
 - ✅ Medidor trabado ahora permite que los clics pasen al juego
 - ✅ Los botones del header funcionan normalmente cuando está trabado
 - ✅ Click-through corregido: los clics pasan a través del medidor al juego
