@@ -1,4 +1,4 @@
-# 🎯 BPSR Meter v3.0.4
+# 🎯 BPSR Meter v3.0.5
 
 [[Português](#português)] | [[English](#english)] | [[Español](#español)]
 
@@ -6,7 +6,15 @@
 
 ## Português
 
-**🇧🇷 NOVIDADE v3.0.4:**
+**🚨 CORREÇÕES CRÍTICAS v3.0.5:**
+- 🔥 **BUG CRÍTICO CORRIGIDO:** Cache e histórico agora realmente preservados entre atualizações!
+  - Arquivos salvos em `%APPDATA%\bpsr-meter` (persistente) ao invés da pasta do programa
+  - Instalador não deleta mais seus dados ao atualizar
+- 🔥 **BUG NO PAUSE CORRIGIDO:** Múltiplos pause/unpause não inflam mais o DPS/HPS
+  - Cálculo correto do tempo pausado acumulado
+  - DPS/HPS precisos mesmo após várias pausas
+
+**🇧🇷 NOVIDADES v3.0.4:**
 - ✅ **Tradução completa para PT-BR!** Todas as mensagens do sistema agora em português
 - ✅ Diagnóstico de erros aprimorado com mensagens claras e soluções
 - ✅ Timeout aumentado (10s → 15s) para PCs mais lentos
@@ -21,7 +29,7 @@
 - ✅ Click-through corrigido: cliques passam pelo medidor pro jogo
 
 **💾 PRESERVAÇÃO DE DADOS:**
-- ✅ Cache e histórico preservados entre atualizações
+- ✅ **[v3.0.5 CORRIGIDO]** Cache e histórico **realmente** preservados entre atualizações
 - ✅ Pergunta ao desinstalar se quer remover dados
 - ✅ Logs temporários removidos automaticamente
 
@@ -32,7 +40,7 @@
 - 🐛 Corrigidos: drag, fundo preto, loading icon
 
 **📥 Como instalar:**
-1. Baixe: `BPSR Meter (by gabrielsanbs) Setup 3.0.4.exe`
+1. Baixe: `BPSR Meter (by gabrielsanbs) Setup 3.0.5.exe`
 2. Execute o instalador
 3. Pronto! Programa detecta o jogo automaticamente
 
@@ -43,7 +51,7 @@
 **❓ Dúvidas?**
 - Não aparece? Instale Npcap 1.83+ e execute como Administrador
 - Como mudo idioma? Use o seletor no histórico de lutas
-- Muito CPU? Versão 3.0.4 é 90% otimizada
+- Muito CPU? Versão 3.0.5 é 90% otimizada
 - Funciona com ExitLag? Sim, totalmente compatível
 - **Erro ao iniciar?** Veja [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
 
@@ -57,6 +65,14 @@
 ---
 
 ## English
+
+**🚨 CRITICAL FIXES v3.0.5:**
+- 🔥 **CRITICAL BUG FIXED:** Cache and history now truly preserved between updates!
+  - Files saved in `%APPDATA%\bpsr-meter` (persistent) instead of program folder
+  - Installer no longer deletes your data when updating
+- 🔥 **PAUSE BUG FIXED:** Multiple pause/unpause no longer inflate DPS/HPS
+  - Correct calculation of accumulated paused time
+  - Accurate DPS/HPS even after multiple pauses
 
 **🇧🇷 NEW IN v3.0.4:**
 - ✅ **Complete PT-BR translation!** All system messages now in Portuguese
@@ -73,7 +89,7 @@
 - ✅ Click-through fixed: clicks pass through the meter to the game
 
 **💾 DATA PRESERVATION:**
-- ✅ Cache and history preserved between updates
+- ✅ **[v3.0.5 FIXED]** Cache and history **truly** preserved between updates
 - ✅ Asks on uninstall if you want to remove saved data
 - ✅ Temporary logs automatically removed
 
@@ -84,7 +100,7 @@
 - 🐛 Fixed: drag, black background, loading icon
 
 **📥 How to Install:**
-1. Download: `BPSR Meter (by gabrielsanbs) Setup 3.0.4.exe`
+1. Download: `BPSR Meter (by gabrielsanbs) Setup 3.0.5.exe`
 2. Run the installer
 3. Done! Program auto-detects the game
 
@@ -95,7 +111,7 @@
 **❓ FAQ:**
 - Not appearing? Install Npcap 1.83+ and run as Administrator
 - How to change language? Use the selector in fight history
-- High CPU usage? v3.0.4 is 90% optimized
+- High CPU usage? v3.0.5 is 90% optimized
 - Works with ExitLag? Yes, fully compatible
 - **Startup errors?** See [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
 
@@ -109,6 +125,14 @@
 ---
 
 ## Español
+
+**🚨 CORRECCIONES CRÍTICAS v3.0.5:**
+- 🔥 **BUG CRÍTICO CORREGIDO:** ¡Caché e historial ahora realmente preservados entre actualizaciones!
+  - Archivos guardados en `%APPDATA%\bpsr-meter` (persistente) en lugar de la carpeta del programa
+  - El instalador ya no elimina tus datos al actualizar
+- 🔥 **BUG DE PAUSA CORREGIDO:** Múltiples pause/unpause ya no inflan el DPS/HPS
+  - Cálculo correcto del tiempo pausado acumulado
+  - DPS/HPS precisos incluso después de múltiples pausas
 
 **🇧🇷 NUEVO EN v3.0.4:**
 - ✅ **¡Traducción completa a PT-BR!** Todos los mensajes del sistema ahora en portugués
@@ -125,7 +149,7 @@
 - ✅ Click-through corregido: los clics pasan a través del medidor al juego
 
 **💾 PRESERVACIÓN DE DATOS:**
-- ✅ Caché e historial preservados entre actualizaciones
+- ✅ **[v3.0.5 CORREGIDO]** Caché e historial **realmente** preservados entre actualizaciones
 - ✅ Pregunta al desinstalar si desea remover datos guardados
 - ✅ Registros temporales eliminados automáticamente
 
@@ -136,7 +160,7 @@
 - 🐛 Corregidos: arrastre, fondo negro, icono de carga
 
 **📥 Cómo instalar:**
-1. Descarga: `BPSR Meter (by gabrielsanbs) Setup 3.0.4.exe`
+1. Descarga: `BPSR Meter (by gabrielsanbs) Setup 3.0.5.exe`
 2. Ejecuta el instalador
 3. ¡Listo! El programa detecta el juego automáticamente
 
@@ -147,7 +171,7 @@
 **❓ Preguntas Frecuentes:**
 - ¿No aparece? Instala Npcap 1.83+ y ejecuta como Administrador
 - ¿Cómo cambio el idioma? Usa el selector en el historial de luchas
-- ¿Alto uso de CPU? v3.0.4 está optimizado al 90%
+- ¿Alto uso de CPU? v3.0.5 está optimizado al 90%
 - ¿Funciona con ExitLag? Sí, totalmente compatible
 - **¿Errores al iniciar?** Ver [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
 
