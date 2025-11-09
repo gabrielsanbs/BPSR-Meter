@@ -6,7 +6,8 @@
   ### Medidor de DPS em Tempo Real para Blue Protocol
   
   [![Download](https://img.shields.io/badge/Download-Latest-brightgreen?style=for-the-badge)](../../releases)
-  [![English](#english) | [Español](#español)
+  
+  [[English](#english)] | [[Español](#español)]
   
   <img src="BPSR_Meter_NEW.png" alt="Interface Principal" width="700"/>
 </div>
@@ -32,7 +33,7 @@
   <img src="BPSR_Meter_HISTORY.png" alt="Histórico de Combates" width="650"/>
 </div>
 
-- **3 idiomas suportados:** Português ��, English �🇸, Español 🇪🇸
+- **3 idiomas suportados:** Português 🇧🇷, English 🇺🇸, Español 🇪🇸
 - Histórico completo de todas as batalhas
 - Estatísticas detalhadas por luta (DPS, dano total, críticos, sorte)
 - Ranking de jogadores em cada combate
@@ -194,7 +195,8 @@ AGPL-3.0 - Veja [LICENSE](LICENSE) para detalhes.
   ### Real-Time DPS Meter for Blue Protocol
   
   [![Download](https://img.shields.io/badge/Download-Latest-brightgreen?style=for-the-badge)](../../releases)
-  [[Português](#) | [Español](#español)]
+  
+  [[Português](#)] | [[Español](#español)]
   
   <img src="BPSR_Meter_NEW.png" alt="Main Interface" width="700"/>
 </div>
@@ -229,7 +231,7 @@ AGPL-3.0 - Veja [LICENSE](LICENSE) para detalhes.
   <img src="BPSR_Meter_HISTORY.png" alt="Combat History" width="650"/>
 </div>
 
-- **3 languages supported:** Português ��, English �🇸, Español 🇪🇸
+- **3 languages supported:** Português 🇧🇷, English 🇺🇸, Español 🇪🇸
 - Complete history of all battles
 - Detailed per-fight statistics (DPS, total damage, crits, luck)
 - Player rankings in each combat
@@ -356,7 +358,7 @@ If the application isn't working correctly:
 
 ## ❓ FAQ
 
-**� Is this bannable?**  
+**🔐 Is this bannable?**  
 Doesn't modify game files or inject code. Read-only tools have extremely low ban risk. **Use at your own risk.**
 
 **⚡ Does it affect FPS?**  
@@ -436,7 +438,8 @@ AGPL-3.0 - See [LICENSE](LICENSE) for details.
   ### Medidor de DPS en Tiempo Real para Blue Protocol
   
   [![Download](https://img.shields.io/badge/Download-Latest-brightgreen?style=for-the-badge)](../../releases)
-  [[Português](#) | [English](#english)]
+  
+  [[Português](#)] | [[English](#english)]
   
   <img src="BPSR_Meter_NEW.png" alt="Interfaz Principal" width="700"/>
 </div>
@@ -457,7 +460,7 @@ AGPL-3.0 - See [LICENSE](LICENSE) for details.
 
 ## ✨ Novedades de v3.0.1
 
-### � Historial de Combates Multilingüe
+### 📜 Historial de Combates Multilingüe
 <div align="center">
   <img src="BPSR_Meter_HISTORY.png" alt="Historial de Combates" width="650"/>
 </div>
@@ -468,7 +471,7 @@ AGPL-3.0 - See [LICENSE](LICENSE) for details.
 - Ranking de jugadores en cada combate
 - Datos persisten entre sesiones
 
-### � Aviso de Cambio de Mapa
+### 🔔 Aviso de Cambio de Mapa
 <div align="center">
   <img src="BPSR_Meter_JANELA.png" alt="Interfaz Completa" width="650"/>
 </div>
