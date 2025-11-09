@@ -49,7 +49,7 @@ try {
     process.exit(1);
 }
 
-const VERSION = '3.0.1';
+const VERSION = '3.0.4';
 const SETTINGS_PATH = path.join(__dirname, 'settings.json');
 
 let globalSettings = {
@@ -98,17 +98,17 @@ async function main() {
     console.log('#             BPSR Meter - Iniciando              #');
     console.log('#                                                 #');
     console.log('###################################################');
-    console.log('\nIniciando servicio...');
-    console.log('Detectando tráfico de red, por favor espera...');
+    console.log('\nIniciando serviço...');
+    console.log('Detectando tráfego de rede, por favor aguarde...');
 
-    // Cargar configuración global
+    // Carregar configuração global
     try {
         await fsPromises.access(SETTINGS_PATH);
         const data = await fsPromises.readFile(SETTINGS_PATH, 'utf8');
         Object.assign(globalSettings, JSON.parse(data));
     } catch (e) {
         if (e.code !== 'ENOENT') {
-            logger.error('Failed to load settings:', e);
+            logger.error('Falha ao carregar configurações:', e);
         }
     }
 
@@ -177,7 +177,7 @@ async function main() {
     // Passar io para o sniffer para emitir eventos
     sniffer.io = io;
 
-    initializeApi(app, server, io, userDataManager, logger, globalSettings, sniffer); // Inicializar API con globalSettings y sniffer
+    initializeApi(app, server, io, userDataManager, logger, globalSettings, sniffer); // Inicializar API com globalSettings e sniffer
 
     server.listen(server_port, '0.0.0.0', () => {
         const localUrl = `http://localhost:${server_port}`;
@@ -198,10 +198,10 @@ async function main() {
         }
     });
 
-    console.log('¡Bienvenido a BPSR Meter!');
-    console.log('Detectando servidor de juego, por favor espera...');
+    console.log('¡Bem-vindo ao BPSR Meter!');
+    console.log('Detectando servidor do jogo, por favor aguarde...');
 
-    // Intervalo para limpiar la caché de fragmentos IP y TCP
+    // Intervalo para limpar o cache de fragmentos IP e TCP
     setInterval(() => {
         userDataManager.checkTimeoutClear();
         userDataManager.checkFightTimeout(); // Verificar timeout de luta
@@ -209,7 +209,7 @@ async function main() {
 }
 
 if (!zlib.zstdDecompressSync) {
-    console.log('zstdDecompressSync is not available! Please update your Node.js!');
+    console.error('zstdDecompressSync não está disponível! Por favor, atualize seu Node.js!');
     process.exit(1);
 }
 

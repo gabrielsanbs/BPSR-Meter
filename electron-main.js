@@ -5,7 +5,7 @@ const { exec, fork } = require('child_process');
 const net = require('net'); // Necesario para checkPort
 const fs = require('fs');
 
-// Función para loguear en archivo seguro para entorno empaquetado
+// Função para registrar em arquivo seguro para ambiente empacotado
 function logToFile(msg) {
     try {
         const userData = app.getPath('userData');
@@ -14,8 +14,8 @@ function logToFile(msg) {
         fs.mkdirSync(userData, { recursive: true });
         fs.appendFileSync(logPath, `[${timestamp}] ${msg}\n`);
     } catch (e) {
-        // Si hay error, mostrar en consola
-        console.error('Error escribiendo log:', e);
+        // Se houver erro, mostrar no console
+        console.error('Erro ao escrever log:', e);
     }
 }
 
@@ -23,11 +23,11 @@ function logToFile(msg) {
 let mainWindow;
 let historyWindow = null;
 let serverProcess;
-let server_port = 8989; // Puerto inicial
-let isLocked = false; // Estado inicial del candado: desbloqueado
-logToFile('==== INICIO DE ELECTRON ====');
+let server_port = 8989; // Porta inicial
+let isLocked = false; // Estado inicial do cadeado: desbloqueado
+logToFile('==== INÍCIO DO ELECTRON ====');
 
-// Fuerza la ventana a comportarse como overlay incluso sobre apps en pantalla completa
+// Força a janela a se comportar como overlay mesmo sobre apps em tela cheia
 function promoteOverlayWindow(win, { focus = false } = {}) {
     if (!win) return;
     win.setAlwaysOnTop(true, 'screen-saver', 1);
@@ -46,7 +46,7 @@ function promoteOverlayWindow(win, { focus = false } = {}) {
     }
 }
 
-    // Función para verificar si un puerto está en uso
+    // Função para verificar se uma porta está em uso
     const checkPort = (port) => {
         return new Promise((resolve) => {
             const server = net.createServer();
@@ -64,12 +64,12 @@ function promoteOverlayWindow(win, { focus = false } = {}) {
             if (await checkPort(port)) {
                 return port;
             }
-            console.warn(`Port ${port} is already in use, trying next...`);
+            console.warn(`Porta ${port} já está em uso, tentando próxima...`);
             port++;
         }
     }
 
-    // Función para matar el proceso que está usando un puerto específico
+    // Função para matar o processo que está usando uma porta específica
     async function killProcessUsingPort(port) {
         return new Promise((resolve) => {
             exec(`netstat -ano | findstr :${port}`, (error, stdout, stderr) => {
@@ -78,12 +78,12 @@ function promoteOverlayWindow(win, { focus = false } = {}) {
                     if (lines.length > 0) {
                         const pid = lines[0].trim().split(/\s+/).pop();
                         if (pid) {
-                            console.log(`Killing process ${pid} using port ${port}...`);
+                            console.log(`Matando processo ${pid} usando porta ${port}...`);
                             exec(`taskkill /PID ${pid} /F`, (killError, killStdout, killStderr) => {
                                 if (killError) {
-                                    console.error(`Error killing process ${pid}: ${killError.message}`);
+                                    console.error(`Erro ao matar processo ${pid}: ${killError.message}`);
                                 } else {
-                                    console.log(`Process ${pid} killed successfully.`);
+                                    console.log(`Processo ${pid} encerrado com sucesso.`);
                                 }
                                 resolve();
                             });
@@ -101,11 +101,11 @@ function promoteOverlayWindow(win, { focus = false } = {}) {
     }
 
     async function createWindow() {
-        logToFile('Intentando matar procesos en el puerto 8989...');
+        logToFile('Tentando encerrar processos na porta 8989...');
         await killProcessUsingPort(8989);
 
         server_port = await findAvailablePort();
-        logToFile('Puerto disponible encontrado: ' + server_port);
+        logToFile('Porta disponível encontrada: ' + server_port);
 
         mainWindow = new BrowserWindow({
             width: 650,
@@ -139,25 +139,25 @@ function promoteOverlayWindow(win, { focus = false } = {}) {
         mainWindow.on('focus', () => promoteOverlayWindow(mainWindow));
         mainWindow.on('restore', () => promoteOverlayWindow(mainWindow, { focus: true }));
 
-        // Iniciar el servidor Node.js, pasando el puerto como argumento
+        // Iniciar o servidor Node.js, passando a porta como argumento
 
-        // Determinar ruta absoluta a server.js según entorno
+        // Determinar caminho absoluto para server.js de acordo com ambiente
         let serverPath;
         if (process.defaultApp || process.env.NODE_ENV === 'development') {
-            // Modo desarrollo
+            // Modo desenvolvimento
             serverPath = path.join(__dirname, 'server.js');
         } else {
-            // Modo empaquetado: usar app.getAppPath() para acceder dentro del asar
+            // Modo empacotado: usar app.getAppPath() para acessar dentro do asar
             serverPath = path.join(app.getAppPath(), 'server.js');
         }
-        logToFile('Lanzando server.js en puerto ' + server_port + ' con ruta: ' + serverPath);
-        logToFile('Node.js versión: ' + process.version);
-        logToFile('Electron versión: ' + process.versions.electron);
+        logToFile('Iniciando server.js na porta ' + server_port + ' com caminho: ' + serverPath);
+        logToFile('Node.js versão: ' + process.version);
+        logToFile('Electron versão: ' + process.versions.electron);
         logToFile('Plataforma: ' + process.platform + ' ' + process.arch);
         
-        // Verificar si el archivo existe
+        // Verificar se o arquivo existe
         if (!fs.existsSync(serverPath)) {
-            logToFile('ERROR CRÍTICO: server.js no encontrado en: ' + serverPath);
+            logToFile('ERRO CRÍTICO: server.js não encontrado em: ' + serverPath);
             const errorHtml = `
                 <h1 style="color:red;">Erro Crítico: Arquivo server.js não encontrado</h1>
                 <p>Caminho esperado: <code>${serverPath}</code></p>
@@ -167,7 +167,7 @@ function promoteOverlayWindow(win, { focus = false } = {}) {
             return;
         }
 
-        // Usar fork para lanzar el servidor como proceso hijo
+        // Usar fork para iniciar o servidor como processo filho
         const { fork } = require('child_process');
         logToFile('Iniciando fork do processo Node.js...');
         
@@ -179,7 +179,7 @@ function promoteOverlayWindow(win, { focus = false } = {}) {
             });
             logToFile('Processo fork iniciado com PID: ' + serverProcess.pid);
         } catch (forkError) {
-            logToFile('ERROR CRÍTICO ao fazer fork: ' + forkError.message);
+            logToFile('ERRO CRÍTICO ao fazer fork: ' + forkError.message);
             logToFile('Stack: ' + forkError.stack);
             const errorHtml = `
                 <h1 style="color:red;">Erro ao iniciar processo Node.js</h1>
@@ -277,8 +277,8 @@ function promoteOverlayWindow(win, { focus = false } = {}) {
                         </p>
                     </h2>
                 `;
-                logToFile('ERROR: El servidor no respondió a tiempo después de 15 segundos.');
-                logToFile('Posibles causas: puerto en uso, Npcap no instalado, falta de permisos, antivirus bloqueando.');
+                logToFile('ERRO: O servidor não respondeu a tempo após 15 segundos.');
+                logToFile('Possíveis causas: porta em uso, Npcap não instalado, falta de permissões, antivírus bloqueando.');
                 mainWindow.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(errorHtml)
                 );
             }
@@ -286,7 +286,7 @@ function promoteOverlayWindow(win, { focus = false } = {}) {
 
         // Handler de erros não capturados do processo
         serverProcess.on('error', (error) => {
-            logToFile('ERROR en el proceso del servidor: ' + error.message);
+            logToFile('ERRO no processo do servidor: ' + error.message);
             logToFile('Stack: ' + error.stack);
             const errorHtml = `
                 <h1 style="color:red;">Erro no processo do servidor</h1>
@@ -359,9 +359,9 @@ function promoteOverlayWindow(win, { focus = false } = {}) {
             }
         });
         serverProcess.on('close', (code) => {
-            logToFile('server process exited with code ' + code);
+            logToFile('Processo do servidor encerrado com código ' + code);
             if (code !== 0 && !createWindow.serverLoaded) {
-                logToFile('ERROR: El servidor terminó inesperadamente antes de iniciar.');
+                logToFile('ERRO: O servidor terminou inesperadamente antes de iniciar.');
                 const errorHtml = `
                     <h1 style="color:red; font-size:2em;">Erro: Servidor fechou inesperadamente</h1>
                     <h2 style="color:orange; font-size:1.2em;">
@@ -385,13 +385,13 @@ function promoteOverlayWindow(win, { focus = false } = {}) {
             }
         });
 
-        /* Simplificado: ahora usamos variables estáticas en la función createWindow
+        /* Simplificado: agora usamos variáveis estáticas na função createWindow
         let serverLoaded = false;
         let serverTimeout = setTimeout(() => {
             if (!serverLoaded) {
-                logToFile('ERROR: El servidor no respondió a tiempo.');
+                logToFile('ERRO: O servidor não respondeu a tempo.');
                 mainWindow.loadURL('data:text/html;charset=utf-8,' +
-                encodeURIComponent('<h2 style="color:red">Error: El servidor no respondió a tiempo.<br>Revisa iniciar_log.txt para más detalles.</h2>')
+                encodeURIComponent('<h2 style="color:red">Erro: O servidor não respondeu a tempo.<br>Revise iniciar_log.txt para mais detalhes.</h2>')
                 );
 
             }
