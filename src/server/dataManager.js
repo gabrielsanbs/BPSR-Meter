@@ -101,6 +101,7 @@ class StatisticData {
         };
         this.realtimeWindow = [];
         this.timeRange = [];
+        this.totalPausedTime = 0; // Tempo total acumulado em pause (em ms)
         this.realtimeStats = {
             value: 0,
             max: 0,
@@ -177,24 +178,25 @@ class StatisticData {
      * @param {number} duration - Duración en ms que estuvo en pausa
      */
     adjustForPause(duration) {
-        if (this.timeRange && this.timeRange.length > 0 && this.timeRange[0]) {
-            // Avanzar el inicio del rango en la duración de la pausa para que
-            // el cálculo de DPS/HPS no cuente el tiempo pausado.
-            this.timeRange[0] += duration;
-            // Si por alguna razón el inicio sobrepasa el fin, ajustar el fin también
-            if (this.timeRange[1] && this.timeRange[0] > this.timeRange[1]) {
-                this.timeRange[1] = this.timeRange[0];
-            }
+        if (duration && duration > 0) {
+            // Acumular o tempo total pausado (suporta múltiplos pause/unpause)
+            this.totalPausedTime += duration;
         }
-        // No necesitamos ajustar realtimeWindow; los timestamps viejos expirarán
-        // cuando se actualicen las estadísticas tras reanudar.
+        // Não modificar timeRange diretamente - isso causava bugs com múltiplos pauses!
+        // Em vez disso, subtraímos totalPausedTime no cálculo de DPS/HPS
     }
 
     getTotalPerSecond() {
         if (!this.timeRange[0] || !this.timeRange[1]) {
             return 0;
         }
-        const totalPerSecond = (this.stats.total / (this.timeRange[1] - this.timeRange[0])) * 1000 || 0;
+        // Tempo total = fim - início - tempo pausado
+        const actualElapsedTime = (this.timeRange[1] - this.timeRange[0]) - this.totalPausedTime;
+        
+        // Evitar divisão por zero ou tempos negativos
+        if (actualElapsedTime <= 0) return 0;
+        
+        const totalPerSecond = (this.stats.total / actualElapsedTime) * 1000 || 0;
         if (!Number.isFinite(totalPerSecond)) return 0;
         return totalPerSecond;
     }
@@ -217,6 +219,7 @@ class StatisticData {
         };
         this.realtimeWindow = [];
         this.timeRange = [];
+        this.totalPausedTime = 0; // Resetar tempo pausado também
         this.realtimeStats = {
             value: 0,
             max: 0,

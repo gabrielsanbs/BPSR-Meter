@@ -49,7 +49,7 @@ try {
     process.exit(1);
 }
 
-const VERSION = '3.0.4';
+const VERSION = '3.0.5';
 const SETTINGS_PATH = path.join(__dirname, 'settings.json');
 
 let globalSettings = {
@@ -112,9 +112,10 @@ async function main() {
         }
     }
 
-    // Usar diretório de trabalho atual (process.cwd()) para salvar dados
-    // No Electron, isso será o diretório do executável, não dentro do .asar
-    const dataDir = process.cwd();
+    // Usar diretório userData do Electron (passado via env) ou cwd como fallback
+    // IMPORTANTE: userData (%APPDATA%/bpsr-meter) persiste entre atualizações
+    // process.cwd() seria deletado durante updates!
+    const dataDir = process.env.BPSR_USER_DATA_DIR || process.cwd();
     logger.info(`Diretório de dados: ${dataDir}`);
     
     const userDataManager = new UserDataManager(logger, globalSettings, dataDir);

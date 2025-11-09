@@ -172,10 +172,18 @@ function promoteOverlayWindow(win, { focus = false } = {}) {
         logToFile('Iniciando fork do processo Node.js...');
         
         try {
+            // Passar userData via variável de ambiente para persistir entre updates
+            const userData = app.getPath('userData');
+            logToFile('Diretório userData (persistente): ' + userData);
+            
             serverProcess = fork(serverPath, [server_port], {
                 stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
                 execArgv: [],
-                env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' }
+                env: { 
+                    ...process.env, 
+                    ELECTRON_RUN_AS_NODE: '1',
+                    BPSR_USER_DATA_DIR: userData // Passa o userData para o server.js
+                }
             });
             logToFile('Processo fork iniciado com PID: ' + serverProcess.pid);
         } catch (forkError) {
