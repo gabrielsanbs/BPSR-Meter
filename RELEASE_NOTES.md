@@ -127,7 +127,3 @@
 - dmlgzs (proyecto original)
 
 **💬 Soporte:** [Issues](https://github.com/gabrielsanbs/BPSR-Meter/issues)
-- MrSnakeVT (fork original)
-- dmlgzs (proyecto original)
-
-**💬 Soporte:** [Issues](https://github.com/gabrielsanbs/BPSR-Meter/issues)
