@@ -148,8 +148,17 @@ body.locked.alt-pressed {
     pointer-events: all; /* Permitir eventos del ratón en el body cuando Alt está presionado y bloqueado */
 }
 
-body.locked #lock-button {
-    pointer-events: all; /* Permitir clics en el botón de candado incluso cuando está bloqueado */
+/* IMPORTANTE: Permitir clics em TODOS os botões mesmo quando travado */
+body.locked .controls {
+    pointer-events: all !important; /* Header sempre clicável */
+    cursor: default !important; /* Cursor visível no header */
+}
+
+body.locked .control-button,
+body.locked #lock-button,
+body.locked #drag-indicator {
+    pointer-events: all !important; /* Todos os botões clicáveis */
+    cursor: pointer !important;
 }
 
 .container {

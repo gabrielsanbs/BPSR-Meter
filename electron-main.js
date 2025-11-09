@@ -313,18 +313,12 @@ function promoteOverlayWindow(win, { focus = false } = {}) {
         if (mainWindow) {
             isLocked = !isLocked;
             
-            if (isLocked) {
-                // Quando BLOQUEADO (cadeado fechado): ignorar TODOS os eventos
-                // Cliques passam pelo overlay direto para o jogo
-                // Não pode arrastar, não pode clicar em nada
-                mainWindow.setIgnoreMouseEvents(true, { forward: true });
-            } else {
-                // Quando DESBLOQUEADO (cadeado aberto): processar eventos normalmente
-                // PODE arrastar pela área de drag, pode clicar nos botões
-                mainWindow.setIgnoreMouseEvents(false);
-            }
+            // SOLUÇÃO: Não usar setIgnoreMouseEvents quando travado
+            // Em vez disso, usar CSS pointer-events para controlar o que é clicável
+            // A janela SEMPRE processa eventos, mas o CSS decide o que passa pro jogo
+            
             promoteOverlayWindow(mainWindow);
-            mainWindow.webContents.send('lock-state-changed', isLocked); // Notificar al renderizador
+            mainWindow.webContents.send('lock-state-changed', isLocked);
             console.log(`Candado: ${isLocked ? 'Cerrado (TRAVADO)' : 'Abierto (PODE ARRASTAR)'}`);
         }
     });
