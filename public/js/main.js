@@ -1,3 +1,25 @@
+// Conectar ao Socket.IO
+const socket = io();
+
+// Escutar evento de conexão com o jogo
+socket.on('game-connected', (data) => {
+    if (data.connected) {
+        gameConnected = true;
+        console.log('[CONNECTION] Conectado ao jogo! gameConnected=true');
+        
+        // IMPORTANTE: Parar qualquer timer de sync que esteja rodando
+        if (syncTimerInterval) {
+            stopSyncTimer();
+            console.log('[CONNECTION] Timer de sync parado ao conectar');
+        }
+        
+        // Forçar atualização do ícone imediatamente
+        if (typeof updateSyncButtonState === 'function') {
+            updateSyncButtonState();
+        }
+    }
+});
+
 // Estado global para modo Lite
 let isLiteMode = false;
 let liteModeType = 'dps'; // 'dps' o 'healer'
@@ -46,6 +68,9 @@ const professionMap = {
     let syncTimerDisplayTimeout; // Para el retardo de 200ms
     let isLocked = false; // Estado de bloqueo de la ventana
     let logPreviewTimeout; // Declarar logPreviewTimeout aquí
+    let gameConnected = false; // Estado de conexão com o jogo
+    let lastPlayerCount = 0; // Controle para evitar resize desnecessário
+    let resizeThrottleTimeout = null; // Throttle para updateWindowSize
 
     const dpsTimerDiv = document.getElementById('dps-timer');
     const playerBarsContainer = document.getElementById('player-bars-container');
@@ -55,6 +80,8 @@ const professionMap = {
     const lockButton = document.getElementById('lock-button');
     const logsSection = document.getElementById('logs-section'); // Declarar logsSection aquí
     const loadingIndicator = document.getElementById('loading-indicator'); // Indicador de carga
+    const mapChangeNotice = document.getElementById('map-change-notice'); // Aviso de mudar mapa
+    let mapNoticeVisible = true; // Por padrão, mostrar aviso
 
     // Permitir interacción con Alt cuando está bloqueado
     document.addEventListener('keydown', (e) => {
@@ -147,12 +174,93 @@ const professionMap = {
             }
         }
 
+        const minimizeButton = document.getElementById('minimize-button');
+        if (minimizeButton) {
+            minimizeButton.addEventListener('click', () => {
+                if (window.electronAPI) {
+                    window.electronAPI.minimizeWindow();
+                }
+            });
+        }
+
         const closeButton = document.getElementById('close-button');
         if (closeButton) {
             closeButton.addEventListener('click', () => {
                 if (window.electronAPI) {
                     window.electronAPI.closeWindow();
                 }
+            });
+        }
+
+        // IMPLEMENTAR DRAG MANUAL (solução para overlays transparentes)
+        const dragIndicator = document.getElementById('drag-indicator');
+        if (dragIndicator && window.electronAPI) {
+            let isDragging = false;
+            let startX = 0;
+            let startY = 0;
+
+            dragIndicator.addEventListener('mousedown', (e) => {
+                if (!isLocked) {
+                    isDragging = true;
+                    // Armazenar posição inicial do mouse em coordenadas de tela
+                    startX = e.screenX;
+                    startY = e.screenY;
+                    dragIndicator.style.cursor = 'grabbing';
+                    console.log('[DRAG] mousedown - startX:', startX, 'startY:', startY);
+                    e.preventDefault(); // Prevenir seleção de texto
+                }
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (isDragging && !isLocked) {
+                    // Calcular quanto o mouse se moveu desde o início
+                    const deltaX = e.screenX - startX;
+                    const deltaY = e.screenY - startY;
+                    
+                    console.log('[DRAG] mousemove - screenX:', e.screenX, 'screenY:', e.screenY, 'deltaX:', deltaX, 'deltaY:', deltaY);
+                    
+                    // Enviar delta para o processo principal
+                    window.electronAPI.windowDragMove(deltaX, deltaY);
+                    
+                    // Atualizar posição inicial para o próximo movimento
+                    startX = e.screenX;
+                    startY = e.screenY;
+                }
+            });
+
+            document.addEventListener('mouseup', () => {
+                if (isDragging) {
+                    isDragging = false;
+                    dragIndicator.style.cursor = 'grab';
+                    console.log('[DRAG] mouseup - drag finalizado');
+                }
+            });
+
+            // Garantir que mouseup fora da janela também pare o drag
+            document.addEventListener('mouseleave', () => {
+                if (isDragging) {
+                    isDragging = false;
+                    dragIndicator.style.cursor = 'grab';
+                    console.log('[DRAG] mouseleave - drag cancelado');
+                }
+            });
+        }
+
+        // Botão para ocultar/mostrar aviso de mapa
+        const toggleMapNoticeBtn = document.getElementById('toggle-map-notice');
+        if (toggleMapNoticeBtn && mapChangeNotice) {
+            toggleMapNoticeBtn.addEventListener('click', () => {
+                mapNoticeVisible = !mapNoticeVisible;
+                if (mapNoticeVisible) {
+                    mapChangeNotice.style.display = 'block';
+                    toggleMapNoticeBtn.innerHTML = '<i class="fa-solid fa-eye-slash"></i>';
+                    toggleMapNoticeBtn.title = 'Ocultar aviso';
+                } else {
+                    mapChangeNotice.style.display = 'none';
+                    toggleMapNoticeBtn.innerHTML = '<i class="fa-solid fa-eye"></i>';
+                    toggleMapNoticeBtn.title = 'Mostrar aviso';
+                }
+                updateWindowSize(); // Recalcular altura da janela
             });
         }
     });
@@ -170,32 +278,57 @@ const professionMap = {
         const container = document.getElementById('player-bars-container');
         if (!dpsMeter || !container || !window.electronAPI) return;
 
-        const baseWidth = 650; // Ancho fijo como se solicitó
-        const headerHeight = document.querySelector('.controls')?.offsetHeight || 50; // Altura de la cabecera
-        const marginTop = 40; // Margen superior del contenedor de barras
-        const borderWidth = 2; // Borde superior e inferior del contenedor
-        const barHeight = 55; // Altura de cada barra de jugador
-        const barGap = 8;    // Espacio entre barras
-
         const numPlayers = container.querySelectorAll('.player-bar').length;
-        const numPlayersCapped = Math.min(numPlayers, 10); // Limitar a 10 barras
-
-        let barsHeight = 0;
-        if (numPlayersCapped > 0) {
-            barsHeight = (numPlayersCapped * barHeight) + ((numPlayersCapped - 1) * barGap);
-        } else {
-            // Altura mínima para el mensaje "Esperando datos..."
-            barsHeight = 50;
-        }
-
-        // Calcular la altura total sin escalar, incluyendo la cabecera y un búfer
-        const totalContentHeightUnscaled = headerHeight + marginTop + borderWidth + barsHeight + 20; // Búfer de 20px
-
-        // Aplicar el zoom actual al ancho y alto de la ventana
-        const finalWidth = Math.round(baseWidth * currentZoom);
-        const finalHeight = Math.round(totalContentHeightUnscaled * currentZoom);
         
-        window.electronAPI.resizeWindow(finalWidth, finalHeight);
+        // Só fazer resize se o número de players mudou (evita fundo preto em updates constantes)
+        if (numPlayers === lastPlayerCount && resizeThrottleTimeout) {
+            console.log('[RESIZE] Pulando resize - mesmo número de players:', numPlayers);
+            return;
+        }
+        
+        lastPlayerCount = numPlayers;
+        
+        // Throttle agressivo - só resize a cada 200ms
+        if (resizeThrottleTimeout) {
+            clearTimeout(resizeThrottleTimeout);
+        }
+        
+        resizeThrottleTimeout = setTimeout(() => {
+            const baseWidth = 650; // Ancho fijo como se solicitó
+            const headerHeight = document.querySelector('.controls')?.offsetHeight || 50; // Altura de la cabecera
+            const marginTop = 40; // Margen superior del contenedor de barras
+            const borderWidth = 2; // Borde superior e inferior del contenedor
+            const barHeight = 55; // Altura de cada barra de jugador
+            const barGap = 8;    // Espacio entre barras
+
+            const numPlayersCapped = Math.min(numPlayers, 10); // Limitar a 10 barras
+
+            let barsHeight = 0;
+            if (numPlayersCapped > 0) {
+                barsHeight = (numPlayersCapped * barHeight) + ((numPlayersCapped - 1) * barGap);
+            } else {
+                // Altura mínima para el mensaje "Esperando datos..."
+                barsHeight = 50;
+            }
+
+            // Adicionar altura do aviso de mapa se estiver visível
+            let mapNoticeHeight = 0;
+            if (mapChangeNotice && mapNoticeVisible && numPlayersCapped > 0) {
+                mapNoticeHeight = mapChangeNotice.offsetHeight || 45; // ~45px altura estimada
+            }
+
+            // Calcular la altura total sin escalar, incluyendo la cabecera, aviso e un búfer
+            const totalContentHeightUnscaled = headerHeight + marginTop + borderWidth + barsHeight + mapNoticeHeight + 20; // Búfer de 20px
+
+            // Aplicar el zoom actual al ancho y alto de la ventana
+            const finalWidth = Math.round(baseWidth * currentZoom);
+            const finalHeight = Math.round(totalContentHeightUnscaled * currentZoom);
+            
+            console.log('[RESIZE] Aplicando resize - players:', numPlayers, 'mapNotice:', mapNoticeHeight, 'width:', finalWidth, 'height:', finalHeight);
+            window.electronAPI.resizeWindow(finalWidth, finalHeight);
+            
+            resizeThrottleTimeout = null;
+        }, 200); // 200ms de throttle
     }
 
     function resetDpsMeter() {
@@ -223,25 +356,39 @@ const professionMap = {
     function updateSyncButtonState() {
         clearTimeout(syncTimerDisplayTimeout); // Limpiar cualquier timeout pendiente
 
-        if (syncTimerInterval) { // Si el temporizador está activo (hay cuenta regresiva)
+        // PRIORIDADE MÁXIMA: Se conectado ao jogo, NUNCA mostrar ícone de loading
+        if (gameConnected) {
+            syncIcon.style.display = 'none';
+            syncIcon.classList.remove('spinning');
+            syncTimerSpan.style.display = 'none';
+            syncTimerSpan.innerText = '';
+            console.log('[LOADING] Jogo conectado - TUDO escondido (timer ativo:', !!syncTimerInterval, ')');
+            return; // PARAR AQUI - não processar mais nada
+        }
+
+        // Só chega aqui se NÃO conectado ao jogo
+        if (syncTimerInterval) { // Se o temporizador está ativo (há conta regresiva)
             if (syncCountdown <= 60) {
                 // Mostrar temporizador, ocultar icono
                 syncIcon.style.display = 'none';
                 syncIcon.classList.remove('spinning');
                 syncTimerSpan.innerText = `${syncCountdown}s`;
                 syncTimerSpan.style.display = 'block';
+                console.log('[LOADING] Temporizador ativo - mostrando countdown:', syncCountdown);
             } else {
                 // Mostrar icono girando, ocultar temporizador
                 syncIcon.style.display = 'block';
-                syncIcon.classList.add('spinning'); // Asegura que gire continuamente
+                syncIcon.classList.add('spinning');
                 syncTimerSpan.style.display = 'none';
+                console.log('[LOADING] Temporizador ativo - mostrando ícone girando');
             }
-        } else { // Si el temporizador no está activo (no hay cuenta regresiva)
-            // Mostrar icono girando, ocultar temporizador
+        } else { // Si el temporizador no está activo
+            // Mostrar ícone girando quando desconectado e sem timer
             syncIcon.style.display = 'block';
-            syncIcon.classList.add('spinning'); // Asegura que gire continuamente
+            syncIcon.classList.add('spinning');
             syncTimerSpan.style.display = 'none';
             syncTimerSpan.innerText = '';
+            console.log('[LOADING] Sem timer - mostrando ícone girando');
         }
     }
 
@@ -266,6 +413,7 @@ const professionMap = {
         syncTimerInterval = null;
         clearTimeout(syncTimerDisplayTimeout); // Limpiar el timeout si existe
         updateSyncButtonState(); // Restablecer el estado del indicador
+        console.log('[LOADING] Timer parado, gameConnected=', gameConnected);
     }
 
     function formatTimer(ms) {
@@ -385,14 +533,32 @@ const professionMap = {
             userArray = userArray.filter(u => u.total_damage && u.total_damage.total > 0);
 
             if (!userArray || userArray.length === 0) {
-                loadingIndicator.style.display = 'flex'; // Mostrar el indicador de carga
+                // Só mostrar loading se NÃO estiver conectado ao jogo
+                if (!gameConnected) {
+                    loadingIndicator.style.display = 'flex';
+                    console.log('[LOADING] Sem dados e sem conexão - mostrando loading');
+                } else {
+                    loadingIndicator.style.display = 'none';
+                    console.log('[LOADING] Sem dados mas conectado - escondendo loading');
+                }
                 playerBarsContainer.style.display = 'none'; // Ocultar el contenedor de barras
                 updateSyncButtonState();
                 return;
             }
 
+            // Se chegou aqui, tem dados - SEMPRE esconder loading
             loadingIndicator.style.display = 'none'; // Ocultar el indicador de carga
             playerBarsContainer.style.display = 'flex'; // Mostrar el contenedor de barras
+
+            // Verificar se há players com nome temporário (Player XXXXX)
+            const hasTemporaryNames = userArray.some(u => u.name && u.name.startsWith('Player '));
+            if (hasTemporaryNames && mapNoticeVisible && mapChangeNotice) {
+                mapChangeNotice.style.display = 'block';
+                console.log('[MAP-NOTICE] Players com nomes temporários detectados - mostrando aviso');
+            } else if (mapChangeNotice) {
+                mapChangeNotice.style.display = 'none';
+                console.log('[MAP-NOTICE] Sem nomes temporários ou aviso oculto');
+            }
 
             const sumaTotalDamage = userArray.reduce((acc, u) => acc + (u.total_damage && u.total_damage.total ? Number(u.total_damage.total) : 0), 0);
 
@@ -603,7 +769,7 @@ const professionMap = {
                 fetchDataAndRender();
                 updateLogsUI();
             }
-        }, 50);
+        }, 70); // Otimizado: 50ms → 250ms (4 atualizações/segundo é suficiente)
     }
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -647,6 +813,85 @@ const professionMap = {
         updateLogsUI();
     });
 
+
+    // Gerenciamento do histórico de lutas
+    let autoResetEnabled = false;
+
+    // Abrir janela de histórico
+    function openHistoryWindow() {
+        if (window.electronAPI && window.electronAPI.openHistoryWindow) {
+            window.electronAPI.openHistoryWindow();
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // Botão de histórico de lutas - abre nova janela
+        const historyButton = document.getElementById('fight-history-button');
+        if (historyButton) {
+            historyButton.addEventListener('click', () => {
+                openHistoryWindow();
+            });
+        }
+
+        // Botão de limpar histórico
+        const clearHistoryButton = document.getElementById('clear-history-button');
+        if (clearHistoryButton) {
+            clearHistoryButton.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                if (confirm('Deseja limpar todo o histórico de lutas?')) {
+                    try {
+                        await fetch('/api/fight-history/clear', { method: 'POST' });
+                        console.log('Histórico limpo com sucesso!');
+                    } catch (err) {
+                        console.error('Erro ao limpar histórico:', err);
+                    }
+                }
+            });
+        }
+
+        // Botão de reset automático
+        const autoResetButton = document.getElementById('auto-reset-toggle');
+        if (autoResetButton) {
+            // Carregar estado inicial
+            fetch('/api/settings')
+                .then(res => res.json())
+                .then(data => {
+                    autoResetEnabled = data.data.autoResetOnFightEnd || false;
+                    updateAutoResetButton();
+                })
+                .catch(err => console.error('Erro ao carregar configurações:', err));
+
+            autoResetButton.addEventListener('click', async () => {
+                autoResetEnabled = !autoResetEnabled;
+                
+                try {
+                    await fetch('/api/settings', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ autoResetOnFightEnd: autoResetEnabled })
+                    });
+                    
+                    updateAutoResetButton();
+                    console.log(`Reset automático: ${autoResetEnabled ? 'Ativado' : 'Desativado'}`);
+                } catch (err) {
+                    console.error('Erro ao alterar configuração:', err);
+                }
+            });
+        }
+
+        function updateAutoResetButton() {
+            const button = document.getElementById('auto-reset-toggle');
+            if (!button) return;
+
+            if (autoResetEnabled) {
+                button.classList.add('active');
+                button.title = 'Reset Automático: Ativado (Clique para desativar)';
+            } else {
+                button.classList.remove('active');
+                button.title = 'Reset Automático: Desativado (Clique para ativar)';
+            }
+        }
+    });
 
     // Script para eliminar el texto de depuración de VSCode
     document.addEventListener('DOMContentLoaded', () => {

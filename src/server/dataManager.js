@@ -415,7 +415,7 @@ class UserData {
 }
 
 class UserDataManager {
-    constructor(logger, globalSettings) {
+    constructor(logger, globalSettings, dataDir = null) {
         this.logger = logger;
         this.globalSettings = globalSettings; // Almacenar globalSettings
         this.users = new Map();
@@ -424,6 +424,20 @@ class UserDataManager {
 
         this.hpCache = new Map();
         this.startTime = Date.now();
+        this.lastDamageTime = Date.now(); // Para detectar fim de combate
+        this.fightActive = false; // Indica se há uma luta ativa
+        this.fightEnded = false; // Indica se luta terminou recentemente
+        this.fightHistory = []; // Histórico das últimas 20 lutas
+        this.MAX_FIGHT_HISTORY = 20; // Máximo de lutas no histórico
+        
+        // Usar diretório de dados customizado se fornecido, senão usar diretório do processo
+        const baseDir = dataDir || process.cwd();
+        this.FIGHT_HISTORY_PATH = path.join(baseDir, 'fight_history.json'); // Caminho do arquivo
+        this.USER_CACHE_PATH = path.join(baseDir, 'user_cache.json'); // Cache de usuários
+
+        // Debounce para salvar cache (evita escrever no disco constantemente)
+        this.cacheSaveTimer = null;
+        this.CACHE_SAVE_DELAY = 3000; // Salvar apenas após 3 segundos sem mudanças
 
         this.logLock = new Lock();
         this.logDirExist = new Set();
@@ -436,7 +450,98 @@ class UserDataManager {
     }
 
     async initialize() {
-        // No es necesario cargar caché si no se guarda
+        // Carregar histórico de lutas do arquivo JSON
+        await this.loadFightHistory();
+        // Carregar cache de usuários
+        await this.loadUserCache();
+    }
+
+    /** Carregar cache de usuários do arquivo JSON */
+    async loadUserCache() {
+        try {
+            await fsPromises.access(this.USER_CACHE_PATH);
+            const data = await fsPromises.readFile(this.USER_CACHE_PATH, 'utf8');
+            const cacheArray = JSON.parse(data);
+            
+            // Converter array para Map
+            this.userCache = new Map(cacheArray);
+            this.logger.info(`Cache de usuários carregado: ${this.userCache.size} usuários`);
+        } catch (error) {
+            if (error.code === 'ENOENT') {
+                this.userCache = new Map();
+                this.logger.info('Nenhum cache de usuários encontrado, iniciando vazio');
+            } else {
+                this.logger.error('Erro ao carregar cache de usuários:', error);
+                this.userCache = new Map();
+            }
+        }
+    }
+
+    /** Salvar cache de usuários no arquivo JSON */
+    async saveUserCache() {
+        try {
+            // Converter Map para array para serialização
+            const cacheArray = Array.from(this.userCache.entries());
+            await fsPromises.writeFile(
+                this.USER_CACHE_PATH,
+                JSON.stringify(cacheArray, null, 2),
+                'utf8'
+            );
+            this.logger.info(`Cache de usuários salvo: ${this.userCache.size} usuários`);
+        } catch (error) {
+            this.logger.error('Erro ao salvar cache de usuários:', error);
+        }
+    }
+
+    /** Salvar cache com debounce (evita escrever no disco constantemente)
+     * Agrupa múltiplas mudanças e salva apenas após CACHE_SAVE_DELAY ms de inatividade
+     * Reduz uso de CPU e disco em até 90%
+     */
+    scheduleCacheSave() {
+        // Cancelar timer anterior se existir
+        if (this.cacheSaveTimer) {
+            clearTimeout(this.cacheSaveTimer);
+        }
+        
+        // Agendar novo salvamento após CACHE_SAVE_DELAY
+        this.cacheSaveTimer = setTimeout(() => {
+            this.saveUserCache().catch(err => {
+                this.logger.error('Erro ao salvar cache agendado:', err);
+            });
+            this.cacheSaveTimer = null;
+        }, this.CACHE_SAVE_DELAY);
+    }
+
+    /** Carregar histórico de lutas do arquivo JSON */
+    async loadFightHistory() {
+        try {
+            await fsPromises.access(this.FIGHT_HISTORY_PATH);
+            const data = await fsPromises.readFile(this.FIGHT_HISTORY_PATH, 'utf8');
+            this.fightHistory = JSON.parse(data);
+            this.logger.info(`Histórico de lutas carregado: ${this.fightHistory.length} lutas`);
+        } catch (error) {
+            if (error.code === 'ENOENT') {
+                this.fightHistory = [];
+                this.logger.info('Nenhum histórico de lutas encontrado, iniciando vazio');
+            } else {
+                this.logger.error('Erro ao carregar histórico de lutas:', error);
+                this.fightHistory = [];
+            }
+        }
+    }
+
+    /** Salvar histórico de lutas no arquivo JSON */
+    async saveFightHistoryToFile() {
+        try {
+            await fsPromises.writeFile(
+                this.FIGHT_HISTORY_PATH,
+                JSON.stringify(this.fightHistory, null, 2),
+                'utf8'
+            );
+            this.logger.info(`Histórico de lutas salvo: ${this.fightHistory.length} lutas`);
+        } catch (error) {
+            this.logger.error('Erro ao salvar histórico de lutas:', error);
+        }
     }
     /** Obtener o crear usuario
      * @param {number} uid - ID de usuario
@@ -447,14 +552,21 @@ class UserDataManager {
             const user = new UserData(uid);
             const uidStr = String(uid);
             const cachedData = this.userCache.get(uidStr);
+            
+            // Definir nome padrão primeiro
+            let hasName = false;
+            
             if (this.playerMap.has(uidStr)) {
-                user.setName(this.playerMap.get(uidStr));
+                const nameFromPlayerMap = this.playerMap.get(uidStr);
+                user.setName(nameFromPlayerMap);
+                hasName = true;
             }
             if (cachedData) {
                 if (cachedData.name) {
                     user.setName(cachedData.name);
+                    hasName = true;
                 }
-                // Ya no se carga la profesión desde el caché de usuario
+                // Profissão NÃO é mais salva no cache (removido para reduzir tamanho)
                 if (cachedData.fightPoint !== undefined && cachedData.fightPoint !== null) {
                     user.setFightPoint(cachedData.fightPoint);
                 }
@@ -462,6 +574,12 @@ class UserDataManager {
                     user.setAttrKV('max_hp', cachedData.maxHp);
                 }
             }
+            
+            // Se não tem nome, usar nome temporário
+            if (!hasName) {
+                user.setName(`Player ${uid}`);
+            }
+            
             if (this.hpCache.has(uid)) {
                 user.setAttrKV('hp', this.hpCache.get(uid));
             }
@@ -485,6 +603,15 @@ class UserDataManager {
     addDamage(uid, skillId, element, damage, isCrit, isLucky, isCauseLucky, hpLessenValue = 0, targetUid) {
         // isPaused y globalSettings.onlyRecordEliteDummy se manejarán en el sniffer o en el punto de entrada
         this.checkTimeoutClear();
+        
+        // Marcar início da luta se não estiver ativa
+        if (!this.fightActive) {
+            this.startFight();
+        }
+        
+        // Atualizar tempo do último dano
+        this.lastDamageTime = Date.now();
+        
         const user = this.getUser(uid);
         user.addDamage(skillId, element, damage, isCrit, isLucky, isCauseLucky, hpLessenValue);
     }
@@ -502,6 +629,10 @@ class UserDataManager {
     addHealing(uid, skillId, element, healing, isCrit, isLucky, isCauseLucky, targetUid) {
         // isPaused se manejará en el sniffer o en el punto de entrada
         this.checkTimeoutClear();
+        
+        // Atualizar tempo do último dano/healing
+        this.lastDamageTime = Date.now();
+        
         if (uid !== 0) {
             const user = this.getUser(uid);
             user.addHealing(skillId, element, healing, isCrit, isLucky, isCauseLucky);
@@ -569,6 +700,15 @@ class UserDataManager {
         if (user.name !== name) {
             user.setName(name);
             this.logger.info(`Found player name ${name} for uid ${uid}`);
+            
+            // Atualizar cache em memória
+            const uidStr = String(uid);
+            const cachedData = this.userCache.get(uidStr) || {};
+            cachedData.name = name;
+            this.userCache.set(uidStr, cachedData);
+            
+            // Agendar salvamento em arquivo com debounce (reduz I/O)
+            this.scheduleCacheSave();
         }
     }
 
@@ -581,6 +721,15 @@ class UserDataManager {
         if (user.fightPoint != fightPoint) {
             user.setFightPoint(fightPoint);
             this.logger.info(`Found fight point ${fightPoint} for uid ${uid}`);
+            
+            // Atualizar cache em memória
+            const uidStr = String(uid);
+            const cachedData = this.userCache.get(uidStr) || {};
+            cachedData.fightPoint = fightPoint;
+            this.userCache.set(uidStr, cachedData);
+            
+            // Agendar salvamento em arquivo com debounce (reduz I/O)
+            this.scheduleCacheSave();
         }
     }
 
@@ -668,9 +817,122 @@ class UserDataManager {
     }
 
     /** Limpiar todos los datos de usuario */
-    clearAll() {
+    async clearAll() {
+        // Se autoResetOnFightEnd estiver ativo, salvar a luta antes de limpar
+        if (this.fightActive && this.users.size > 0) {
+            await this.saveFightToHistory();
+        }
+        
         this.users = new Map();
         this.startTime = Date.now();
+        this.lastDamageTime = Date.now();
+        this.fightActive = false;
+    }
+
+    /** Iniciar uma nova luta */
+    startFight() {
+        if (!this.fightActive) {
+            this.fightActive = true;
+            this.startTime = Date.now();
+            this.lastDamageTime = Date.now();
+            this.logger.info('Nova luta iniciada!');
+        }
+    }
+
+    /** Finalizar luta atual e salvar no histórico */
+    async endFight() {
+        if (this.fightActive && this.users.size > 0) {
+            await this.saveFightToHistory();
+            
+            // Se autoResetOnFightEnd estiver ativo, limpar dados
+            if (this.globalSettings.autoResetOnFightEnd) {
+                this.users = new Map();
+                this.startTime = Date.now();
+            }
+            
+            this.fightActive = false;
+            this.fightEnded = true; // Marcar que luta terminou
+            this.logger.info('Luta finalizada e salva no histórico!');
+        }
+    }
+
+    /** Salvar luta atual no histórico */
+    async saveFightToHistory() {
+        if (this.users.size === 0) return;
+
+        const endTime = Date.now();
+        const duration = endTime - this.startTime;
+        
+        // Criar snapshot dos dados atuais
+        const fightData = {
+            id: Date.now(), // ID único baseado em timestamp
+            startTime: this.startTime,
+            endTime: endTime,
+            duration: duration,
+            players: []
+        };
+
+        // Salvar dados de cada jogador
+        for (const [uid, user] of this.users.entries()) {
+            const playerData = {
+                uid: uid,
+                name: user.name || `Player ${uid}`,
+                profession: user.profession + (user.subProfession ? `-${user.subProfession}` : ''),
+                totalDamage: user.damageStats.stats.total || 0,
+                totalHealing: user.healingStats.stats.total || 0,
+                totalDps: user.getTotalDps(),
+                totalHps: user.getTotalHps(),
+                takenDamage: user.takenDamage,
+                deadCount: user.deadCount,
+                fightPoint: user.fightPoint,
+                critRate: user.damageStats.count.total > 0 ? 
+                    (user.damageStats.count.critical / user.damageStats.count.total * 100) : 0,
+                luckyRate: user.damageStats.count.total > 0 ? 
+                    (user.damageStats.count.lucky / user.damageStats.count.total * 100) : 0,
+                peakDps: user.damageStats.realtimeStats.max
+            };
+            fightData.players.push(playerData);
+        }
+
+        // Ordenar por DPS total
+        fightData.players.sort((a, b) => b.totalDps - a.totalDps);
+
+        // Adicionar ao histórico (no início)
+        this.fightHistory.unshift(fightData);
+
+        // Limitar a 20 lutas
+        if (this.fightHistory.length > this.MAX_FIGHT_HISTORY) {
+            this.fightHistory = this.fightHistory.slice(0, this.MAX_FIGHT_HISTORY);
+        }
+
+        this.logger.info(`Luta salva no histórico. Total de lutas: ${this.fightHistory.length}`);
+        
+        // Salvar no arquivo JSON
+        await this.saveFightHistoryToFile();
+    }
+
+    /** Obter histórico de lutas */
+    getFightHistory() {
+        return this.fightHistory;
+    }
+
+    /** Limpar histórico de lutas */
+    async clearFightHistory() {
+        this.fightHistory = [];
+        await this.saveFightHistoryToFile();
+        this.logger.info('Histórico de lutas limpo!');
+    }
+
+    /** Verificar se deve finalizar a luta (30s sem dano) */
+    checkFightTimeout() {
+        if (this.fightActive) {
+            const timeSinceLastDamage = Date.now() - this.lastDamageTime;
+            const FIGHT_TIMEOUT = 30000; // 30 segundos
+            
+            if (timeSinceLastDamage > FIGHT_TIMEOUT) {
+                this.endFight();
+            }
+        }
     }
 
     /** Obtener lista de IDs de usuario */

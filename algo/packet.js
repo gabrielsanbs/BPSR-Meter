@@ -509,7 +509,8 @@ class PacketProcessor {
                     case 5: // Name
                         const playerName = streamReadString(messageReader);
                         if (!playerName || playerName === '') break;
-                        this.userDataManager.setName(currentUserUuid.shiftRight(16).toNumber(), playerName);
+                        const playerUidFromStream = currentUserUuid.shiftRight(16).toNumber();
+                        this.userDataManager.setName(playerUidFromStream, playerName);
                         break;
                     case 35: // FightPoint
                         const fightPoint = messageReader.readUInt32LE();
@@ -549,8 +550,11 @@ class PacketProcessor {
                     case 1: // CurProfessionId
                         const curProfessionId = messageReader.readUInt32LE();
                         messageReader.readInt32();
-                        if (curProfessionId)
-                            this.userDataManager.setProfession(currentUserUuid.shiftRight(16).toNumber(), getProfessionNameFromId(curProfessionId));
+                        if (curProfessionId) {
+                            const professionUidFromStream = currentUserUuid.shiftRight(16).toNumber();
+                            const professionNameFromStream = getProfessionNameFromId(curProfessionId);
+                            this.userDataManager.setProfession(professionUidFromStream, professionNameFromStream);
+                        }
                         break;
                     default:
                         // unhandle

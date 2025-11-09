@@ -62,6 +62,8 @@ class Sniffer {
         this.packetProcessor = null;
         this.isPaused = false; // Estado de pausa para el sniffer
         this.pauseStart = null; // Timestamp cuando se pausó
+        this.io = null; // Socket.io instance para emitir eventos
+        this.isConnected = false; // Status de conexão
     }
 
     setPaused(paused) {
@@ -219,6 +221,11 @@ class Sniffer {
                                             console.log('¡Servidor cambiado, estadísticas limpiadas!');
                                         }
                                         console.log('Servidor de juego detectado. Midiendo DPS...');
+                                        // Emitir evento de conexão estabelecida
+                                        if (!this.isConnected && this.io) {
+                                            this.isConnected = true;
+                                            this.io.emit('game-connected', { connected: true });
+                                        }
                                     }
                                 } catch (e) {}
                             } while (data1 && data1.length);
@@ -247,6 +254,11 @@ class Sniffer {
                                     console.log('¡Servidor cambiado, estadísticas limpiadas!');
                                 }
                                 console.log('Servidor de juego detectado por paquete de inicio de sesión. Midiendo DPS...');
+                                // Emitir evento de conexão estabelecida
+                                if (!this.isConnected && this.io) {
+                                    this.isConnected = true;
+                                    this.io.emit('game-connected', { connected: true });
+                                }
                             }
                         }
                     }

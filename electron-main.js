@@ -21,6 +21,7 @@ function logToFile(msg) {
 
 
 let mainWindow;
+let historyWindow = null;
 let serverProcess;
 let server_port = 8989; // Puerto inicial
 let isLocked = false; // Estado inicial del candado: desbloqueado
@@ -113,13 +114,20 @@ function promoteOverlayWindow(win, { focus = false } = {}) {
             frame: false,
             alwaysOnTop: true,
             resizable: false,
+            backgroundColor: '#00000000', // Transparente RGBA para evitar fundo preto
+            hasShadow: false, // Remover sombra que pode causar fundo preto
             webPreferences: {
                 preload: path.join(__dirname, 'preload.js'),
                 nodeIntegration: false,
                 contextIsolation: true,
+                backgroundThrottling: false, // Evitar throttling que causa re-rendering
             },
             icon: path.join(__dirname, 'icon.ico'),
         });
+
+        // Configurar estado inicial: cadeado ABERTO = permite eventos (pode arrastar)
+        mainWindow.setIgnoreMouseEvents(false);
+        // REMOVIDO: setMovable() - drag será manual via JavaScript
 
         promoteOverlayWindow(mainWindow);
 
@@ -253,10 +261,50 @@ function promoteOverlayWindow(win, { focus = false } = {}) {
         }
     });
 
+    // Manejar drag manual da janela (solução para overlays transparentes)
+    ipcMain.on('window-drag-move', (event, deltaX, deltaY) => {
+        const win = BrowserWindow.fromWebContents(event.sender);
+        if (win && !isLocked) {
+            // Obter posição atual da janela
+            const bounds = win.getBounds();
+            
+            // Calcular nova posição adicionando o delta
+            const newX = bounds.x + deltaX;
+            const newY = bounds.y + deltaY;
+            
+            // Mover janela para nova posição
+            win.setPosition(newX, newY, false); // false = sem animação para movimento suave
+        }
+    });
+
+    // Manejar el evento para minimizar la ventana (principal o histórico)
+    ipcMain.on('minimize-window', (event) => {
+        const win = BrowserWindow.fromWebContents(event.sender);
+        if (win) {
+            win.minimize();
+        }
+    });
+
     // Manejar el evento para redimensionar la ventana
+    let resizeTimeout;
+    let lastWidth = 0;
+    let lastHeight = 0;
     ipcMain.on('resize-window', (event, width, height) => {
         if (mainWindow) {
-            mainWindow.setSize(width, height);
+            // Pular se dimensões não mudaram (evita fundo preto)
+            if (width === lastWidth && height === lastHeight) {
+                return;
+            }
+            
+            lastWidth = width;
+            lastHeight = height;
+            
+            // Debounce agressivo para evitar fundo preto durante resize constante
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                // Usar setSize ao invés de setContentSize para evitar flash preto
+                mainWindow.setSize(width, height, false); // animate=false para evitar flash
+            }, 100); // 100ms de debounce
         }
     });
 
@@ -264,23 +312,58 @@ function promoteOverlayWindow(win, { focus = false } = {}) {
     ipcMain.on('toggle-lock-state', () => {
         if (mainWindow) {
             isLocked = !isLocked;
-            mainWindow.setMovable(!isLocked); // Hacer la ventana movible o no
+            
             if (isLocked) {
-                // Cuando se bloquea, ignorar eventos del ratón y reenviarlos al juego
+                // Quando BLOQUEADO (cadeado fechado): ignorar TODOS os eventos
+                // Cliques passam pelo overlay direto para o jogo
+                // Não pode arrastar, não pode clicar em nada
                 mainWindow.setIgnoreMouseEvents(true, { forward: true });
             } else {
-                // Cuando se desbloquea, procesar eventos del ratón normalmente
+                // Quando DESBLOQUEADO (cadeado aberto): processar eventos normalmente
+                // PODE arrastar pela área de drag, pode clicar nos botões
                 mainWindow.setIgnoreMouseEvents(false);
             }
             promoteOverlayWindow(mainWindow);
             mainWindow.webContents.send('lock-state-changed', isLocked); // Notificar al renderizador
-            console.log(`Candado: ${isLocked ? 'Cerrado' : 'Abierto'}`);
+            console.log(`Candado: ${isLocked ? 'Cerrado (TRAVADO)' : 'Abierto (PODE ARRASTAR)'}`);
         }
     });
+
+    
 
     // Enviar el estado inicial del candado al renderizador una vez que la ventana esté lista
     mainWindow.webContents.on('did-finish-load', () => {
         mainWindow.webContents.send('lock-state-changed', isLocked);
+    });
+
+    // Manejar el evento para abrir la ventana de histórico
+    ipcMain.on('open-history-window', () => {
+        if (historyWindow) {
+            historyWindow.focus();
+            return;
+        }
+
+        historyWindow = new BrowserWindow({
+            width: 1000,
+            height: 700,
+            transparent: false,
+            frame: false, // Remove menu bar e bordas
+            alwaysOnTop: true,
+            resizable: true,
+            webPreferences: {
+                preload: path.join(__dirname, 'preload.js'), // ADICIONAR preload para IPC funcionar
+                nodeIntegration: false,
+                contextIsolation: true,
+            },
+            icon: path.join(__dirname, 'icon.ico'),
+            title: 'Histórico de Lutas - BPSR Meter'
+        });
+
+        historyWindow.loadURL(`http://localhost:${server_port}/history.html`);
+
+        historyWindow.on('closed', () => {
+            historyWindow = null;
+        });
     });
 }
 

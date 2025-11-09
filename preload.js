@@ -3,11 +3,13 @@ const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('electronAPI', {
     setWindowMovable: (movable) => ipcRenderer.send('set-window-movable', movable),
     closeWindow: () => ipcRenderer.send('close-window'),
+    minimizeWindow: () => ipcRenderer.send('minimize-window'),
     resizeWindow: (width, height) => ipcRenderer.send('resize-window', width, height),
     toggleLockState: () => ipcRenderer.send('toggle-lock-state'),
     onLockStateChanged: (callback) => ipcRenderer.on('lock-state-changed', (event, isLocked) => callback(isLocked)),
-    allowMouseEvents: () => ipcRenderer.send('allow-mouse-events'),
-    ignoreMouseEvents: () => ipcRenderer.send('ignore-mouse-events'),
+    openHistoryWindow: () => ipcRenderer.send('open-history-window'),
+    // Função para drag manual (recebe deltaX e deltaY)
+    windowDragMove: (deltaX, deltaY) => ipcRenderer.send('window-drag-move', deltaX, deltaY),
 });
 
 window.addEventListener('DOMContentLoaded', () => {

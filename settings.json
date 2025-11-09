@@ -1,5 +1,7 @@
 {
     "autoClearOnServerChange": true,
     "autoClearOnTimeout": true,
-    "onlyRecordEliteDummy": false
+    "onlyRecordEliteDummy": false,
+    "autoResetOnFightEnd": false,
+    "enableFightHistory": true
 }

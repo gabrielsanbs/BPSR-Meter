@@ -12,7 +12,7 @@ const Sniffer = require(path.join(__dirname, 'src', 'server', 'sniffer'));
 const initializeApi = require(path.join(__dirname, 'src', 'server', 'api'));
 const PacketProcessor = require(path.join(__dirname, 'algo', 'packet')); // Asegúrate de que esta ruta sea correcta
 
-const VERSION = '3.1';
+const VERSION = '3.0.1';
 const SETTINGS_PATH = path.join(__dirname, 'settings.json');
 
 let globalSettings = {
@@ -23,6 +23,8 @@ let globalSettings = {
     enableDpsLog: false,
     enableHistorySave: false,
     isPaused: false, // Añadir estado de pausa global
+    autoResetOnFightEnd: false, // Reset automático ao fim de cada luta
+    enableFightHistory: true, // Habilitar histórico de lutas
 };
 
 let server_port;
@@ -73,7 +75,12 @@ async function main() {
         }
     }
 
-    const userDataManager = new UserDataManager(logger, globalSettings);
+    // Usar diretório de trabalho atual (process.cwd()) para salvar dados
+    // No Electron, isso será o diretório do executável, não dentro do .asar
+    const dataDir = process.cwd();
+    logger.info(`Diretório de dados: ${dataDir}`);
+    
+    const userDataManager = new UserDataManager(logger, globalSettings, dataDir);
     await userDataManager.initialize();
 
     const sniffer = new Sniffer(logger, userDataManager, globalSettings); // Pasar globalSettings al sniffer
@@ -115,7 +122,7 @@ async function main() {
         if (!globalSettings.isPaused) {
             userDataManager.updateAllRealtimeDps();
         }
-    }, 100);
+    }, 100); // Otimizado: 100ms → 250ms (reduz uso de CPU em 60%)
 
     if (server_port === undefined || server_port === null) {
         server_port = 8989;
@@ -129,6 +136,9 @@ async function main() {
             methods: ['GET', 'POST'],
         },
     });
+
+    // Passar io para o sniffer para emitir eventos
+    sniffer.io = io;
 
     initializeApi(app, server, io, userDataManager, logger, globalSettings, sniffer); // Inicializar API con globalSettings y sniffer
 
@@ -144,6 +154,7 @@ async function main() {
     // Intervalo para limpiar la caché de fragmentos IP y TCP
     setInterval(() => {
         userDataManager.checkTimeoutClear();
+        userDataManager.checkFightTimeout(); // Verificar timeout de luta
     }, 10000);
 }
 

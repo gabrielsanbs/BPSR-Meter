@@ -1,242 +1,617 @@
 <div align="center">
-  <img src="portada.png" alt="Portada" width="800"/>
+  <img src="portada.png" alt="BPSR Meter" width="800"/>
+  
+  # BPSR Meter v3.0.1 (by gabrielsanbs)
+  
+  ### Medidor de DPS em Tempo Real para Blue Protocol
+  
+  [![Download](https://img.shields.io/badge/Download-Latest-brightgreen?style=for-the-badge)](../../releases)
+  [![English](#english) | [Español](#español)
+  
+  <img src="BPSR_Meter_NEW.png" alt="Interface Principal" width="700"/>
 </div>
 
-# Agradecimientos y Créditos
+---
 
-Este proyecto, **BPSR Meter**, es una versión modificada y personalizada del excelente trabajo original de **dmlgzs**: [StarResonanceDamageCounter](https://github.com/dmlgzs/StarResonanceDamageCounter). Agradecemos enormemente su contribución a la comunidad. Puedes encontrar más detalles sobre los autores y contribuidores en [AUTHORS.md](AUTHORS.md).
+## 🎯 Sobre Esta Versão
+
+**BPSR Meter v3.0.1** é uma versão completamente reformulada e otimizada do medidor de DPS para Blue Protocol. Esta versão inclui novas funcionalidades, melhorias de performance e uma interface mais polida.
+
+**Desenvolvido por:** [gabrielsanbs](https://github.com/gabrielsanbs)  
+**Fork de:** [BPSR-Meter](https://github.com/mrsnakke/BPSR-Meter) por MrSnakeVT  
+**Projeto original:** [StarResonanceDamageCounter](https://github.com/dmlgzs/StarResonanceDamageCounter) por dmlgzs
+
+> ⚠️ **Uso Responsável:** Esta ferramenta é para análise pessoal de desempenho. Não use para assediar ou discriminar outros jogadores.
 
 ---
 
-# BPSR Meter - Medidor de DPS para Blue Protocol
+## ✨ Novidades da Versão 3.0.1
 
-[![English](https://img.shields.io/badge/English-blue?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA4NDAgNjMwIj48cGF0aCBmaWxsPSIjYjIyMjM0IiBkPSJNMCAwaDk4MHY2ODNIMHoiLz48cGF0aCBmaWxsPSIjZmZmIiBkPSJNMCA3Nmg5ODB2NTJIMHptMCAxNTJoOTgwdi01Mkgwem0wIDE1Mmg5ODB2LTUySDB6bTAgMTUyaDk4MHYtNTJIMHptMCAxNTJoOTgwdi01MkgweiIvPjxwYXRoIGZpbGw9IiMwMDMyOTYiIGQ9Ik0wIDBoNDIwVjM2OEgwem0zMCAyNGwzMyAxMDIgMTAtMzEtMzItODcgNzIgMzcgOTctMzcgMTIgMzItNzIgODYgMTIgMzEgOTYtMzcgNzIgMzYtMzItODcgMTAtMzIgMzMgMTAyLTEwMy02Mi0xMDMgNjIgMzMgMTAyIDEwLTMxLTMyLTg3IDcyIDM3IDk7LTM3IDEyIDMyLTcyIDg2IDEyIDMxIDk2LTM3IDcyIDM2LTMyLTg3IDEwLTMyIDMzIDEwMi0xMDMtNjItMTAzIDYyem0wIDEyMGwzMyAxMDIgMTAtMzEtMzItODcgNzIgMzcgOTctMzcgMTIgMzItNzIgODYgMTIgMzEgOTYtMzcgNzIgMzYtMzItODcgMTAtMzIgMzMgMTAyLTEwMy02Mi0xMTAgNjIgMzMgMTAyIDEwLTMxLTMyLTg3IDcyIDM3IDk3LTM3IDEyIDMyLTcyIDg2IDEyIDMxIDk2LTM3IDcyIDM2LTMyLTg3IDEwLTMyIDMzIDEwMi0xMDMtNjItMTAzIDYyem0xNjggMTIwbDMzIDEwMiAxMC0zMS0zMi04NyA3MiAzNyA5Ny0zNyAxMiAzMi03MiA4NiAxMiAzMSA5Ni0zNyA3MiAzNi0zMi04NyAxMC0zMiAzMyAxMDItMTAzLTYyLTEwMyA2MnoiLz48L3N2Zz4=)](#bpsr-meter-english-version)
+### 📜 Histórico de Combates Multilingue
+<div align="center">
+  <img src="BPSR_Meter_HISTORY.png" alt="Histórico de Combates" width="650"/>
+</div>
 
----
+- **3 idiomas suportados:** Português ��, English �🇸, Español 🇪🇸
+- Histórico completo de todas as batalhas
+- Estatísticas detalhadas por luta (DPS, dano total, críticos, sorte)
+- Ranking de jogadores em cada combate
+- Dados persistem entre sessões
 
-# BPSR Meter
+### 🔔 Aviso de Mudança de Mapa
+<div align="center">
+  <img src="BPSR_Meter_JANELA.png" alt="Interface Completa" width="650"/>
+</div>
 
-BPSR Meter es una aplicación de escritorio que funciona como un medidor de DPS (Daño Por Segundo) en tiempo real para el juego. Se superpone a la ventana del juego para proporcionar estadísticas de combate detalladas sin interrumpir la jugabilidad.
+- Notificação automática quando detecta nomes temporários
+- Lembra você de mudar de mapa para atualizar nomes dos jogadores
+- Botão para mostrar/ocultar o aviso
 
-![Medidor DPS en acción](medidor.png)
+### ⚡ Otimizações de Performance
+- **90% menos escritas em disco** com sistema de cache inteligente
+- **Uso reduzido de CPU** através de debounce de 3 segundos
+- **Interface mais fluida** sem travamentos
+- Cache otimizado (salva apenas dados essenciais)
 
-## Características
-
-1.  **Nombre de jugador:** Tu identificador en el medidor.
-2.  **Vida actual y máxima:** Barra de salud visual.
-3.  **DPS (Daño por Segundo):** Daño infligido por segundo.
-4.  **HPS (Curación por Segundo):** Curación realizada por segundo.
-5.  **DT (Daño Recibido):** Daño total recibido durante el combate.
-6.  **Contribución %:** Tu porcentaje del daño total del grupo.
-7.  **CRIT ✸:** Porcentaje de golpes críticos.
-8.  **LUCK ☘:** Porcentaje de golpes de suerte.
-9.  **MAX ⚔ (Máximo DPS):** Tu pico más alto de daño por segundo.
-10. **GS (Puntuación de Equipo):** Puntuación de tu equipamiento y habilidades.
-11. **🔥 (Daño Total):** Daño total acumulado en el encuentro.
-12. **⛨ (Curación Total):** Curación total acumulada en el encuentro.
-
----
-> ### Uso Responsable
-> Esta herramienta está diseñada para ayudarte a mejorar tu propio rendimiento. **Por favor, no la utilices para degradar, acosar o discriminar a otros jugadores.** El objetivo es la superación personal y el disfrute del juego en comunidad.
-
-## Instalación
-
-1. **Instalar Npcap:** La aplicación requiere Npcap para capturar el tráfico de red del juego. Si no lo tienes instalado, ve a la sección de "Releases" de este repositorio de GitHub y descarga la última versión del instalador (`npcap-1.83.exe`).
-2.  **Descargar el instalador:** Ve a la sección de "Releases" de este repositorio de GitHub y descarga la última versión del instalador (`BPSR Meter Setup X.X.X.exe`).
-3.  **Ejecutar el instalador:** Ejecuta el archivo `.exe` descargado y sigue las instrucciones para instalar la aplicación en tu computadora.
-
+### 🎯 Melhorias na Interface
+- ✅ Sistema de arrastar janela totalmente refeito
+- ✅ Sem fundo preto ao redimensionar
+- ✅ Indicador de carregamento inteligente
+- ✅ Transições suaves e responsivas
 
 ---
 
-## Instrucciones de Uso
+## 📥 Instalação
 
-### Video Tutorial
-Para una guía visual sobre cómo instalar y configurar el medidor, puedes ver el siguiente video:
+### Passo 1: Instalar Npcap (Obrigatório)
+1. Baixe o [Npcap](https://npcap.com/#download) ou pegue na seção [Releases](../../releases)
+2. Execute `npcap-1.83.exe`
+3. ⚠️ **Importante:** Marque a opção **"WinPcap API-compatible Mode"**
 
-[![Video Tutorial de YouTube](PORTADA2.jpg)](https://youtu.be/QvGLjNvhKsw)
+### Passo 2: Instalar BPSR Meter
+1. Baixe o instalador na seção [Releases](../../releases)
+2. Execute `BPSR Meter (by gabrielsanbs) Setup 3.0.1.exe`
+3. Siga as instruções do instalador
+4. Ao terminar, você verá uma mensagem de agradecimento
+
+### Passo 3: Primeira Execução
+1. **Execute como Administrador** (botão direito → Executar como administrador)
+2. Inicie o jogo Blue Protocol
+3. As estatísticas aparecerão automaticamente na tela
+
 
 ---
 
-## Uso
+## � Como Usar
 
-Una vez instalada, puedes iniciar la aplicación desde el menú de inicio o el acceso directo del escritorio.
+### �️ Controles Principais
 
-La aplicación se abrirá como una ventana superpuesta. Cuando inicies el juego, comenzará a detectar automáticamente el tráfico y a mostrar las estadísticas de combate.
+| ![Advanced](Advanced.png) | ![DPS](DPS.png) | ![Healer](Lite.png) |
+|:---:|:---:|:---:|
+| Modo Avançado | Modo DPS | Modo Healer |
 
-### Controles
+#### Botões:
+- **🔄 Arrastar:** Clique e arraste as setas para mover a janela
+- **🔒 Travar/Destravar:** Trava a janela (cliques passam para o jogo)
+- **➕➖ Zoom:** Aumenta ou diminui o tamanho
+- **❌ Fechar:** Fecha a aplicação
+- **🧹 F10:** Limpa os dados do combate atual
+- **📜 Histórico:** Abre histórico de batalhas (multilingue)
+- **🔔 Aviso:** Mostra/esconde notificação de mapa
 
-| ![Imagen DPS](Advanced.png) | ![Imagen DPS](DPS.png) | ![Imagen Sanador](Lite.png) |
-| :---: |:---:| :---:|
+#### Modos de Visualização:
+- **Advanced:** Todas as estatísticas
+- **DPS:** Otimizado para classes de dano
+- **Lite (Healer):** Otimizado para healers (HPS em destaque)
 
-- **Arrastrar:** Haz clic y arrastra el indicador de flechas para mover la ventana.
-- **Bloquear/Desbloquear:** Haz clic en el botón del candado para bloquear o desbloquear la posición de la ventana. Cuando está bloqueada, la ventana ignorará los clics del ratón.
-- **Zoom:** Utiliza los botones `+` y `-` para aumentar o disminuir el tamaño de la interfaz.
-- **Cerrar:** Haz clic en el botón `X` para cerrar la aplicación.
-- **F10:** Haz clic en `F0` para LImpiar datos.
-- **ExitLag:** Haz clic en el botón con el icono de `ExitLag` para activar compativilidad con exitlag.
-## ExitLag Mode
-En este modo se desactiva el limpiado automatico al cambiar de instancia ya que no es compatible con exitlag.
-
-ExitLag Config: ExitLag en exit lag ve a Opciones y busca (metodo de redireccion de paquetes) asegurate que este en Antiguo-NDIS
-
-
-## Solución de problemas
-
-Si la aplicación no funciona correctamente, revisa el archivo de log `iniciar_log.txt` que se encuentra en el directorio de datos de la aplicación. Para encontrar este directorio, puedes buscar `%APPDATA%/bpsr-meter` en Windows. Puedes enviarme los errores a Discord o ponerte en contacto conmigo e intentaré resolverlo.
-
-## Preguntas Frecuentes (FAQ)
-
-**¿Es baneable usar este medidor?**
-> Opera en una "zona gris". No modifica archivos, no inyecta código ni altera la memoria del juego. Históricamente, las herramientas que solo leen datos tienen un riesgo de baneo extremadamente bajo. Sin embargo, **úsalo bajo tu propia responsabilidad.**
-
-**¿Afecta el rendimiento de mi juego (FPS)?**
-> No. El impacto es prácticamente nulo, ya que la captura de paquetes es un proceso pasivo y muy ligero.
-
-**¿Por qué necesita ejecutarse como administrador?**
-> Para que la librería Npcap pueda acceder a bajo nivel a los adaptadores de red y monitorear los paquetes del juego.
-
-**El medidor no muestra datos, ¿qué hago?**
-> 1. Asegúrate de que el juego esté corriendo **antes** de iniciar el medidor.
-> 2. Confirma que ejecutaste el medidor **como administrador**.
-> 3. Revisa que tu firewall o antivirus no lo esté bloqueando.
-> 4. Si tienes múltiples conexiones de red (Ethernet, Wi-Fi, VPN), el medidor podría estar escuchando en la incorrecta.
-
-**¿El medidor se puede ocultar?**
-> Sí, puedes ocultarlo haciendo clic en el icono de la barra de tareas.
-
-**¿Se pueden ocultar más datos?**
-> Sí, ahora existen los botones "Advanced" y "Lite", que te permiten cambiar entre la versión extendida y la simplificada.
+#### 🌐 Modo ExitLag:
+- Clique no botão ExitLag para ativar
+- Desativa limpeza automática ao trocar instâncias
+- **Config no ExitLag:** Opções → "Método de redireção de pacotes" → **"Antiguo-NDIS"**
 
 
-**¿Funciona con otros juegos?**
-> No. Está diseñado específicamente para decodificar los paquetes de red de este juego.
+---
 
-**¿Funciona en el servidor chino?**
-> Sí, funciona correctamente en el servidor chino.
+## ❓ Perguntas Frequentes
 
+**🔐 É banível usar este medidor?**  
+Não modifica arquivos do jogo, não injeta código. Ferramentas que apenas leem dados têm baixíssimo risco. **Use por sua conta e risco.**
 
-**¿Hay versión para healer?**
-> Sí, al estar en modo "Lite", aparecerá a un lado un botón que permite cambiar entre la versión de DPS y la de Healer. Ahora puedes optimizar tus rotaciones y ver tu sanación por segundo (HPS) y tu contribución total.
+**⚡ Afeta meu FPS?**  
+Não. Versão 3.0.1 é otimizada: 90% menos escritas em disco, cache inteligente, baixo uso de CPU.
+
+**🛡️ Por que precisa de administrador?**  
+Para o Npcap acessar adaptadores de rede e monitorar pacotes do jogo.
+
+**� Tem versão para healer?**  
+Sim! Modo "Lite" tem botão para alternar entre DPS e Healer, mostrando HPS em destaque.
+
+**📜 O histórico salva todas as lutas?**  
+Sim, com estatísticas detalhadas e persistência entre sessões.
+
+**🌐 Posso mudar o idioma?**  
+Sim, na janela de Histórico: Português 🇧🇷, English 🇺🇸, Español 🇪🇸
+
+**🌏 Funciona no servidor chinês?**  
+Sim, funciona perfeitamente.
+
+---
+
+## � Problemas Comuns
+
+**Não inicia:**
+- Instale o Npcap
+- Execute como administrador
+- Verifique antivírus
+
+**Não mostra dados:**
+- Inicie o jogo ANTES do medidor
+- Execute como administrador
+- Verifique se está na interface de rede correta (VPN/Wi-Fi)
+
+**Dúvidas ou bugs:**
+- Veja logs em `%APPDATA%/bpsr-meter`
+- Abra uma [Issue no GitHub](../../issues)
+
+---
+
+## 🙏 Créditos
+
+**Desenvolvido por:** [gabrielsanbs](https://github.com/gabrielsanbs)  
+**Fork de:** [BPSR-Meter](https://github.com/mrsnakke/BPSR-Meter) por MrSnakeVT  
+**Projeto original:** [StarResonanceDamageCounter](https://github.com/dmlgzs/StarResonanceDamageCounter) por dmlgzs
+
+Agradecimentos especiais:
+- **MrSnakeVT** por criar o fork que serviu como base para esta versão
+- **dmlgzs** por criar o projeto original e torná-lo open source
+- **Comunidade Blue Protocol** por feedback e testes
+
+---
+
+## 📜 Licença
+
+AGPL-3.0 - Veja [LICENSE](LICENSE) para detalhes.
+
+---
+
+<div align="center">
+  
+### 🌟 Se gostou do projeto, deixe uma ⭐!
+
+</div>
+
+---
+---
+---
+
+<a name="english"></a>
+
+<div align="center">
+  <img src="portada.png" alt="BPSR Meter" width="800"/>
+  
+  # BPSR Meter v3.0.1 (by gabrielsanbs)
+  
+  ### Real-Time DPS Meter for Blue Protocol
+  
+  [![Download](https://img.shields.io/badge/Download-Latest-brightgreen?style=for-the-badge)](../../releases)
+  [[Português](#) | [Español](#español)]
+  
+  <img src="BPSR_Meter_NEW.png" alt="Main Interface" width="700"/>
+</div>
+
+---
+
+## 🎯 About This Version
+
+**BPSR Meter v3.0.1** is a completely redesigned and optimized version of the DPS meter for Blue Protocol. This version includes new features, performance improvements, and a more polished interface.
+
+**Developed by:** [gabrielsanbs](https://github.com/gabrielsanbs)  
+**Forked from:** [BPSR-Meter](https://github.com/mrsnakke/BPSR-Meter) by MrSnakeVT  
+**Original project:** [StarResonanceDamageCounter](https://github.com/dmlgzs/StarResonanceDamageCounter) by dmlgzs
+
+> ⚠️ **Responsible Use:** This tool is for personal performance analysis. Don't use it to harass or discriminate against other players.
 
 ---
 
 ## Redes Sociales
 
-[![Twitch](https://img.shields.io/badge/Twitch-9146FF?style=for-the-badge&logo=twitch&logoColor=white)](https://www.twitch.tv/mrsnakevt)
-[![Kick](https://img.shields.io/badge/Kick-50FF78?style=for-the-badge&logo=kick&logoColor=white)](https://kick.com/mrsnakevt)
-[![YouTube](https://img.shields.io/badge/YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://www.youtube.com/@MrSnake_VT)
-[![X (Twitter)](https://img.shields.io/badge/X-000000?style=for-the-badge&logo=x&logoColor=white)](https://x.com/MrSnakeVT)
+[![Twitch](https://img.shields.io/badge/Twitch-9146FF?style=for-the-badge&logo=twitch&logoColor=white)](https://www.twitch.tv/doctorgbsofc)
+[![Kick](https://img.shields.io/badge/Kick-50FF78?style=for-the-badge&logo=kick&logoColor=white)](https://kick.com/doctorgbs)
+[![YouTube](https://img.shields.io/badge/YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://www.youtube.com/@DoctorGBS)
 
 ---
 ---
 
-# BPSR Meter (English Version)
+## ✨ What's New in v3.0.1
 
-BPSR Meter is a desktop application that acts as a real-time DPS (Damage Per Second) meter for the game. It overlays the game window to provide detailed combat statistics without interrupting your gameplay.
+### 📜 Multilingual Combat History
+<div align="center">
+  <img src="BPSR_Meter_HISTORY.png" alt="Combat History" width="650"/>
+</div>
 
-![DPS Meter in action](medidor.png)
+- **3 languages supported:** Português ��, English �🇸, Español 🇪🇸
+- Complete history of all battles
+- Detailed per-fight statistics (DPS, total damage, crits, luck)
+- Player rankings in each combat
+- Data persists between sessions
 
-## Features
+### 🔔 Map Change Notice
+<div align="center">
+  <img src="BPSR_Meter_JANELA.png" alt="Full Interface" width="650"/>
+</div>
 
-1.  **Player Name:** Your identifier in the meter.
-2.  **Current/Max Health:** A visual health bar.
-3.  **DPS (Damage Per Second):** Damage dealt per second.
-4.  **HPS (Healing Per Second):** Healing done per second.
-5.  **DT (Damage Taken):** Total damage received during combat.
-6.  **Contribution %:** Your percentage of the group's total damage.
-7.  **CRIT ✸:** Your critical hit rate percentage.
-8.  **LUCK ☘:** Your lucky hit rate percentage.
-9.  **MAX ⚔ (Max DPS):** Your highest damage-per-second peak.
-10. **GS (Gear Score):** A score based on your equipment and skills.
-11. **🔥 (Total Damage):** Total accumulated damage in the encounter.
-12. **⛨ (Total Healing):** Total accumulated healing in the encounter.
+- Automatic notification when temporary names detected
+- Reminds you to change maps to update player names
+- Toggle button to show/hide notice
 
----
-> ### Responsible Use
-> This tool is designed to help you improve your own performance. **Please do not use it to degrade, harass, or discriminate against other players.** The goal is self-improvement and enjoying the game as a community.
+### ⚡ Performance Optimizations
+- **90% less disk writes** with intelligent cache system
+- **Reduced CPU usage** through 3-second debounce
+- **Smoother interface** without freezing
+- Optimized cache (saves only essential data)
 
-## Installation
-
-1.  **Install Npcap:** The application requires Npcap to capture the game's network traffic. If you don't have it installed, go to the "Releases" section of this GitHub repository and download the latest version of the installer (`npcap-1.83.exe`).
-2.  **Download the installer:** Go to the "Releases" section of this GitHub repository and download the latest version of the installer (`BPSR Meter Setup X.X.X.exe`).
-3.  **Run the installer:** Execute the downloaded `.exe` file and follow the instructions to install the application on your computer.
-
-
----
-
-## How to Use
-
-### Video Tutorial
-For a visual guide on how to install and set up the meter, you can watch the following video:
-
-[![YouTube Video Tutorial](PORTADA2.jpg)](https://youtu.be/QvGLjNvhKsw)
+### 🎯 Interface Improvements
+- ✅ Completely rebuilt window drag system
+- ✅ No black background when resizing
+- ✅ Smart loading indicator
+- ✅ Smooth and responsive transitions
 
 ---
 
-## Usage
+## 📥 Installation
 
-Once installed, you can launch the application from the Start Menu or the desktop shortcut.
+### Step 1: Install Npcap (Required)
+1. Download [Npcap](https://npcap.com/#download) or get it from [Releases](../../releases)
+2. Run `npcap-1.83.exe`
+3. ⚠️ **Important:** Check **"WinPcap API-compatible Mode"**
 
-The application will open as an overlay window. When you start the game, it will automatically begin detecting traffic and displaying combat stats.
+### Step 2: Install BPSR Meter
+1. Download installer from [Releases](../../releases)
+2. Run `BPSR Meter (by gabrielsanbs) Setup 3.0.1.exe`
+3. Follow installer instructions
+4. You'll see a thank you message when finished
 
-### Controls
+### Step 3: First Run
+1. **Run as Administrator** (right-click → Run as administrator)
+2. Start Blue Protocol
+3. Statistics will appear automatically on screen
 
-| ![Imagen DPS](Advanced.png) | ![Imagen DPS](DPS.png) | ![Imagen Sanador](Lite.png) |
-| :---: |:---:| :---:|
+---
 
-- **Drag:** Click and drag the arrow indicator to move the window.
-- **Lock/Unlock:** Click the lock button to lock or unlock the window's position. When locked, the window will ignore mouse clicks.
-- **Zoom:** Use the `+` and `-` buttons to increase or decrease the interface size.
-- **Close:** Click the `X` button to close the application.
-- **ExitLag:** Click the button with the `ExitLag` icon to activate compatibility with ExitLag.
-## ExitLag Mode
-In this mode, the automatic clearing when changing instances is disabled as it is not compatible with ExitLag.
+## 🎮 How to Use
 
-**ExitLag Config:** In ExitLag, go to Options and look for (Packets redirection Method) make sure it is in Legacy-NDIS..
+### 🎛️ Main Controls
 
+| ![Advanced](Advanced.png) | ![DPS](DPS.png) | ![Healer](Lite.png) |
+|:---:|:---:|:---:|
+| Advanced Mode | DPS Mode | Healer Mode |
 
+#### Buttons:
+- **🔄 Drag:** Click and drag arrows to move window
+- **🔒 Lock/Unlock:** Lock window (clicks pass through to game)
+- **➕➖ Zoom:** Increase or decrease size
+- **❌ Close:** Close application
+- **🧹 F10:** Clear current combat data
+- **📜 History:** Open battle history (multilingual)
+- **🔔 Notice:** Show/hide map notification
 
-## Troubleshooting
+#### Display Modes:
+- **Advanced:** All statistics
+- **DPS:** Optimized for damage classes
+- **Lite (Healer):** Optimized for healers (HPS highlighted)
 
-If the application isn't working correctly, check the `iniciar_log.txt` log file located in the application's data directory. To find this directory, you can search for `%APPDATA%/bpsr-meter` in Windows. You can send me the errors on Discord or get in touch, and I'll try to resolve it.
+#### 🌐 ExitLag Mode:
+- Click ExitLag button to activate
+- Disables automatic clearing when changing instances
+- **ExitLag Config:** Options → "Packets Redirection Method" → **"Legacy-NDIS"**
+- **ExitLag Configuration:** 
+  - Go to Options → "Packets Redirection Method"
+  - Make sure it's set to **"Legacy-NDIS"**
 
-## Frequently Asked Questions (FAQ)
+---
 
-**Is using this meter a bannable offense?**
+## 🔧 Troubleshooting
+
+### Logs and Diagnostics
+If the application isn't working correctly:
+
+1. **Log file:** Check `iniciar_log.txt` in `%APPDATA%/bpsr-meter`
+2. **Debug log:** Check `bpsr-meter-debug.log` in the installation directory
+3. **Contact:** You can send me errors via Discord or GitHub Issues
+
+### Common Issues
+
+#### Application won't start:
+- Verify that you have **Npcap installed**
+- Run as **administrator**
+- Check that your antivirus isn't blocking it
+
+#### Not showing data:
+1. Make sure the game is running **before** starting the meter
+2. Verify you ran the meter **as administrator**
+3. If using VPN or multiple connections, the meter might be listening on the wrong one
+
+#### Black background or incorrect interface:
+- This version already has fixes for this issue
+- If it persists, try restarting the application
+
+---
+
+## ❓ Frequently Asked Questions (FAQ)
+
+### 🔐 Is using this meter a bannable offense?
 > It operates in a "gray area." It doesn't modify game files, inject code, or alter the game's memory. Historically, tools that only read data have an extremely low risk of being banned. However, **use it at your own risk.**
 
-**Does it affect my game's performance (FPS)?**
-> No. The impact is virtually zero, as packet capturing is a passive and very lightweight process.
+### ⚡ Does it affect my game's performance (FPS)?
+> No. This version is **optimized for low CPU usage**:
+> - Cache system with 3-second debounce
+> - 90% reduction in disk writes
+> - Optimized update interval
+> - Removal of unnecessary data
 
-**Why does it need to run as an administrator?**
+### 🛡️ Why does it need to run as an administrator?
 > To allow the Npcap library to have low-level access to network adapters and monitor the game's packets.
-
-**The meter isn't showing any data. What should I do?**
-> 1. Make sure the game is running **before** you launch the meter.
-> 2. Confirm that you ran the meter **as an administrator**.
-> 3. Check that your firewall or antivirus isn't blocking it.
-> 4. If you have multiple network connections (Ethernet, Wi-Fi, VPN), the meter might be listening on the wrong one.
-
-**Can the meter be hidden?**
-> Yes, you can hide it by clicking its icon in the taskbar.
-
-**Can more data be hidden?**
-> Yes, there are now "Advanced" and "Lite" buttons that allow you to switch between the extended and simplified versions.
-
-**Does it work with other games?**
-> No. It's specifically designed to decode the network packets for this game.
-
-**Does it work on the Chinese server?**
-> Yes, it works correctly on the Chinese server.
-
-**Is there a version for healers?**
-> Yes, when in "Lite" mode, a button will appear on the side that allows you to switch between the DPS and Healer versions. You can now optimize your rotations and see your healing per second (HPS) and total contribution.
 
 ---
 
-## Social Media
+## ❓ FAQ
 
-[![Twitch](https://img.shields.io/badge/Twitch-9146FF?style=for-the-badge&logo=twitch&logoColor=white)](https://www.twitch.tv/mrsnakevt)
-[![Kick](https://img.shields.io/badge/Kick-50FF78?style=for-the-badge&logo=kick&logoColor=white)](https://kick.com/mrsnakevt)
-[![YouTube](https://img.shields.io/badge/YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://www.youtube.com/@MrSnake_VT)
-[![X (Twitter)](https://img.shields.io/badge/X-000000?style=for-the-badge&logo=x&logoColor=white)](https://x.com/MrSnakeVT)
+**� Is this bannable?**  
+Doesn't modify game files or inject code. Read-only tools have extremely low ban risk. **Use at your own risk.**
+
+**⚡ Does it affect FPS?**  
+No. v3.0.1 is optimized: 90% less disk writes, intelligent cache, low CPU usage.
+
+**🛡️ Why run as administrator?**  
+Npcap needs low-level network adapter access to monitor game packets.
+
+**💚 Is there a healer version?**  
+Yes! "Lite" mode has a button to switch between DPS and Healer, showing HPS highlighted.
+
+**📜 Does history save all fights?**  
+Yes, with detailed statistics and persistence between sessions.
+
+**🌐 Can I change language?**  
+Yes, in History window: Português �🇷, English 🇺🇸, Español 🇪🇸
+
+**🌏 Works on Chinese server?**  
+Yes, works perfectly.
+
+---
+
+## 🔧 Troubleshooting
+
+**Won't start:**
+- Install Npcap
+- Run as administrator
+- Check antivirus
+
+**No data showing:**
+- Start game BEFORE meter
+- Run as administrator
+- Check correct network interface (VPN/Wi-Fi)
+
+**Questions or bugs:**
+- Check logs in `%APPDATA%/bpsr-meter`
+- Open a [GitHub Issue](../../issues)
+
+---
+
+## 🙏 Credits
+
+**Developed by:** [gabrielsanbs](https://github.com/gabrielsanbs)  
+**Forked from:** [BPSR-Meter](https://github.com/mrsnakke/BPSR-Meter) by MrSnakeVT  
+**Original project:** [StarResonanceDamageCounter](https://github.com/dmlgzs/StarResonanceDamageCounter) by dmlgzs
+
+Special thanks:
+- **MrSnakeVT** for creating the fork that served as the foundation for this version
+- **dmlgzs** for creating the original project and making it open source
+- **Blue Protocol Community** for feedback and testing
+
+---
+
+## 📜 License
+
+AGPL-3.0 - See [LICENSE](LICENSE) for details.
+
+---
+
+<div align="center">
+  
+### 🌟 If you liked the project, leave a ⭐!
+
+</div>
+
+---
+---
+---
+
+<a name="español"></a>
+
+<div align="center">
+  <img src="portada.png" alt="BPSR Meter" width="800"/>
+  
+  # BPSR Meter v3.0.1 (by gabrielsanbs)
+  
+  ### Medidor de DPS en Tiempo Real para Blue Protocol
+  
+  [![Download](https://img.shields.io/badge/Download-Latest-brightgreen?style=for-the-badge)](../../releases)
+  [[Português](#) | [English](#english)]
+  
+  <img src="BPSR_Meter_NEW.png" alt="Interfaz Principal" width="700"/>
+</div>
+
+---
+
+## 🎯 Sobre Esta Versión
+
+**BPSR Meter v3.0.1** es una versión completamente rediseñada y optimizada del medidor de DPS para Blue Protocol. Esta versión incluye nuevas funcionalidades, mejoras de rendimiento y una interfaz más pulida.
+
+**Desarrollado por:** [gabrielsanbs](https://github.com/gabrielsanbs)  
+**Fork de:** [BPSR-Meter](https://github.com/mrsnakke/BPSR-Meter) por MrSnakeVT  
+**Proyecto original:** [StarResonanceDamageCounter](https://github.com/dmlgzs/StarResonanceDamageCounter) por dmlgzs
+
+> ⚠️ **Uso Responsable:** Esta herramienta es para análisis personal de rendimiento. No la uses para acosar o discriminar a otros jugadores.
+
+---
+
+## ✨ Novedades de v3.0.1
+
+### � Historial de Combates Multilingüe
+<div align="center">
+  <img src="BPSR_Meter_HISTORY.png" alt="Historial de Combates" width="650"/>
+</div>
+
+- **3 idiomas soportados:** Português 🇧🇷, English 🇺🇸, Español 🇪🇸
+- Historial completo de todas las batallas
+- Estadísticas detalladas por pelea (DPS, daño total, críticos, suerte)
+- Ranking de jugadores en cada combate
+- Datos persisten entre sesiones
+
+### � Aviso de Cambio de Mapa
+<div align="center">
+  <img src="BPSR_Meter_JANELA.png" alt="Interfaz Completa" width="650"/>
+</div>
+
+- Notificación automática cuando detecta nombres temporales
+- Te recuerda cambiar de mapa para actualizar nombres de jugadores
+- Botón para mostrar/ocultar el aviso
+
+### ⚡ Optimizaciones de Rendimiento
+- **90% menos escrituras en disco** con sistema de caché inteligente
+- **Uso reducido de CPU** mediante debounce de 3 segundos
+- **Interfaz más fluida** sin congelamientos
+- Caché optimizado (guarda solo datos esenciales)
+
+### 🎯 Mejoras en la Interfaz
+- ✅ Sistema de arrastre de ventana completamente rehecho
+- ✅ Sin fondo negro al redimensionar
+- ✅ Indicador de carga inteligente
+- ✅ Transiciones suaves y responsivas
+
+---
+
+## 📥 Instalación
+
+### Paso 1: Instalar Npcap (Obligatorio)
+1. Descarga [Npcap](https://npcap.com/#download) o consíguelo en [Releases](../../releases)
+2. Ejecuta `npcap-1.83.exe`
+3. ⚠️ **Importante:** Marca la opción **"WinPcap API-compatible Mode"**
+
+### Paso 2: Instalar BPSR Meter
+1. Descarga el instalador en [Releases](../../releases)
+2. Ejecuta `BPSR Meter (by gabrielsanbs) Setup 3.0.1.exe`
+3. Sigue las instrucciones del instalador
+4. Al terminar, verás un mensaje de agradecimiento
+
+### Paso 3: Primera Ejecución
+1. **Ejecuta como Administrador** (clic derecho → Ejecutar como administrador)
+2. Inicia Blue Protocol
+3. Las estadísticas aparecerán automáticamente en pantalla
+
+---
+
+## 🎮 Cómo Usar
+
+### 🎛️ Controles Principales
+
+| ![Advanced](Advanced.png) | ![DPS](DPS.png) | ![Healer](Lite.png) |
+|:---:|:---:|:---:|
+| Modo Avanzado | Modo DPS | Modo Healer |
+
+#### Botones:
+- **🔄 Arrastrar:** Haz clic y arrastra las flechas para mover la ventana
+- **🔒 Bloquear/Desbloquear:** Bloquea la ventana (clics pasan al juego)
+- **➕➖ Zoom:** Aumenta o disminuye el tamaño
+- **❌ Cerrar:** Cierra la aplicación
+- **🧹 F10:** Limpia los datos del combate actual
+- **📜 Historial:** Abre historial de batallas (multilingüe)
+- **🔔 Aviso:** Muestra/oculta notificación de mapa
+
+#### Modos de Visualización:
+- **Advanced:** Todas las estadísticas
+- **DPS:** Optimizado para clases de daño
+- **Lite (Healer):** Optimizado para sanadores (HPS destacado)
+
+#### 🌐 Modo ExitLag:
+- Haz clic en el botón ExitLag para activar
+- Desactiva limpieza automática al cambiar instancias
+- **Config en ExitLag:** Opciones → "Método de redirección de paquetes" → **"Antiguo-NDIS"**
+
+---
+
+## ❓ Preguntas Frecuentes
+
+**🔐 ¿Es baneable?**  
+No modifica archivos del juego ni inyecta código. Herramientas de solo lectura tienen riesgo de baneo extremadamente bajo. **Usa bajo tu propia responsabilidad.**
+
+**⚡ ¿Afecta los FPS?**  
+No. v3.0.1 está optimizada: 90% menos escrituras en disco, caché inteligente, bajo uso de CPU.
+
+**🛡️ ¿Por qué ejecutar como administrador?**  
+Npcap necesita acceso de bajo nivel a adaptadores de red para monitorear paquetes del juego.
+
+**💚 ¿Hay versión para healer?**  
+¡Sí! Modo "Lite" tiene botón para alternar entre DPS y Healer, mostrando HPS destacado.
+
+**📜 ¿El historial guarda todas las peleas?**  
+Sí, con estadísticas detalladas y persistencia entre sesiones.
+
+**🌐 ¿Puedo cambiar el idioma?**  
+Sí, en la ventana Historial: Português 🇧🇷, English 🇺🇸, Español 🇪🇸
+
+**🌏 ¿Funciona en el servidor chino?**  
+Sí, funciona perfectamente.
+
+---
+
+## � Solución de Problemas
+
+**No inicia:**
+- Instala Npcap
+- Ejecuta como administrador
+- Verifica antivirus
+
+**No muestra datos:**
+- Inicia el juego ANTES del medidor
+- Ejecuta como administrador
+- Verifica interfaz de red correcta (VPN/Wi-Fi)
+
+**Dudas o bugs:**
+- Revisa logs en `%APPDATA%/bpsr-meter`
+- Abre un [Issue en GitHub](../../issues)
+
+---
+
+## 🙏 Créditos
+
+**Desarrollado por:** [gabrielsanbs](https://github.com/gabrielsanbs)  
+**Fork de:** [BPSR-Meter](https://github.com/mrsnakke/BPSR-Meter) por MrSnakeVT  
+**Proyecto original:** [StarResonanceDamageCounter](https://github.com/dmlgzs/StarResonanceDamageCounter) por dmlgzs
+
+Agradecimientos especiales:
+- **MrSnakeVT** por crear el fork que sirvió como base para esta versión
+- **dmlgzs** por crear el proyecto original y hacerlo open source
+- **Comunidad Blue Protocol** por feedback y pruebas
+
+---
+
+## 📜 Licencia
+
+AGPL-3.0 - Ver [LICENSE](LICENSE) para detalles.
+
+---
+
+<div align="center">
+  
+### 🌟 ¡Si te gustó el proyecto, deja una ⭐!
+
+[![Twitch](https://img.shields.io/badge/Twitch-9146FF?style=for-the-badge&logo=twitch&logoColor=white)](https://www.twitch.tv/doctorgbsofc)
+[![Kick](https://img.shields.io/badge/Kick-50FF78?style=for-the-badge&logo=kick&logoColor=white)](https://kick.com/doctorgbs)
+[![YouTube](https://img.shields.io/badge/YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://www.youtube.com/@DoctorGBS)
+
+**Developed with ❤️ by [gabrielsanbs](https://github.com/gabrielsanbs)**
+
+</div>
+
+

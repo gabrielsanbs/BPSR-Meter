@@ -40,8 +40,8 @@ function initializeApi(app, server, io, userDataManager, logger, globalSettings,
         res.json(data);
     });
 
-    app.get('/api/clear', (req, res) => {
-        userDataManager.clearAll(globalSettings); // Pasar globalSettings
+    app.get('/api/clear', async (req, res) => {
+        await userDataManager.clearAll(globalSettings); // Pasar globalSettings
         console.log('¡Estadísticas limpiadas!');
         res.json({
             code: 0,
@@ -312,6 +312,64 @@ function initializeApi(app, server, io, userDataManager, logger, globalSettings,
             logs = JSON.parse(fs.readFileSync(LOGS_DPS_PATH, 'utf8'));
         }
         res.json(logs);
+    });
+
+    // Endpoints para histórico de lutas
+    app.get('/api/fight-history', (req, res) => {
+        const history = userDataManager.getFightHistory();
+        res.json({
+            code: 0,
+            data: history
+        });
+    });
+
+    app.get('/api/fight-history/:id', (req, res) => {
+        const fightId = parseInt(req.params.id);
+        const history = userDataManager.getFightHistory();
+        const fight = history.find(f => f.id === fightId);
+        
+        if (!fight) {
+            return res.status(404).json({
+                code: 1,
+                msg: 'Fight not found'
+            });
+        }
+        
+        res.json({
+            code: 0,
+            data: fight
+        });
+    });
+
+    app.post('/api/fight-history/clear', async (req, res) => {
+        await userDataManager.clearFightHistory();
+        res.json({
+            code: 0,
+            msg: 'Histórico de lutas limpo com sucesso!'
+        });
+    });
+
+    app.post('/api/fight/end', async (req, res) => {
+        await userDataManager.endFight();
+        res.json({
+            code: 0,
+            msg: 'Luta finalizada e salva no histórico!'
+        });
+    });
+
+    // Endpoint para verificar se uma luta terminou
+    app.get('/api/fight-status', (req, res) => {
+        const status = {
+            fightActive: userDataManager.fightActive,
+            fightEnded: userDataManager.fightEnded
+        };
+        
+        // Resetar flag após verificar
+        if (userDataManager.fightEnded) {
+            userDataManager.fightEnded = false;
+        }
+        
+        res.json(status);
     });
 
     io.on('connection', (socket) => {

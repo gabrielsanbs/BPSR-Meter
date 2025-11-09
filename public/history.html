@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Histórico de Lutas - BPSR Meter</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            --bg-primary: #1a1d29;
+            --bg-secondary: #252837;
+            --text-primary: #e0e0e0;
+            --text-secondary: #aaa;
+            --accent-blue: #4fc3f7;
+            --accent-green: #28a745;
+            --accent-red: #dc3545;
+            --border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .title-bar {
+            background: #1a1d29;
+            padding: 8px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            -webkit-app-region: drag;
+            user-select: none;
+        }
+
+        .title-bar-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .title-bar-close {
+            -webkit-app-region: no-drag;
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            font-size: 1.2rem;
+            cursor: pointer;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        .title-bar-close:hover {
+            background: var(--accent-red);
+        }
+
+        .header {
+            background: var(--bg-secondary);
+            padding: 15px 20px;
+            border-bottom: 2px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-primary);
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-1px);
+        }
+
+        .btn-danger {
+            background: rgba(220, 53, 69, 0.2);
+            border-color: var(--accent-red);
+        }
+
+        .btn-danger:hover {
+            background: rgba(220, 53, 69, 0.3);
+        }
+
+        .btn-back {
+            background: rgba(79, 195, 247, 0.2);
+            border-color: var(--accent-blue);
+        }
+
+        .btn-back:hover {
+            background: rgba(79, 195, 247, 0.3);
+        }
+
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .fight-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .fight-item {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .fight-item:hover {
+            background: rgba(79, 195, 247, 0.1);
+            border-color: var(--accent-blue);
+            transform: translateX(5px);
+        }
+
+        .fight-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .fight-number {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--accent-blue);
+        }
+
+        .fight-time {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .fight-stats-row {
+            display: flex;
+            gap: 20px;
+            font-size: 0.9rem;
+        }
+
+        .fight-stat {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .fight-stat i {
+            color: var(--accent-blue);
+        }
+
+        .fight-details-header {
+            background: var(--bg-secondary);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .fight-details-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: var(--accent-blue);
+        }
+
+        .fight-details-meta {
+            display: flex;
+            gap: 30px;
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+        }
+
+        .players-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+        }
+
+        .player-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            transition: all 0.2s;
+        }
+
+        .player-card:hover {
+            border-color: var(--accent-blue);
+            transform: translateY(-2px);
+        }
+
+        .player-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .player-rank {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent-blue);
+            width: 35px;
+        }
+
+        .player-name {
+            flex: 1;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .player-profession {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .player-stats {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .player-stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+
+        .player-stat-label {
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .player-stat-value {
+            font-weight: 600;
+            color: var(--accent-green);
+        }
+
+        .empty-message {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        .empty-message i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            display: block;
+            opacity: 0.5;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="title-bar">
+        <div class="title-bar-title">Histórico de Lutas - BPSR Meter</div>
+        <div style="display: flex; gap: 5px; -webkit-app-region: no-drag;">
+            <button class="title-bar-close" onclick="minimizeHistoryWindow()" title="Minimizar" style="background: rgba(255, 193, 7, 0.2);">
+                <i class="fa-solid fa-window-minimize"></i>
+            </button>
+            <button class="title-bar-close" onclick="window.close()" title="Fechar">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+    </div>
+    
+    <div class="header">
+        <h1 id="header-title">
+            <i class="fa-solid fa-clock-rotate-left"></i>
+            <span data-i18n="title">Histórico de Lutas</span>
+        </h1>
+        <div class="header-buttons">
+            <!-- Seletor de idioma -->
+            <select id="language-selector" style="padding: 8px 12px; border-radius: 6px; background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border-color); cursor: pointer; font-family: 'Inter', sans-serif; margin-right: 10px;">
+                <option value="pt-BR">🇧🇷 Português</option>
+                <option value="en">🇺🇸 English</option>
+                <option value="es">🇪🇸 Español</option>
+            </select>
+            
+            <button class="btn btn-back" id="back-btn" style="display: none;">
+                <i class="fa-solid fa-arrow-left"></i>
+                <span data-i18n="back">Voltar</span>
+            </button>
+            <button class="btn" id="refresh-btn">
+                <i class="fa-solid fa-rotate"></i>
+                <span data-i18n="refresh">Atualizar</span>
+            </button>
+            <button class="btn btn-danger" id="clear-all-btn">
+                <i class="fa-solid fa-trash"></i>
+                <span data-i18n="clear">Limpar Tudo</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="content">
+        <div id="fight-list-container"></div>
+        <div id="fight-details-container" style="display: none;"></div>
+    </div>
+
+    <script>
+        let currentView = 'list';
+        let currentFightId = null;
+        let currentLanguage = localStorage.getItem('historyLanguage') || 'pt-BR';
+
+        // Sistema de traduções
+        const translations = {
+            'pt-BR': {
+                title: 'Histórico de Lutas',
+                titleBar: 'Histórico de Lutas - BPSR Meter',
+                back: 'Voltar',
+                refresh: 'Atualizar',
+                clear: 'Limpar Tudo',
+                duration: 'Duração',
+                players: 'jogadores',
+                player: 'jogador',
+                details: 'Detalhes da Luta',
+                fightNumber: 'Luta',
+                dps: 'DPS',
+                totalDamage: 'Dano Total',
+                hps: 'HPS',
+                crit: 'CRIT',
+                peakDps: 'Pico DPS',
+                confirmClear: 'Deseja realmente limpar todo o histórico de lutas?',
+                errorLoad: 'Erro ao carregar histórico',
+                errorDetails: 'Erro ao carregar detalhes da luta!',
+                errorClear: 'Erro ao limpar histórico!',
+                ago: 'atrás',
+                now: 'Agora',
+                min: 'min',
+                hour: 'h',
+                hours: 'horas'
+            },
+            'en': {
+                title: 'Fight History',
+                titleBar: 'Fight History - BPSR Meter',
+                back: 'Back',
+                refresh: 'Refresh',
+                clear: 'Clear All',
+                duration: 'Duration',
+                players: 'players',
+                player: 'player',
+                details: 'Fight Details',
+                fightNumber: 'Fight',
+                dps: 'DPS',
+                totalDamage: 'Total Damage',
+                hps: 'HPS',
+                crit: 'CRIT',
+                peakDps: 'Peak DPS',
+                confirmClear: 'Do you really want to clear all fight history?',
+                errorLoad: 'Error loading history',
+                errorDetails: 'Error loading fight details!',
+                errorClear: 'Error clearing history!',
+                ago: 'ago',
+                now: 'Now',
+                min: 'min',
+                hour: 'h',
+                hours: 'hours'
+            },
+            'es': {
+                title: 'Historial de Combates',
+                titleBar: 'Historial de Combates - BPSR Meter',
+                back: 'Volver',
+                refresh: 'Actualizar',
+                clear: 'Limpiar Todo',
+                duration: 'Duración',
+                players: 'jugadores',
+                player: 'jugador',
+                details: 'Detalles del Combate',
+                fightNumber: 'Combate',
+                dps: 'DPS',
+                totalDamage: 'Daño Total',
+                hps: 'HPS',
+                crit: 'CRIT',
+                peakDps: 'DPS Máximo',
+                confirmClear: '¿Desea realmente limpiar todo el historial de combates?',
+                errorLoad: 'Error al cargar historial',
+                errorDetails: '¡Error al cargar detalles del combate!',
+                errorClear: '¡Error al limpiar historial!',
+                ago: 'hace',
+                now: 'Ahora',
+                min: 'min',
+                hour: 'h',
+                hours: 'horas'
+            }
+        };
+
+        function t(key) {
+            return translations[currentLanguage][key] || translations['pt-BR'][key] || key;
+        }
+
+        function applyTranslations() {
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                el.textContent = t(key);
+            });
+            document.querySelector('.title-bar-title').textContent = t('titleBar');
+            document.title = t('titleBar');
+        }
+
+        function minimizeHistoryWindow() {
+            // Electron não expõe window.minimize() diretamente
+            // Precisa usar IPC para minimizar
+            if (window.electronAPI && window.electronAPI.minimizeWindow) {
+                window.electronAPI.minimizeWindow();
+            }
+        }
+
+        function formatStat(value) {
+            if (value >= 1000000000) return (value / 1000000000).toFixed(1) + 'G';
+            if (value >= 1000000) return (value / 1000000).toFixed(1) + 'M';
+            if (value >= 1000) return (value / 1000).toFixed(1) + 'k';
+            return value.toFixed(0);
+        }
+
+        function formatDuration(ms) {
+            const seconds = Math.floor(ms / 1000);
+            const minutes = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${minutes}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function formatTimestamp(timestamp) {
+            const date = new Date(timestamp);
+            const now = new Date();
+            const diff = now - date;
+            if (diff < 3600000) {
+                const mins = Math.floor(diff / 60000);
+                return mins === 0 ? t('now') : `${mins}${t('min')} ${t('ago')}`;
+            }
+            if (diff < 86400000) {
+                const hours = Math.floor(diff / 3600000);
+                return `${hours}${t('hour')} ${t('ago')}`;
+            }
+            const day = date.getDate().toString().padStart(2, '0');
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            const hours = date.getHours().toString().padStart(2, '0');
+            const minutes = date.getMinutes().toString().padStart(2, '0');
+            return `${day}/${month} ${hours}:${minutes}`;
+        }
+
+        async function loadFightList() {
+            try {
+                const response = await fetch('/api/fight-history');
+                const data = await response.json();
+                const history = data.data || [];
+                const container = document.getElementById('fight-list-container');
+                
+                if (history.length === 0) {
+                    container.innerHTML = `<div class="empty-message"><i class="fa-solid fa-inbox"></i>Nenhuma luta registrada ainda</div>`;
+                    return;
+                }
+
+                container.innerHTML = '<div class="fight-list">' + history.map((fight, index) => {
+                    const fightNumber = history.length - index;
+                    const topPlayer = fight.players[0] || { name: 'Unknown' };
+                    const playersText = fight.players.length === 1 ? t('player') : t('players');
+                    return `
+                        <div class="fight-item" onclick="showFightDetails(${fight.id})">
+                            <div class="fight-item-header">
+                                <span class="fight-number">${t('fightNumber')} #${fightNumber}</span>
+                                <span class="fight-time">${formatTimestamp(fight.startTime)}</span>
+                            </div>
+                            <div class="fight-stats-row">
+                                <div class="fight-stat"><i class="fa-solid fa-clock"></i><span>${formatDuration(fight.duration)}</span></div>
+                                <div class="fight-stat"><i class="fa-solid fa-users"></i><span>${fight.players.length} ${playersText}</span></div>
+                                <div class="fight-stat"><i class="fa-solid fa-trophy"></i><span>${topPlayer.name}</span></div>
+                            </div>
+                        </div>`;
+                }).join('') + '</div>';
+            } catch (error) {
+                console.error('Erro ao carregar histórico:', error);
+                document.getElementById('fight-list-container').innerHTML = `<div class="empty-message"><i class="fa-solid fa-exclamation-triangle"></i>${t('errorLoad')}</div>`;
+            }
+        }
+
+        async function showFightDetails(fightId) {
+            try {
+                const response = await fetch(`/api/fight-history/${fightId}`);
+                const data = await response.json();
+                const fight = data.data;
+                currentView = 'details';
+                currentFightId = fightId;
+                document.getElementById('fight-list-container').style.display = 'none';
+                document.getElementById('fight-details-container').style.display = 'block';
+                document.getElementById('back-btn').style.display = 'flex';
+
+                const players = fight.players.slice(0, 20);
+                const playersText = fight.players.length === 1 ? t('player') : t('players');
+                document.getElementById('fight-details-container').innerHTML = `
+                    <div class="fight-details-header">
+                        <div class="fight-details-title">${t('details')} #${fightId}</div>
+                        <div class="fight-details-meta">
+                            <div><i class="fa-solid fa-calendar"></i> ${formatTimestamp(fight.startTime)}</div>
+                            <div><i class="fa-solid fa-clock"></i> ${t('duration')}: ${formatDuration(fight.duration)}</div>
+                            <div><i class="fa-solid fa-users"></i> ${fight.players.length} ${playersText}</div>
+                        </div>
+                    </div>
+                    <div class="players-grid">${players.map((player, index) => `
+                        <div class="player-card">
+                            <div class="player-header">
+                                <div class="player-rank">#${index + 1}</div>
+                                <div>
+                                    <div class="player-name">${player.name}</div>
+                                </div>
+                            </div>
+                            <div class="player-stats">
+                                <div class="player-stat-row"><span class="player-stat-label"><i class="fa-solid fa-fire"></i> ${t('dps')}</span><span class="player-stat-value">${formatStat(player.totalDps)}</span></div>
+                                <div class="player-stat-row"><span class="player-stat-label"><i class="fa-solid fa-sword"></i> ${t('totalDamage')}</span><span class="player-stat-value">${formatStat(player.totalDamage)}</span></div>
+                                <div class="player-stat-row"><span class="player-stat-label"><i class="fa-solid fa-heart"></i> ${t('hps')}</span><span class="player-stat-value">${formatStat(player.totalHps)}</span></div>
+                                <div class="player-stat-row"><span class="player-stat-label"><i class="fa-solid fa-sparkles"></i> ${t('crit')}</span><span class="player-stat-value">${player.critRate.toFixed(1)}%</span></div>
+                                <div class="player-stat-row"><span class="player-stat-label"><i class="fa-solid fa-chart-line"></i> ${t('peakDps')}</span><span class="player-stat-value">${formatStat(player.peakDps)}</span></div>
+                            </div>
+                        </div>`).join('')}
+                    </div>`;
+            } catch (error) {
+                console.error('Erro ao carregar detalhes:', error);
+                alert(t('errorDetails'));
+            }
+        }
+
+        function goBackToList() {
+            currentView = 'list';
+            currentFightId = null;
+            document.getElementById('fight-list-container').style.display = 'block';
+            document.getElementById('fight-details-container').style.display = 'none';
+            document.getElementById('back-btn').style.display = 'none';
+            loadFightList();
+        }
+
+        // Event listener do seletor de idioma
+        document.getElementById('language-selector').addEventListener('change', (e) => {
+            currentLanguage = e.target.value;
+            localStorage.setItem('historyLanguage', currentLanguage);
+            applyTranslations();
+            // Recarregar lista/detalhes para aplicar traduções
+            if (currentView === 'list') {
+                loadFightList();
+            } else {
+                showFightDetails(currentFightId);
+            }
+        });
+
+        document.getElementById('refresh-btn').addEventListener('click', () => currentView === 'list' ? loadFightList() : showFightDetails(currentFightId));
+        document.getElementById('clear-all-btn').addEventListener('click', async () => {
+            if (confirm(t('confirmClear'))) {
+                try {
+                    await fetch('/api/fight-history/clear', { method: 'POST' });
+                    goBackToList();
+                } catch (err) {
+                    console.error('Erro ao limpar histórico:', err);
+                    alert(t('errorClear'));
+                }
+            }
+        });
+        document.getElementById('back-btn').addEventListener('click', goBackToList);
+
+        // Aplicar idioma salvo ao carregar
+        document.getElementById('language-selector').value = currentLanguage;
+        applyTranslations();
+        loadFightList();
+        setInterval(() => { if (currentView === 'list') loadFightList(); }, 5000);
+    </script>
+</body>
+</html>

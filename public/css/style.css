@@ -518,9 +518,10 @@ input[type="text"] {
     justify-content: center;
     align-items: center;
     color: #ffffff;
-    font-size: 0.9rem; /* Tamaño de fuente como los otros botones */
+    font-size: 0.9rem; /* Tamaño de fuente como los otros botões */
     cursor: grab;
-    -webkit-app-region: drag; /* Permite arrastrar la ventana desde este elemento */
+    /* REMOVIDO: -webkit-app-region: drag - causa problemas em overlays transparentes */
+    -webkit-app-region: no-drag; /* Desabilitar drag nativo */
 }
 .drag-indicator:active {
     cursor: grabbing;
@@ -711,3 +712,140 @@ input[type="text"] {
 .lite-bar .lite-bar-content {
     padding-left: 38px; /* Ajustar para dejar espacio al botón (ancho del botón + margen) */
 }
+
+/* Estilos para o dropdown de histórico de lutas */
+.history-dropdown-container {
+    position: relative;
+}
+
+.fight-history-dropdown {
+    position: absolute;
+    top: 40px;
+    right: 0;
+    width: 400px;
+    max-height: 500px;
+    background: rgba(30, 30, 40, 0.98);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    z-index: 1000;
+    overflow: hidden;
+    backdrop-filter: blur(10px);
+}
+
+.history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    background: rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    font-weight: 600;
+    font-size: 1rem;
+    color: #fff;
+}
+
+.history-header button {
+    background: rgba(220, 53, 69, 0.7);
+    border: none;
+    border-radius: 4px;
+    padding: 6px 10px;
+    cursor: pointer;
+    color: #fff;
+    transition: background 0.2s;
+}
+
+.history-header button:hover {
+    background: rgba(220, 53, 69, 0.9);
+}
+
+.history-list {
+    max-height: 450px;
+    overflow-y: auto;
+    padding: 8px;
+}
+
+.history-item {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    padding: 10px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.history-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateX(2px);
+}
+
+.history-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.history-item-time {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #4fc3f7;
+}
+
+.history-item-duration {
+    font-size: 0.85rem;
+    color: #aaa;
+}
+
+.history-item-stats {
+    display: flex;
+    gap: 15px;
+    font-size: 0.85rem;
+    color: #ddd;
+}
+
+.history-item-stat {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.history-item-players {
+    margin-top: 6px;
+    font-size: 0.8rem;
+    color: #999;
+}
+
+.history-empty {
+    text-align: center;
+    padding: 30px;
+    color: #999;
+    font-size: 0.9rem;
+}
+
+/* Botão de reset automático com indicador visual */
+#auto-reset-toggle {
+    position: relative;
+}
+
+#auto-reset-toggle.active {
+    background: rgba(40, 167, 69, 0.3);
+    border-color: rgba(40, 167, 69, 0.6);
+}
+
+#auto-reset-toggle.active i {
+    color: #28a745;
+    animation: rotate 2s linear infinite;
+}
+
+@keyframes rotate {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+

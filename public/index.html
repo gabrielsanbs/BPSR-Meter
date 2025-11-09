@@ -9,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
+    <script src="/socket.io/socket.io.js"></script>
 </head>
 <body>
 <div class="dps-meter">
@@ -23,6 +24,22 @@
             <button class="control-button" id="reset-button" title="Reset" style="display: none;"><i class="fa-solid fa-arrows-rotate"></i></button>
             <button class="control-button" id="reset-button" title="Reset" style="display: none;"><i class="fa-solid fa-arrows-rotate"></i></button>
             <button class="control-button" id="pause-logs-button" title="Pausar Logs"><i class="fa-solid fa-pause"></i></button>
+            
+            <!-- Botão de histórico de lutas - abre nova janela -->
+            <button class="control-button" id="fight-history-button" title="Histórico de Lutas">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+            </button>
+
+            <!-- Botão de limpar histórico -->
+            <button class="control-button" id="clear-history-button" title="Limpar Histórico">
+                <i class="fa-solid fa-trash"></i>
+            </button>
+
+            <!-- Botão de configuração de reset automático -->
+            <button class="control-button" id="auto-reset-toggle" title="Reset Automático: Desativado">
+                <i class="fa-solid fa-rotate"></i>
+            </button>
+
             <div id="dps-timer-btns" class="dps-timer-buttons" style="flex-grow: 1; justify-content: flex-end; display: none;">
             </div>
             <button class="control-button" id="zoom-in-button" title="Aumentar tamaño"><i class="fa-solid fa-plus"></i></button>
@@ -37,6 +54,7 @@
         <button class="control-button advanced-lite-btn" id="lite-dps-healer-btn" style="display:none;">DPS</button>
             <!-- Botón de bloqueo/desbloqueo -->
             <button class="control-button" id="lock-button" title="Bloquear posición" style="width: 32px; height: 32px; font-size: 0.9rem; margin-top: 0;"><i class="fa-solid fa-lock-open"></i></button>
+            <button class="control-button" id="minimize-button" title="Minimizar" style="width: 32px; height: 32px; font-size: 0.9rem; margin-top: 0;"><i class="fa-solid fa-window-minimize"></i></button>
             <button class="control-button" id="close-button" title="Cerrar ventana" style="width: 32px; height: 32px; font-size: 0.9rem; margin-top: 0;"><i class="fa-solid fa-xmark"></i></button>
         </header>
         <div style="display:flex; flex-direction:column; gap:6px; margin-bottom:10px;">
@@ -47,6 +65,18 @@
             <i class="fa-solid fa-spinner fa-spin"></i>
         </div>
         <main id="player-bars-container" style="margin-top: 40px; border: 1px solid rgba(255, 255, 255, 0.1); display: none;"></main>
+        
+        <!-- Aviso de mudar mapa -->
+        <div id="map-change-notice" style="display: none; margin-top: 8px; padding: 8px 12px; background: rgba(255, 193, 7, 0.15); border: 1px solid rgba(255, 193, 7, 0.4); border-radius: 8px; text-align: center;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                <span style="font-size: 0.85rem; color: #ffc107; flex: 1;">
+                    <i class="fa-solid fa-map"></i> Mude de mapa para atualizar os nomes dos jogadores
+                </span>
+                <button id="toggle-map-notice" style="background: rgba(255, 193, 7, 0.2); border: 1px solid rgba(255, 193, 7, 0.5); border-radius: 4px; padding: 2px 8px; color: #ffc107; cursor: pointer; font-size: 0.75rem; white-space: nowrap;" title="Ocultar aviso">
+                    <i class="fa-solid fa-eye-slash"></i>
+                </button>
+            </div>
+        </div>
     </div>
 
     <script src="js/main.js"></script>

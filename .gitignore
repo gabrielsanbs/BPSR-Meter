@@ -8,6 +8,7 @@ dist/logs/
 
 # Build output
 /dist
+/dist_electron
 
 # Misc
 .npmrc
