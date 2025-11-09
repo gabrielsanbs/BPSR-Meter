@@ -1,7 +1,7 @@
 <div align="center">
   <img src="portada.png" alt="BPSR Meter" width="800"/>
   
-  # BPSR Meter v3.0.1 (by gabrielsanbs)
+  # BPSR Meter v3.0.5 (by gabrielsanbs)
   
   ### Medidor de DPS em Tempo Real para Blue Protocol
   
@@ -16,7 +16,7 @@
 
 ## 🎯 Sobre Esta Versão
 
-**BPSR Meter v3.0.1** é uma versão completamente reformulada e otimizada do medidor de DPS para Blue Protocol. Esta versão inclui novas funcionalidades, melhorias de performance e uma interface mais polida.
+**BPSR Meter v3.0.5** é uma versão completamente reformulada e otimizada do medidor de DPS para Blue Protocol. Esta versão inclui novas funcionalidades, melhorias de performance e uma interface mais polida.
 
 **Desenvolvido por:** [gabrielsanbs](https://github.com/gabrielsanbs)  
 **Fork de:** [BPSR-Meter](https://github.com/mrsnakke/BPSR-Meter) por MrSnakeVT  
@@ -26,7 +26,7 @@
 
 ---
 
-## ✨ Novidades da Versão 3.0.1
+## ✨ Novidades da Versão 3.0.5
 
 ### 📜 Histórico de Combates Multilingue
 <div align="center">
@@ -71,7 +71,7 @@
 
 ### Passo 2: Instalar BPSR Meter
 1. Baixe o instalador na seção [Releases](../../releases)
-2. Execute `BPSR Meter (by gabrielsanbs) Setup 3.0.1.exe`
+2. Execute `BPSR Meter (by gabrielsanbs) Setup 3.0.5.exe`
 3. Siga as instruções do instalador
 4. Ao terminar, você verá uma mensagem de agradecimento
 
@@ -119,7 +119,7 @@
 Não modifica arquivos do jogo, não injeta código. Ferramentas que apenas leem dados têm baixíssimo risco. **Use por sua conta e risco.**
 
 **⚡ Afeta meu FPS?**  
-Não. Versão 3.0.1 é otimizada: 90% menos escritas em disco, cache inteligente, baixo uso de CPU.
+Não. Versão 3.0.5 é otimizada: 90% menos escritas em disco, cache inteligente, baixo uso de CPU.
 
 **🛡️ Por que precisa de administrador?**  
 Para o Npcap acessar adaptadores de rede e monitorar pacotes do jogo.
@@ -190,7 +190,7 @@ AGPL-3.0 - Veja [LICENSE](LICENSE) para detalhes.
 <div align="center">
   <img src="portada.png" alt="BPSR Meter" width="800"/>
   
-  # BPSR Meter v3.0.1 (by gabrielsanbs)
+  # BPSR Meter v3.0.5 (by gabrielsanbs)
   
   ### Real-Time DPS Meter for Blue Protocol
   
@@ -205,7 +205,7 @@ AGPL-3.0 - Veja [LICENSE](LICENSE) para detalhes.
 
 ## 🎯 About This Version
 
-**BPSR Meter v3.0.1** is a completely redesigned and optimized version of the DPS meter for Blue Protocol. This version includes new features, performance improvements, and a more polished interface.
+**BPSR Meter v3.0.5** is a completely redesigned and optimized version of the DPS meter for Blue Protocol. This version includes new features, performance improvements, and a more polished interface.
 
 **Developed by:** [gabrielsanbs](https://github.com/gabrielsanbs)  
 **Forked from:** [BPSR-Meter](https://github.com/mrsnakke/BPSR-Meter) by MrSnakeVT  
@@ -224,7 +224,7 @@ AGPL-3.0 - Veja [LICENSE](LICENSE) para detalhes.
 ---
 ---
 
-## ✨ What's New in v3.0.1
+## ✨ What's New in v3.0.5
 
 ### 📜 Multilingual Combat History
 <div align="center">
@@ -269,7 +269,7 @@ AGPL-3.0 - Veja [LICENSE](LICENSE) para detalhes.
 
 ### Step 2: Install BPSR Meter
 1. Download installer from [Releases](../../releases)
-2. Run `BPSR Meter (by gabrielsanbs) Setup 3.0.1.exe`
+2. Run `BPSR Meter (by gabrielsanbs) Setup 3.0.5.exe`
 3. Follow installer instructions
 4. You'll see a thank you message when finished
 
@@ -362,7 +362,7 @@ If the application isn't working correctly:
 Doesn't modify game files or inject code. Read-only tools have extremely low ban risk. **Use at your own risk.**
 
 **⚡ Does it affect FPS?**  
-No. v3.0.1 is optimized: 90% less disk writes, intelligent cache, low CPU usage.
+No. v3.0.5 is optimized: 90% less disk writes, intelligent cache, low CPU usage.
 
 **🛡️ Why run as administrator?**  
 Npcap needs low-level network adapter access to monitor game packets.
@@ -433,7 +433,7 @@ AGPL-3.0 - See [LICENSE](LICENSE) for details.
 <div align="center">
   <img src="portada.png" alt="BPSR Meter" width="800"/>
   
-  # BPSR Meter v3.0.1 (by gabrielsanbs)
+  # BPSR Meter v3.0.5 (by gabrielsanbs)
   
   ### Medidor de DPS en Tiempo Real para Blue Protocol
   
@@ -448,7 +448,7 @@ AGPL-3.0 - See [LICENSE](LICENSE) for details.
 
 ## 🎯 Sobre Esta Versión
 
-**BPSR Meter v3.0.1** es una versión completamente rediseñada y optimizada del medidor de DPS para Blue Protocol. Esta versión incluye nuevas funcionalidades, mejoras de rendimiento y una interfaz más pulida.
+**BPSR Meter v3.0.5** es una versión completamente rediseñada y optimizada del medidor de DPS para Blue Protocol. Esta versión incluye nuevas funcionalidades, mejoras de rendimiento y una interfaz más pulida.
 
 **Desarrollado por:** [gabrielsanbs](https://github.com/gabrielsanbs)  
 **Fork de:** [BPSR-Meter](https://github.com/mrsnakke/BPSR-Meter) por MrSnakeVT  
@@ -458,7 +458,7 @@ AGPL-3.0 - See [LICENSE](LICENSE) for details.
 
 ---
 
-## ✨ Novedades de v3.0.1
+## ✨ Novedades de v3.0.5
 
 ### 📜 Historial de Combates Multilingüe
 <div align="center">
@@ -503,7 +503,7 @@ AGPL-3.0 - See [LICENSE](LICENSE) for details.
 
 ### Paso 2: Instalar BPSR Meter
 1. Descarga el instalador en [Releases](../../releases)
-2. Ejecuta `BPSR Meter (by gabrielsanbs) Setup 3.0.1.exe`
+2. Ejecuta `BPSR Meter (by gabrielsanbs) Setup 3.0.5.exe`
 3. Sigue las instrucciones del instalador
 4. Al terminar, verás un mensaje de agradecimiento
 
@@ -549,7 +549,7 @@ AGPL-3.0 - See [LICENSE](LICENSE) for details.
 No modifica archivos del juego ni inyecta código. Herramientas de solo lectura tienen riesgo de baneo extremadamente bajo. **Usa bajo tu propia responsabilidad.**
 
 **⚡ ¿Afecta los FPS?**  
-No. v3.0.1 está optimizada: 90% menos escrituras en disco, caché inteligente, bajo uso de CPU.
+No. v3.0.5 está optimizada: 90% menos escrituras en disco, caché inteligente, bajo uso de CPU.
 
 **🛡️ ¿Por qué ejecutar como administrador?**  
 Npcap necesita acceso de bajo nivel a adaptadores de red para monitorear paquetes del juego.
