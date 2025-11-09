@@ -83,9 +83,9 @@
 
 ---
 
-## � Como Usar
+## ❓ Como Usar
 
-### �️ Controles Principais
+### 🎮️ Controles Principais
 
 | ![Advanced](Advanced.png) | ![DPS](DPS.png) | ![Healer](Lite.png) |
 |:---:|:---:|:---:|
@@ -124,7 +124,7 @@ Não. Versão 3.0.1 é otimizada: 90% menos escritas em disco, cache inteligente
 **🛡️ Por que precisa de administrador?**  
 Para o Npcap acessar adaptadores de rede e monitorar pacotes do jogo.
 
-**� Tem versão para healer?**  
+**✝️ Tem versão para healer?**  
 Sim! Modo "Lite" tem botão para alternar entre DPS e Healer, mostrando HPS em destaque.
 
 **📜 O histórico salva todas as lutas?**  
@@ -138,7 +138,7 @@ Sim, funciona perfeitamente.
 
 ---
 
-## � Problemas Comuns
+## ❓ Problemas Comuns
 
 **Não inicia:**
 - Instale o Npcap
@@ -374,7 +374,7 @@ Yes! "Lite" mode has a button to switch between DPS and Healer, showing HPS high
 Yes, with detailed statistics and persistence between sessions.
 
 **🌐 Can I change language?**  
-Yes, in History window: Português �🇷, English 🇺🇸, Español 🇪🇸
+Yes, in History window: Português, English 🇺🇸, Español 🇪🇸
 
 **🌏 Works on Chinese server?**  
 Yes, works perfectly.
@@ -568,7 +568,7 @@ Sí, funciona perfectamente.
 
 ---
 
-## � Solución de Problemas
+## ❓ Solución de Problemas
 
 **No inicia:**
 - Instala Npcap
