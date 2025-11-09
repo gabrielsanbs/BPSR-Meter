@@ -1,4 +1,4 @@
-# 🎯 BPSR Meter v3.0.1
+# 🎯 BPSR Meter v3.0.2 - HOTFIX
 
 [[Português](#português)] | [[English](#english)] | [[Español](#español)]
 
@@ -6,14 +6,19 @@
 
 ## Português
 
-**✨ Novidades:**
+**🐛 CORREÇÃO CRÍTICA:**
+- 🔓 **RESOLVIDO:** Cadeado travado não destravava ao clicar
+- ✅ Todos os botões agora funcionam mesmo quando travado
+- ✅ Header sempre clicável para controles essenciais
+
+**✨ Novidades da v3.0.1:**
 - 🌍 Histórico multilíngue (PT-BR, EN, ES)
 - 🗺️ Notificação automática de mudança de mapa
 - ⚡ 90% menos CPU e disco
 - 🐛 Corrigidos: drag, fundo preto, loading icon
 
-**� Como instalar:**
-1. Baixe: `BPSR Meter (by gabrielsanbs) Setup 3.0.1.exe`
+**📥 Como instalar:**
+1. Baixe: `BPSR Meter (by gabrielsanbs) Setup 3.0.2.exe`
 2. Execute o instalador
 3. Pronto! Programa detecta o jogo automaticamente
 
@@ -38,14 +43,19 @@
 
 ## English
 
-**✨ What's New:**
+**🐛 CRITICAL FIX:**
+- 🔓 **FIXED:** Lock button not unlocking when clicked
+- ✅ All buttons now work even when locked
+- ✅ Header always clickable for essential controls
+
+**✨ What's New in v3.0.1:**
 - 🌍 Multilingual history (PT-BR, EN, ES)
 - 🗺️ Automatic map change notification
 - ⚡ 90% less CPU and disk usage
 - 🐛 Fixed: drag, black background, loading icon
 
 **📥 How to Install:**
-1. Download: `BPSR Meter (by gabrielsanbs) Setup 3.0.1.exe`
+1. Download: `BPSR Meter (by gabrielsanbs) Setup 3.0.2.exe`
 2. Run the installer
 3. Done! Program auto-detects the game
 
@@ -70,14 +80,19 @@
 
 ## Español
 
-**✨ Novedades:**
+**🐛 CORRECCIÓN CRÍTICA:**
+- 🔓 **RESUELTO:** Candado no se destrababa al hacer clic
+- ✅ Todos los botones funcionan incluso cuando está trabado
+- ✅ Header siempre clicable para controles esenciales
+
+**✨ Novedades de v3.0.1:**
 - 🌍 Historial multilingüe (PT-BR, EN, ES)
 - 🗺️ Notificación automática de cambio de mapa
 - ⚡ 90% menos CPU y disco
 - 🐛 Corregidos: arrastre, fondo negro, icono de carga
 
-**� Cómo instalar:**
-1. Descarga: `BPSR Meter (by gabrielsanbs) Setup 3.0.1.exe`
+**📥 Cómo instalar:**
+1. Descarga: `BPSR Meter (by gabrielsanbs) Setup 3.0.2.exe`
 2. Ejecuta el instalador
 3. ¡Listo! El programa detecta el juego automáticamente
 
