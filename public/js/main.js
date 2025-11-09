@@ -171,18 +171,23 @@ const professionMap = {
                     lockButton.title = isLocked ? 'Desbloquear posición' : 'Bloquear posición';
                     document.body.classList.toggle('locked', isLocked); // Añadir/quitar clase al body
                     
-                    // Quando travado, configurar listeners para detectar mouse sobre header
-                    if (locked) {
-                        setupIgnoreMouseEventsForHeader();
+                    // Quando destravado, restaurar eventos de mouse normalmente
+                    if (!locked) {
+                        window.electronAPI.setIgnoreMouseEvents(false);
                     }
                 });
             }
         }
 
-        // Função para detectar mouse sobre header quando travado
+        // Configurar listeners de mouse para o header (uma vez só)
+        let headerListenersSetup = false;
         function setupIgnoreMouseEventsForHeader() {
+            if (headerListenersSetup) return; // Não adicionar listeners duplicados
+            
             const header = document.querySelector('.controls');
             if (!header || !window.electronAPI) return;
+
+            headerListenersSetup = true;
 
             // Quando mouse ENTRA no header: DESABILITAR ignore (pode clicar nos botões)
             header.addEventListener('mouseenter', () => {
@@ -198,6 +203,9 @@ const professionMap = {
                 }
             });
         }
+        
+        // Inicializar listeners do header imediatamente
+        setupIgnoreMouseEventsForHeader();
 
         const minimizeButton = document.getElementById('minimize-button');
         if (minimizeButton) {

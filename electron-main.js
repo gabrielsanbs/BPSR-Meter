@@ -506,8 +506,9 @@ function promoteOverlayWindow(win, { focus = false } = {}) {
             isLocked = !isLocked;
             
             if (isLocked) {
-                // Quando TRAVADO: ignorar eventos EXCETO quando mouse sobre o header
-                mainWindow.setIgnoreMouseEvents(true, { forward: true });
+                // Quando TRAVADO: NÃO ignorar eventos inicialmente (para permitir mouse no header)
+                // Os listeners de mouseenter/mouseleave no frontend vão controlar depois
+                mainWindow.setIgnoreMouseEvents(false);
             } else {
                 // Quando DESTRAVADO: processar todos os eventos normalmente
                 mainWindow.setIgnoreMouseEvents(false);
