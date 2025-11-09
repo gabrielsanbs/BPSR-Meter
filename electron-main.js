@@ -313,13 +313,24 @@ function promoteOverlayWindow(win, { focus = false } = {}) {
         if (mainWindow) {
             isLocked = !isLocked;
             
-            // SOLUÇÃO: Não usar setIgnoreMouseEvents quando travado
-            // Em vez disso, usar CSS pointer-events para controlar o que é clicável
-            // A janela SEMPRE processa eventos, mas o CSS decide o que passa pro jogo
+            if (isLocked) {
+                // Quando TRAVADO: ignorar eventos EXCETO quando mouse sobre o header
+                mainWindow.setIgnoreMouseEvents(true, { forward: true });
+            } else {
+                // Quando DESTRAVADO: processar todos os eventos normalmente
+                mainWindow.setIgnoreMouseEvents(false);
+            }
             
             promoteOverlayWindow(mainWindow);
             mainWindow.webContents.send('lock-state-changed', isLocked);
             console.log(`Candado: ${isLocked ? 'Cerrado (TRAVADO)' : 'Abierto (PODE ARRASTAR)'}`);
+        }
+    });
+
+    // Listener para detectar quando mouse está sobre área clicável (header)
+    ipcMain.on('set-ignore-mouse-events', (event, ignore, options) => {
+        if (mainWindow && isLocked) {
+            mainWindow.setIgnoreMouseEvents(ignore, options);
         }
     });
 

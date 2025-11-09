@@ -1,6 +1,6 @@
 {
   "name": "bpsr-meter",
-  "version": "3.0.2",
+  "version": "3.0.3",
   "description": "BPSR Meter",
   "main": "electron-main.js",
   "bin": {
@@ -94,7 +94,7 @@
     },
     "nsis": {
       "include": "extra.nsh",
-      "deleteAppDataOnUninstall": true
+      "deleteAppDataOnUninstall": false
     },
     "directories": {
       "output": "dist_electron"

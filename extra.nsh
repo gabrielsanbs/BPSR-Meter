@@ -8,7 +8,21 @@
     Bom jogo!"
 !macroend
 
-; Eliminar carpeta de datos de usuario en Roaming al desinstalar
-Section "Remove AppData" SECREMOVEAPPDATA
+; Ao desinstalar: perguntar se quer remover dados de usuário (cache e histórico)
+!macro customUnInstall
+    MessageBox MB_YESNO "Deseja remover seus dados salvos?$\n\
+    (Histórico de lutas, cache de jogadores, configurações)$\n$\n\
+    Selecione NÃO se planeja reinstalar o BPSR Meter." IDNO KeepData
+    
+    ; Se o usuário escolheu SIM, deletar tudo
     RMDir /r "$APPDATA\bpsr-meter"
-SectionEnd
+    Goto Done
+    
+    KeepData:
+        ; Se o usuário escolheu NÃO, deletar apenas logs temporários
+        Delete "$APPDATA\bpsr-meter\iniciar_log.txt"
+        Delete "$APPDATA\bpsr-meter\bpsr-meter-debug.log"
+        ; Manter user_cache.json e fight-history.json
+    
+    Done:
+!macroend

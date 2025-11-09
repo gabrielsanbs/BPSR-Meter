@@ -170,8 +170,33 @@ const professionMap = {
                     lockButton.innerHTML = isLocked ? '<i class="fa-solid fa-lock"></i>' : '<i class="fa-solid fa-lock-open"></i>';
                     lockButton.title = isLocked ? 'Desbloquear posición' : 'Bloquear posición';
                     document.body.classList.toggle('locked', isLocked); // Añadir/quitar clase al body
+                    
+                    // Quando travado, configurar listeners para detectar mouse sobre header
+                    if (locked) {
+                        setupIgnoreMouseEventsForHeader();
+                    }
                 });
             }
+        }
+
+        // Função para detectar mouse sobre header quando travado
+        function setupIgnoreMouseEventsForHeader() {
+            const header = document.querySelector('.controls');
+            if (!header || !window.electronAPI) return;
+
+            // Quando mouse ENTRA no header: DESABILITAR ignore (pode clicar nos botões)
+            header.addEventListener('mouseenter', () => {
+                if (isLocked) {
+                    window.electronAPI.setIgnoreMouseEvents(false);
+                }
+            });
+
+            // Quando mouse SAI do header: HABILITAR ignore (cliques passam pro jogo)
+            header.addEventListener('mouseleave', () => {
+                if (isLocked) {
+                    window.electronAPI.setIgnoreMouseEvents(true, { forward: true });
+                }
+            });
         }
 
         const minimizeButton = document.getElementById('minimize-button');

@@ -10,6 +10,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     openHistoryWindow: () => ipcRenderer.send('open-history-window'),
     // Função para drag manual (recebe deltaX e deltaY)
     windowDragMove: (deltaX, deltaY) => ipcRenderer.send('window-drag-move', deltaX, deltaY),
+    // Função para controlar setIgnoreMouseEvents quando travado
+    setIgnoreMouseEvents: (ignore, options) => ipcRenderer.send('set-ignore-mouse-events', ignore, options),
 });
 
 window.addEventListener('DOMContentLoaded', () => {
