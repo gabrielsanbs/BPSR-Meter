@@ -56,7 +56,7 @@
 
 ### 🔔 Aviso de Mudança de Mapa
 <div align="center">
-  <img src="BPSR_Meter_JANELA.png" alt="Interface Completa" width="650"/>
+  <img src="BPSR_Meter_Window_v31.png" alt="Interface Completa" width="650"/>
 </div>
 
 - Notificação automática quando detecta nomes temporários
@@ -87,6 +87,34 @@
 - ✅ **Buttons without selection effect** after click
 - ✅ Smooth and responsive transitions
 - ✅ Interface automatically adjusts to player count
+
+---
+
+## 📥 Installation
+
+### Step 1: Install Npcap (Required)
+1. Download [Npcap](https://npcap.com/#download) or get it from [Releases](../../releases)
+2. Run `npcap-1.83.exe`
+3. ⚠️ **Important:** Check **"WinPcap API-compatible Mode"**
+
+### Step 2: Install BPSR Meter
+1. Download installer from [Releases](../../releases)
+2. Run `BPSR Meter (by gabrielsanbs) Setup 3.1.0.exe`
+3. Follow installer instructions
+4. You'll see a thank you message when finished
+
+### Step 3: First Run
+1. **Run as Administrator** (right-click → Run as administrator)
+2. Start Blue Protocol
+3. Statistics will appear automatically on screen
+
+---
+
+## 🎮 How to Use
+
+### 🎛️ Main Controls
+
+| ![Advanced](Advanced_v31.png) | ![DPS](DPS_v31.png) | ![Healer](Lite_v31.png) |
 
 ---
 
@@ -304,7 +332,7 @@ AGPL-3.0 - Veja [LICENSE](LICENSE) para detalhes.
 
 ### 🔔 Map Change Notice
 <div align="center">
-  <img src="BPSR_Meter_JANELA.png" alt="Full Interface" width="650"/>
+  <img src="BPSR_Meter_Window_v31.png" alt="Full Interface" width="650"/>
 </div>
 
 - Automatic notification when temporary names detected
@@ -579,7 +607,7 @@ AGPL-3.0 - See [LICENSE](LICENSE) for details.
 
 ### 🔔 Aviso de Cambio de Mapa
 <div align="center">
-  <img src="BPSR_Meter_JANELA.png" alt="Interfaz Completa" width="650"/>
+  <img src="BPSR_Meter_Window_v31.png" alt="Interfaz Completa" width="650"/>
 </div>
 
 - Notificación automática cuando detecta nombres temporales
