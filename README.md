@@ -30,7 +30,7 @@
 
 ### ⚙️ Tela de Configurações Completa
 <div align="center">
-  <img src="BPSR_Meter_SETTINGS.png" alt="Configurações" width="650"/>
+  <img src="BPSR_Meter_Settings.png" alt="Configurações" width="650"/>
 </div>
 
 - **Configurações em tempo real** sem necessidade de reiniciar
@@ -278,7 +278,7 @@ AGPL-3.0 - Veja [LICENSE](LICENSE) para detalhes.
 
 ### ⚙️ Complete Settings Screen
 <div align="center">
-  <img src="BPSR_Meter_SETTINGS.png" alt="Settings" width="650"/>
+  <img src="BPSR_Meter_Settings.png" alt="Settings" width="650"/>
 </div>
 
 - **Real-time configuration** without restart required
@@ -553,7 +553,7 @@ AGPL-3.0 - See [LICENSE](LICENSE) for details.
 
 ### ⚙️ Pantalla de Configuración Completa
 <div align="center">
-  <img src="BPSR_Meter_SETTINGS.png" alt="Configuraciones" width="650"/>
+  <img src="BPSR_Meter_Settings.png" alt="Configuraciones" width="650"/>
 </div>
 
 - **Configuración en tiempo real** sin necesidad de reiniciar
