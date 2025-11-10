@@ -143,7 +143,7 @@
 
 ### 🎮️ Controles Principais
 
-| ![Advanced](Advanced.png) | ![DPS](DPS.png) | ![Healer](Lite.png) |
+| ![Advanced](Advanced_v31.png) | ![DPS](DPS_v31.png) | ![Healer](Lite_v31.png) |
 |:---:|:---:|:---:|
 | Modo Avançado | Modo DPS | Modo Healer |
 
@@ -175,7 +175,6 @@
 - **Cache:** Limpeza de cache de usuários
 - **Histórico:** Limpeza completa de lutas salvas
 
-
 ---
 
 ## ❓ Perguntas Frequentes
@@ -184,34 +183,32 @@
 Não modifica arquivos do jogo, não injeta código. Ferramentas que apenas leem dados têm baixíssimo risco. **Use por sua conta e risco.**
 
 **⚡ Afeta meu FPS?**  
-Não. Versão 3.0.5 é otimizada: 90% menos escritas em disco, cache inteligente, baixo uso de CPU.
+Não. Versão 3.1.0 é otimizada: 90% menos escritas em disco, cache inteligente, baixo uso de CPU.
 
 **🛡️ Por que precisa de administrador?**  
 Para o Npcap acessar adaptadores de rede e monitorar pacotes do jogo.
 
-**✝️ Tem versão para healer?**  
+**💚 Tem versão para healer?**  
 Sim! Modo "Lite" tem botão para alternar entre DPS e Healer, mostrando HPS em destaque.
 
-**📜 Does the history save all fights?**  
-Yes! Automatically saves up to 20 fights with detailed statistics. Persists between sessions and **auto-saves when changing maps**.
+**📜 O histórico salva todas as lutas?**  
+Sim! Salva automaticamente até 20 lutas com estatísticas detalhadas. Persiste entre sessões e **auto-salva ao trocar de mapas**.
 
-**🌐 Can I change the language?**  
-Yes! In the **Settings** or **History** window: Português 🇧🇷, English 🇺🇸, Español 🇪🇸
-
-**🔀 Can I sort by HPS in history?**  
-Yes! 4 sorting modes: **DPS**, **Total DMG**, **HPS**, **Total Healing**
-
-**🌐 Does it work with ExitLag/NoPing?**  
-Yes! **Automatic support** for all popular gaming VPNs (ExitLag, NoPing, WTFast, Mudfish, etc)
+**🌐 Posso mudar o idioma?**  
+Sim! Na janela de **Configurações** ou **Histórico**: Português 🇧🇷, English 🇺🇸, Español 🇪🇸
 
 **🔀 Posso ordenar por HPS no histórico?**  
-Sim! 4 modos de ordenação: **DPS**, **DMG Total**, **HPS**, **Healing Total**
+Sim! 4 modos: **DPS**, **DMG Total**, **HPS**, **Healing Total**
 
 **🌐 Funciona com ExitLag/NoPing?**  
-Sim! **Suporte automático** para todas as VPNs de jogos populares (ExitLag, NoPing, WTFast, Mudfish, etc)
+Sim! **Suporte automático** para todas as VPNs gaming (ExitLag, NoPing, WTFast, Mudfish, etc)
 
-**🌏 Funciona no servidor chinês?**  
+** Funciona no servidor chinês?**  
 Sim, funciona perfeitamente.
+
+---
+
+## 🔧 Solução de Problemas
 
 ---
 
@@ -452,30 +449,13 @@ If the application isn't working correctly:
 
 ---
 
-## ❓ Frequently Asked Questions (FAQ)
-
-### 🔐 Is using this meter a bannable offense?
-> It operates in a "gray area." It doesn't modify game files, inject code, or alter the game's memory. Historically, tools that only read data have an extremely low risk of being banned. However, **use it at your own risk.**
-
-### ⚡ Does it affect my game's performance (FPS)?
-> No. This version is **optimized for low CPU usage**:
-> - Cache system with 3-second debounce
-> - 90% reduction in disk writes
-> - Optimized update interval
-> - Removal of unnecessary data
-
-### 🛡️ Why does it need to run as an administrator?
-> To allow the Npcap library to have low-level access to network adapters and monitor the game's packets.
-
----
-
 ## ❓ FAQ
 
 **🔐 Is this bannable?**  
 Doesn't modify game files or inject code. Read-only tools have extremely low ban risk. **Use at your own risk.**
 
 **⚡ Does it affect FPS?**  
-No. v3.0.5 is optimized: 90% less disk writes, intelligent cache, low CPU usage.
+No. v3.1.0 is optimized: 90% less disk writes, intelligent cache, low CPU usage.
 
 **🛡️ Why run as administrator?**  
 Npcap needs low-level network adapter access to monitor game packets.
