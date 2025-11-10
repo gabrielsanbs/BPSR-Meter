@@ -8,6 +8,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
     toggleLockState: () => ipcRenderer.send('toggle-lock-state'),
     onLockStateChanged: (callback) => ipcRenderer.on('lock-state-changed', (event, isLocked) => callback(isLocked)),
     openHistoryWindow: () => ipcRenderer.send('open-history-window'),
+    openSettingsWindow: () => ipcRenderer.send('open-settings-window'),
+    settingsChanged: (settings) => ipcRenderer.send('settings-changed', settings),
+    onSettingsChanged: (callback) => ipcRenderer.on('settings-changed', (event, settings) => callback(settings)),
     // Função para drag manual (recebe deltaX e deltaY)
     windowDragMove: (deltaX, deltaY) => ipcRenderer.send('window-drag-move', deltaX, deltaY),
     // Função para controlar setIgnoreMouseEvents quando travado

@@ -50,7 +50,6 @@ try {
 }
 
 const VERSION = '3.0.5';
-const SETTINGS_PATH = path.join(__dirname, 'settings.json');
 
 let globalSettings = {
     autoClearOnServerChange: true,
@@ -101,22 +100,28 @@ async function main() {
     console.log('\nIniciando serviço...');
     console.log('Detectando tráfego de rede, por favor aguarde...');
 
-    // Carregar configuração global
-    try {
-        await fsPromises.access(SETTINGS_PATH);
-        const data = await fsPromises.readFile(SETTINGS_PATH, 'utf8');
-        Object.assign(globalSettings, JSON.parse(data));
-    } catch (e) {
-        if (e.code !== 'ENOENT') {
-            logger.error('Falha ao carregar configurações:', e);
-        }
-    }
-
     // Usar diretório userData do Electron (passado via env) ou cwd como fallback
     // IMPORTANTE: userData (%APPDATA%/bpsr-meter) persiste entre atualizações
     // process.cwd() seria deletado durante updates!
     const dataDir = process.env.BPSR_USER_DATA_DIR || process.cwd();
     logger.info(`Diretório de dados: ${dataDir}`);
+    
+    // SETTINGS_PATH agora usa o mesmo diretório de dados do usuário
+    const SETTINGS_PATH = path.join(dataDir, 'settings.json');
+
+    // Carregar configuração global
+    try {
+        await fsPromises.access(SETTINGS_PATH);
+        const data = await fsPromises.readFile(SETTINGS_PATH, 'utf8');
+        Object.assign(globalSettings, JSON.parse(data));
+        logger.info('Configurações carregadas de:', SETTINGS_PATH);
+    } catch (e) {
+        if (e.code !== 'ENOENT') {
+            logger.error('Falha ao carregar configurações:', e);
+        } else {
+            logger.info('Arquivo de configurações não encontrado, usando padrões');
+        }
+    }
     
     const userDataManager = new UserDataManager(logger, globalSettings, dataDir);
     await userDataManager.initialize();
@@ -175,10 +180,11 @@ async function main() {
         },
     });
 
-    // Passar io para o sniffer para emitir eventos
+    // Passar io para o sniffer e userDataManager para emitir eventos
     sniffer.io = io;
+    userDataManager.io = io;
 
-    initializeApi(app, server, io, userDataManager, logger, globalSettings, sniffer); // Inicializar API com globalSettings e sniffer
+    initializeApi(app, server, io, userDataManager, logger, globalSettings, sniffer, SETTINGS_PATH); // Passar SETTINGS_PATH para a API
 
     server.listen(server_port, '0.0.0.0', () => {
         const localUrl = `http://localhost:${server_port}`;

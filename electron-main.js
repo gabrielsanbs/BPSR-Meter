@@ -22,8 +22,10 @@ function logToFile(msg) {
 
 let mainWindow;
 let historyWindow = null;
+let settingsWindow = null;
 let serverProcess;
 let server_port = 8989; // Porta inicial
+let serverUrl = ''; // URL do servidor
 let isLocked = false; // Estado inicial do cadeado: desbloqueado
 logToFile('==== INÍCIO DO ELECTRON ====');
 
@@ -198,6 +200,16 @@ function promoteOverlayWindow(win, { focus = false } = {}) {
             return;
         }
 
+        // Carregar ícone como base64
+        let iconBase64 = '';
+        try {
+            const iconPath = path.join(__dirname, 'icon.png');
+            const iconBuffer = fs.readFileSync(iconPath);
+            iconBase64 = `data:image/png;base64,${iconBuffer.toString('base64')}`;
+        } catch (e) {
+            logToFile('Erro ao carregar ícone: ' + e.message);
+        }
+
         // Mostrar tela de carregamento
         const loadingHtml = `
             <html>
@@ -214,28 +226,51 @@ function promoteOverlayWindow(win, { focus = false } = {}) {
                         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
                         color: white;
                     }
-                    .loader-container { text-align: center; }
+                    .loader-container { 
+                        text-align: center; 
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        gap: 20px;
+                    }
+                    .app-icon {
+                        width: 120px;
+                        height: 120px;
+                        margin-bottom: 10px;
+                    }
                     .spinner { 
-                        border: 8px solid #f3f3f3; 
-                        border-top: 8px solid #3498db; 
+                        border: 4px solid rgba(255, 255, 255, 0.2); 
+                        border-top: 4px solid #ffffff; 
                         border-radius: 50%; 
-                        width: 60px; 
-                        height: 60px; 
+                        width: 40px; 
+                        height: 40px; 
                         animation: spin 1s linear infinite;
-                        margin: 0 auto 20px;
                     }
                     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-                    h1 { font-size: 2em; margin: 10px 0; }
-                    p { font-size: 1.2em; opacity: 0.9; }
-                    .status { margin-top: 20px; font-size: 0.9em; opacity: 0.7; }
+                    h1 { 
+                        font-size: 2.2em; 
+                        margin: 0; 
+                        font-weight: 600;
+                    }
+                    p { 
+                        font-size: 1em; 
+                        opacity: 0.8; 
+                        margin: 0;
+                    }
+                    .credits {
+                        margin-top: 30px;
+                        font-size: 0.85em;
+                        opacity: 0.6;
+                    }
                 </style>
             </head>
             <body>
                 <div class="loader-container">
-                    <div class="spinner"></div>
-                    <h1>🎯 BPSR Meter</h1>
+                    ${iconBase64 ? `<img src="${iconBase64}" alt="BPSR Meter" class="app-icon">` : ''}
+                    <h1>BPSR Meter</h1>
                     <p>Inicializando servidor backend...</p>
-                    <div class="status">Porta: ${server_port} | Aguardando resposta...</div>
+                    <div class="spinner"></div>
+                    <div class="credits">by gabrielsanbs ❤️</div>
                 </div>
             </body>
             </html>
@@ -311,7 +346,7 @@ function promoteOverlayWindow(win, { focus = false } = {}) {
             // Detectar mensagem de sucesso
             const match = output.match(/Servidor web iniciado en (http:\/\/localhost:\d+)/);
             if (match && match[1]) {
-                const serverUrl = match[1];
+                serverUrl = match[1]; // Armazenar globalmente
                 logToFile('✓ Servidor iniciado com sucesso! Carregando URL: ' + serverUrl + '/index.html');
                 mainWindow.loadURL(`${serverUrl}/index.html`);
                 createWindow.serverLoaded = true;
@@ -446,10 +481,11 @@ function promoteOverlayWindow(win, { focus = false } = {}) {
         }
     });
 
-    // Manejar el evento para cerrar la ventana
-    ipcMain.on('close-window', () => {
-        if (mainWindow) {
-            mainWindow.close();
+    // Manejar el evento para cerrar la ventana (fecha a janela que enviou o evento)
+    ipcMain.on('close-window', (event) => {
+        const win = BrowserWindow.fromWebContents(event.sender);
+        if (win) {
+            win.close();
         }
     });
 
@@ -614,11 +650,77 @@ function promoteOverlayWindow(win, { focus = false } = {}) {
             title: 'Histórico de Lutas - BPSR Meter'
         });
 
-        historyWindow.loadURL(`http://localhost:${server_port}/history.html`);
+        historyWindow.loadURL(`${serverUrl}/history.html`);
 
         historyWindow.on('closed', () => {
             historyWindow = null;
         });
+    });
+
+    // Manejar el evento para abrir la ventana de configurações
+    ipcMain.on('open-settings-window', () => {
+        if (settingsWindow) {
+            settingsWindow.focus();
+            return;
+        }
+
+        // Calcular posição: à direita da janela principal com espaçamento
+        let x = 100;
+        let y = 100;
+        
+        if (mainWindow) {
+            const mainBounds = mainWindow.getBounds();
+            const displays = screen.getAllDisplays();
+            const primaryDisplay = screen.getPrimaryDisplay();
+            
+            // Posicionar à direita da janela principal com 20px de espaço
+            x = mainBounds.x + mainBounds.width + 20;
+            y = mainBounds.y;
+            
+            // Verificar se a janela caberia na tela
+            if (x + 600 > primaryDisplay.workArea.x + primaryDisplay.workArea.width) {
+                // Se não couber à direita, colocar à esquerda
+                x = mainBounds.x - 600 - 20;
+                
+                // Se ainda não couber, centralizar na tela
+                if (x < primaryDisplay.workArea.x) {
+                    x = Math.floor((primaryDisplay.workArea.width - 600) / 2) + primaryDisplay.workArea.x;
+                    y = Math.floor((primaryDisplay.workArea.height - 700) / 2) + primaryDisplay.workArea.y;
+                }
+            }
+        }
+
+        settingsWindow = new BrowserWindow({
+            width: 600,
+            height: 700,
+            x: x,
+            y: y,
+            transparent: true,
+            frame: false,
+            alwaysOnTop: true,
+            resizable: false,
+            backgroundColor: '#00000000',
+            webPreferences: {
+                preload: path.join(__dirname, 'preload.js'),
+                nodeIntegration: false,
+                contextIsolation: true,
+            },
+            icon: path.join(__dirname, 'icon.ico'),
+            title: 'Configurações - BPSR Meter'
+        });
+
+        settingsWindow.loadURL(`${serverUrl}/settings.html`);
+
+        settingsWindow.on('closed', () => {
+            settingsWindow = null;
+        });
+    });
+
+    // Repassar mudanças de configurações para janela principal
+    ipcMain.on('settings-changed', (event, settings) => {
+        if (mainWindow && !mainWindow.isDestroyed()) {
+            mainWindow.webContents.send('settings-changed', settings);
+        }
     });
 }
 

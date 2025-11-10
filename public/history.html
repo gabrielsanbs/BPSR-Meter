@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="/socket.io/socket.io.js"></script>
     <style>
         :root {
             --bg-primary: #1a1d29;
@@ -36,63 +37,44 @@
             flex-direction: column;
         }
 
-        .title-bar {
-            background: #1a1d29;
-            padding: 8px 15px;
+        /* Header com estilo da tela principal */
+        header.controls {
+            background: rgba(26, 29, 41, 0.9);
+            padding: 8px 12px;
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            gap: 8px;
             border-bottom: 1px solid var(--border-color);
+            min-height: 50px;
+            cursor: move;
             -webkit-app-region: drag;
-            user-select: none;
         }
 
-        .title-bar-title {
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-
-        .title-bar-close {
+        header.controls button,
+        header.controls .control-button,
+        header.controls select,
+        header.controls .btn {
             -webkit-app-region: no-drag;
-            background: transparent;
-            border: none;
+        }
+
+        .control-button {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.13);
             color: var(--text-primary);
-            font-size: 1.2rem;
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
             cursor: pointer;
-            width: 30px;
-            height: 30px;
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: 4px;
-            transition: background 0.2s;
+            transition: all 0.2s;
+            font-size: 0.9rem;
         }
 
-        .title-bar-close:hover {
-            background: var(--accent-red);
-        }
-
-        .header {
-            background: var(--bg-secondary);
-            padding: 15px 20px;
-            border-bottom: 2px solid var(--border-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .header h1 {
-            font-size: 1.5rem;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .header-buttons {
-            display: flex;
-            gap: 10px;
+        .control-button:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-1px);
         }
 
         .btn {
@@ -214,75 +196,116 @@
             color: var(--text-secondary);
         }
 
-        .players-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 15px;
+        /* Estilos das barras de jogadores - igual à tela principal */
+        #player-bars-container { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 8px; 
         }
-
-        .player-card {
-            background: var(--bg-secondary);
+        
+        .player-bar { 
+            background-color: rgba(26, 29, 41, 0.6); 
+            border-radius: 8px; 
+            height: 55px; 
+            position: relative; 
+            overflow: hidden;
             border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 15px;
-            transition: all 0.2s;
         }
-
-        .player-card:hover {
-            border-color: var(--accent-blue);
-            transform: translateY(-2px);
+        
+        .progress-fill { 
+            position: absolute; 
+            left: 0; 
+            top: 0; 
+            height: 100%; 
+            border-radius: 8px; 
+            transition: width 0.4s ease-out; 
+            z-index: 1; 
         }
-
-        .player-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid var(--border-color);
+        
+        .player-bar[data-rank="1"] .progress-fill { 
+            background: linear-gradient(90deg, transparent, #4fc3f7) !important; 
         }
-
-        .player-rank {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--accent-blue);
-            width: 35px;
+        .player-bar[data-rank="2"] .progress-fill { 
+            background: linear-gradient(90deg, transparent, #28a745) !important; 
         }
-
-        .player-name {
-            flex: 1;
-            font-size: 1.1rem;
-            font-weight: 600;
+        .player-bar[data-rank="3"] .progress-fill { 
+            background: linear-gradient(90deg, transparent, #ffc107) !important; 
         }
-
-        .player-profession {
-            font-size: 0.85rem;
-            color: var(--text-secondary);
+        
+        .bar-content { 
+            position: relative; 
+            z-index: 2; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 4px 8px; 
+            height: 100%; 
         }
-
-        .player-stats {
+        
+        .column {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            justify-content: center;
         }
-
-        .player-stat-row {
+        
+        .name-col {
+            min-width: 140px;
+        }
+        
+        .player-name { 
+            font-size: 1rem; 
+            font-weight: 700; 
+            color: var(--text-primary);
+            white-space: nowrap; 
+            overflow: hidden; 
+            text-overflow: ellipsis; 
+        }
+        
+        .player-id { 
+            font-size: 0.75rem; 
+            color: var(--text-secondary); 
+        }
+        
+        .stats-col {
+            min-width: 120px;
+        }
+        
+        .stats-group, .stats-extra {
             display: flex;
-            justify-content: space-between;
+            flex-direction: column;
+            gap: 2px;
+        }
+        
+        .stat-row {
+            display: flex;
             align-items: center;
+            gap: 5px;
+            font-size: 0.75rem;
+        }
+        
+        .stat-label {
+            color: var(--text-secondary);
+            font-weight: 600;
+            min-width: 35px;
+        }
+        
+        .stat-value {
+            color: var(--text-primary);
+            font-weight: 700;
+            min-width: 45px;
+            text-align: right;
+        }
+        
+        .stat-icon {
             font-size: 0.9rem;
         }
-
-        .player-stat-label {
-            color: var(--text-secondary);
-            display: flex;
-            align-items: center;
-            gap: 6px;
+        
+        .icon-col {
+            min-width: 65px;
         }
-
-        .player-stat-value {
-            font-weight: 600;
-            color: var(--accent-green);
+        
+        .extra-col {
+            min-width: 120px;
         }
 
         .empty-message {
@@ -318,45 +341,38 @@
     </style>
 </head>
 <body>
-    <div class="title-bar">
-        <div class="title-bar-title">Histórico de Lutas - BPSR Meter</div>
-        <div style="display: flex; gap: 5px; -webkit-app-region: no-drag;">
-            <button class="title-bar-close" onclick="minimizeHistoryWindow()" title="Minimizar" style="background: rgba(255, 193, 7, 0.2);">
-                <i class="fa-solid fa-window-minimize"></i>
-            </button>
-            <button class="title-bar-close" onclick="window.close()" title="Fechar">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
+    <!-- Header similar à tela principal -->
+    <header class="controls" style="padding: 8px 12px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border-color); background: rgba(26, 29, 41, 0.9);">
+        <div style="position: relative; width: 32px; height: 32px; margin-right: 10px;">
+            <img src="/icon.png" alt="Logo" style="height: 32px;">
         </div>
-    </div>
-    
-    <div class="header">
-        <h1 id="header-title">
-            <i class="fa-solid fa-clock-rotate-left"></i>
-            <span data-i18n="title">Histórico de Lutas</span>
-        </h1>
-        <div class="header-buttons">
+        <div style="flex-grow: 1; display: flex; align-items: center; gap: 12px;">
+            <div style="font-size: 1.1rem; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                <span data-i18n="title">Histórico de Lutas</span>
+            </div>
             <!-- Seletor de idioma -->
-            <select id="language-selector" style="padding: 8px 12px; border-radius: 6px; background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border-color); cursor: pointer; font-family: 'Inter', sans-serif; margin-right: 10px;">
-                <option value="pt-BR">🇧🇷 Português</option>
-                <option value="en">🇺🇸 English</option>
-                <option value="es">🇪🇸 Español</option>
+            <select id="language-selector" style="padding: 6px 10px; border-radius: 6px; background: rgba(20, 22, 31, 0.9); color: #ffffff; border: 1px solid var(--border-color); cursor: pointer; font-family: 'Inter', sans-serif; font-size: 0.85rem;">
+                <option value="pt-BR" style="background: rgba(20, 22, 31, 0.95); color: #ffffff;">🇧🇷 PT</option>
+                <option value="en" style="background: rgba(20, 22, 31, 0.95); color: #ffffff;">🇺🇸 EN</option>
+                <option value="es" style="background: rgba(20, 22, 31, 0.95); color: #ffffff;">🇪🇸 ES</option>
             </select>
-            
-            <button class="btn btn-back" id="back-btn" style="display: none;">
-                <i class="fa-solid fa-arrow-left"></i>
-                <span data-i18n="back">Voltar</span>
-            </button>
-            <button class="btn" id="refresh-btn">
-                <i class="fa-solid fa-rotate"></i>
-                <span data-i18n="refresh">Atualizar</span>
-            </button>
-            <button class="btn btn-danger" id="clear-all-btn">
-                <i class="fa-solid fa-trash"></i>
-                <span data-i18n="clear">Limpar Tudo</span>
-            </button>
         </div>
-    </div>
+        <button class="btn btn-back" id="back-btn" style="display: none; padding: 6px 12px; font-size: 0.85rem;">
+            <i class="fa-solid fa-arrow-left"></i>
+            <span data-i18n="back">Voltar</span>
+        </button>
+        <button class="btn" id="refresh-btn" style="padding: 6px 12px; font-size: 0.85rem;">
+            <i class="fa-solid fa-rotate"></i>
+            <span data-i18n="refresh">Atualizar</span>
+        </button>
+        <button class="control-button" onclick="minimizeHistoryWindow()" title="Minimizar" style="width: 32px; height: 32px; font-size: 0.9rem;">
+            <i class="fa-solid fa-window-minimize"></i>
+        </button>
+        <button class="control-button" onclick="window.close()" title="Fechar" style="width: 32px; height: 32px; font-size: 0.9rem;">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+    </header>
 
     <div class="content">
         <div id="fight-list-container"></div>
@@ -394,7 +410,12 @@
                 now: 'Agora',
                 min: 'min',
                 hour: 'h',
-                hours: 'horas'
+                hours: 'horas',
+                sortByDps: 'Ordenar por DPS',
+                sortByDmg: 'Ordenar por DMG Total',
+                sortByHps: 'Ordenar por HPS',
+                sortByHealing: 'Ordenar por Cura Total',
+                emptyHistory: 'Nenhuma luta registrada ainda'
             },
             'en': {
                 title: 'Fight History',
@@ -420,7 +441,12 @@
                 now: 'Now',
                 min: 'min',
                 hour: 'h',
-                hours: 'hours'
+                hours: 'hours',
+                sortByDps: 'Sort by DPS',
+                sortByDmg: 'Sort by Total DMG',
+                sortByHps: 'Sort by HPS',
+                sortByHealing: 'Sort by Total Healing',
+                emptyHistory: 'No fights recorded yet'
             },
             'es': {
                 title: 'Historial de Combates',
@@ -446,7 +472,12 @@
                 now: 'Ahora',
                 min: 'min',
                 hour: 'h',
-                hours: 'horas'
+                hours: 'horas',
+                sortByDps: 'Ordenar por DPS',
+                sortByDmg: 'Ordenar por DMG Total',
+                sortByHps: 'Ordenar por HPS',
+                sortByHealing: 'Ordenar por Curación Total',
+                emptyHistory: 'Ningún combate registrado aún'
             }
         };
 
@@ -459,7 +490,6 @@
                 const key = el.getAttribute('data-i18n');
                 el.textContent = t(key);
             });
-            document.querySelector('.title-bar-title').textContent = t('titleBar');
             document.title = t('titleBar');
         }
 
@@ -512,7 +542,7 @@
                 const container = document.getElementById('fight-list-container');
                 
                 if (history.length === 0) {
-                    container.innerHTML = `<div class="empty-message"><i class="fa-solid fa-inbox"></i>Nenhuma luta registrada ainda</div>`;
+                    container.innerHTML = `<div class="empty-message"><i class="fa-solid fa-inbox"></i>${t('emptyHistory')}</div>`;
                     return;
                 }
 
@@ -539,45 +569,181 @@
             }
         }
 
-        async function showFightDetails(fightId) {
+        // Variável para controlar o modo de ordenação
+        let currentSortMode = 'dps'; // 'dps' ou 'dmg'
+
+        // Mapa de profissões (copiar do main.js)
+        const professionMap = {
+            '雷影剑士': { name: 'Stormblade', icon: 'Stormblade.png', role: 'dps' },
+            '冰魔导师': { name: 'Frost Mage', icon: 'Frost Mage.png', role: 'dps' },
+            '涤罪恶火·战斧': { name: 'Heavy Guardian', icon: 'Heavy Guardian.png', role: 'dps' },
+            '青岚骑士': { name: 'Wind Knight', icon: 'Wind Knight.png', role: 'dps' },
+            '森语者': { name: 'Verdant Oracle', icon: 'Verdant Oracle.png', role: 'healer' },
+            '雷霆一闪·手炮': { name: 'Gunner', icon: 'desconocido.png', role: 'dps' },
+            '巨刃守护者': { name: 'Heavy Guardian', icon: 'Heavy Guardian.png', role: 'tank' },
+            '暗灵祈舞·仪刀/仪仗': { name: 'Spirit Dancer', icon: 'desconocido.png', role: 'dps' },
+            '神射手': { name: 'Marksman', icon: 'arco_halcon.png', role: 'dps' },
+            '神盾骑士': { name: 'Shield Knight', icon: 'Shield Knight.png', role: 'tank' },
+            '灵魂乐手': { name: 'Beat Performer', icon: 'Beat Performer.png', role: 'healer' },
+            '居合': { name: 'Iaido Slash', icon: 'Iaido Slash.png', role: 'dps' },
+            '月刃': { name: 'MoonStrike', icon: 'MoonStrike.png', role: 'dps' },
+            '冰矛': { name: 'Icicle', icon: 'Icicle.png', role: 'dps' },
+            '射线': { name: 'Frostbeam', icon: 'Frostbeam.png', role: 'dps' },
+            '防盾': { name: 'Recovery', icon: 'Recovery.png', role: 'tank' },
+            '光盾': { name: 'Shield', icon: 'Shield.png', role: 'tank' },
+            '格挡': { name: 'Block', icon: 'Block.png', role: 'tank' },
+            '岩盾': { name: 'Earthfort', icon: 'Earthfort.png', role: 'tank' },
+            '惩戒': { name: 'Smite', icon: 'Smite.png', role: 'healer' },
+            '愈合': { name: 'Lifebind', icon: 'Lifebind.png', role: 'healer' },
+            '狼弓': { name: 'Wildpack', icon: 'arco_lobo.png', role: 'dps' },
+            '鹰弓': { name: 'Falconry', icon: 'arco_halcon.png', role: 'dps' },
+            '协奏': { name: 'Concerto', icon: 'Concerto.png', role: 'healer' },
+            '狂音': { name: 'Dissonance', icon: 'Dissonance.png', role: 'healer' },
+            '空枪': { name: 'Skyward', icon: 'Skyward.png', role: 'dps' },
+            '重装': { name: 'Vanguard', icon: 'Vanguard.png', role: 'dps' }
+        };
+        const defaultProfession = { name: 'Unknown', icon: 'desconocido.png', role: 'dps' };
+
+        async function showFightDetails(fightId, sortMode = 'dps') {
             try {
                 const response = await fetch(`/api/fight-history/${fightId}`);
                 const data = await response.json();
                 const fight = data.data;
                 currentView = 'details';
                 currentFightId = fightId;
+                currentSortMode = sortMode;
                 document.getElementById('fight-list-container').style.display = 'none';
                 document.getElementById('fight-details-container').style.display = 'block';
                 document.getElementById('back-btn').style.display = 'flex';
 
-                const players = fight.players.slice(0, 20);
+                let players = [...fight.players];
+                
+                // Ordenar de acordo com o modo selecionado
+                if (sortMode === 'dps') {
+                    players.sort((a, b) => (b.totalDps || 0) - (a.totalDps || 0));
+                } else if (sortMode === 'dmg') {
+                    players.sort((a, b) => (b.totalDamage || 0) - (a.totalDamage || 0));
+                } else if (sortMode === 'hps') {
+                    players.sort((a, b) => (b.totalHps || 0) - (a.totalHps || 0));
+                } else if (sortMode === 'healing') {
+                    players.sort((a, b) => (b.totalHealing || 0) - (a.totalHealing || 0));
+                }
+                
+                players = players.slice(0, 20);
                 const playersText = fight.players.length === 1 ? t('player') : t('players');
+                
+                // Calcular o valor máximo de acordo com a ordenação
+                let maxValue = 1;
+                if (players.length > 0) {
+                    if (sortMode === 'dps') maxValue = players[0].totalDps;
+                    else if (sortMode === 'dmg') maxValue = players[0].totalDamage;
+                    else if (sortMode === 'hps') maxValue = players[0].totalHps;
+                    else if (sortMode === 'healing') maxValue = players[0].totalHealing;
+                }
+                
+                // Cores do gradiente para os ranks
+                const playerColors = ['#4fc3f7', '#28a745', '#ffc107', '#dc3545', '#17a2b8', '#6f42c1', '#fd7e14', '#20c997'];
+                
+                // Buscar o número sequencial da luta no histórico completo
+                const historyResponse = await fetch('/api/fight-history');
+                const historyData = await historyResponse.json();
+                const fullHistory = historyData.data || [];
+                const fightIndex = fullHistory.findIndex(f => f.id === fightId);
+                const fightNumber = fightIndex !== -1 ? fullHistory.length - fightIndex : '?';
+                
                 document.getElementById('fight-details-container').innerHTML = `
                     <div class="fight-details-header">
-                        <div class="fight-details-title">${t('details')} #${fightId}</div>
+                        <div class="fight-details-title">${t('details')} #${fightNumber}</div>
                         <div class="fight-details-meta">
                             <div><i class="fa-solid fa-calendar"></i> ${formatTimestamp(fight.startTime)}</div>
                             <div><i class="fa-solid fa-clock"></i> ${t('duration')}: ${formatDuration(fight.duration)}</div>
                             <div><i class="fa-solid fa-users"></i> ${fight.players.length} ${playersText}</div>
                         </div>
+                        <div style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;">
+                            <button class="btn ${sortMode === 'dps' ? 'btn-primary' : ''}" onclick="showFightDetails(${fightId}, 'dps')" style="padding: 8px 16px; font-size: 0.9rem;">
+                                <i class="fa-solid fa-bolt"></i> ${t('sortByDps')}
+                            </button>
+                            <button class="btn ${sortMode === 'dmg' ? 'btn-primary' : ''}" onclick="showFightDetails(${fightId}, 'dmg')" style="padding: 8px 16px; font-size: 0.9rem;">
+                                <i class="fa-solid fa-fire"></i> ${t('sortByDmg')}
+                            </button>
+                            <button class="btn ${sortMode === 'hps' ? 'btn-primary' : ''}" onclick="showFightDetails(${fightId}, 'hps')" style="padding: 8px 16px; font-size: 0.9rem;">
+                                <i class="fa-solid fa-heart-pulse"></i> ${t('sortByHps')}
+                            </button>
+                            <button class="btn ${sortMode === 'healing' ? 'btn-primary' : ''}" onclick="showFightDetails(${fightId}, 'healing')" style="padding: 8px 16px; font-size: 0.9rem;">
+                                <i class="fa-solid fa-hand-holding-medical"></i> ${t('sortByHealing')}
+                            </button>
+                        </div>
                     </div>
-                    <div class="players-grid">${players.map((player, index) => `
-                        <div class="player-card">
-                            <div class="player-header">
-                                <div class="player-rank">#${index + 1}</div>
-                                <div>
-                                    <div class="player-name">${player.name}</div>
+                    <div id="player-bars-container" style="padding: 0 20px 20px;">
+                    </div>`;
+                
+                // Renderizar as barras dos jogadores
+                const playerBarsContainer = document.getElementById('player-bars-container');
+                players.forEach((player, index) => {
+                    let currentValue;
+                    if (sortMode === 'dps') currentValue = player.totalDps;
+                    else if (sortMode === 'dmg') currentValue = player.totalDamage;
+                    else if (sortMode === 'hps') currentValue = player.totalHps;
+                    else if (sortMode === 'healing') currentValue = player.totalHealing;
+                    
+                    const valuePercent = maxValue > 0 ? (currentValue / maxValue) * 100 : 0;
+                    const visualBarWidth = (valuePercent * 0.35).toFixed(1);
+                    const color = playerColors[index % playerColors.length];
+                    const dpsColor = `linear-gradient(90deg, transparent, ${color})`;
+                    const rank = index + 1;
+                    
+                    // Obter ícone de profissão
+                    const profession = player.profession || '';
+                    const professionParts = profession.split('-');
+                    const mainProfessionKey = professionParts[0];
+                    const subProfessionKey = professionParts[1];
+                    const mainProf = professionMap[mainProfessionKey] || defaultProfession;
+                    const subProf = professionMap[subProfessionKey];
+                    const prof = subProf || mainProf;
+                    
+                    const playerBarHTML = `
+                        <div class="player-bar" data-rank="${rank}">
+                            <div class="progress-fill" style="width: ${visualBarWidth}%; background: ${dpsColor}"></div>
+                            <div class="bar-content">
+                                <div class="column name-col">
+                                    <span class="player-name">${player.name}</span>
+                                    <span class="player-id">Rank #${rank}</span>
+                                </div>
+                                <div class="column stats-col" style="margin-left: 40px;">
+                                    <div class="stats-group">
+                                        <div class="stat-row"><span class="stat-value">${formatStat(player.totalDps)}</span><span class="stat-label">DPS</span></div>
+                                        <div class="stat-row"><span class="stat-value">${formatStat(player.totalHps || 0)}</span><span class="stat-label" style="color: #28a745;">HPS</span></div>
+                                        <div class="stat-row"><span class="stat-value">${player.critRate ? player.critRate.toFixed(1) : '0'}%</span><span class="stat-label" style="color: #ffc107;">CRIT</span></div>
+                                    </div>
+                                </div>
+                                <div class="column icon-col" style="flex-direction: column; justify-content: center; align-items: center; text-align: center; min-width: 65px; position: relative; margin-left: -10px;">
+                                    <img class="class-icon" src="icons/${prof.icon}" alt="icon" style="height: 42px; width: 42px; border-radius: 8px;">
+                                    <span style="font-size: 0.8rem; font-weight: 600; color: #fff; background: rgba(0, 0, 0, 0.5); padding: 0 4px; border-radius: 5px; position: absolute; top: 12.5px; left: 50%; transform: translateX(-50%); text-shadow: 0 0 2px rgba(0,0,0,0.7);">${valuePercent.toFixed(1)}%</span>
+                                </div>
+                                <div class="column extra-col" style="margin-left: -10px;">
+                                    <div class="stats-extra">
+                                        <div class="stat-row">
+                                            <span class="stat-label">MAX</span>
+                                            <span class="stat-icon"> ⚔</span>
+                                            <span class="stat-value">${formatStat(player.peakDps || 0)}</span>
+                                        </div>
+                                        <div class="stat-row">
+                                            <span class="stat-label">DMG</span>
+                                            <span class="stat-icon">🔥</span>
+                                            <span class="stat-value">${formatStat(player.totalDamage)}</span>
+                                        </div>
+                                        <div class="stat-row">
+                                            <span class="stat-label">HEAL</span>
+                                            <span class="stat-icon" style="color: #28a745;">⛨</span>
+                                            <span class="stat-value">${formatStat(player.totalHealing || 0)}</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="player-stats">
-                                <div class="player-stat-row"><span class="player-stat-label"><i class="fa-solid fa-fire"></i> ${t('dps')}</span><span class="player-stat-value">${formatStat(player.totalDps)}</span></div>
-                                <div class="player-stat-row"><span class="player-stat-label"><i class="fa-solid fa-sword"></i> ${t('totalDamage')}</span><span class="player-stat-value">${formatStat(player.totalDamage)}</span></div>
-                                <div class="player-stat-row"><span class="player-stat-label"><i class="fa-solid fa-heart"></i> ${t('hps')}</span><span class="player-stat-value">${formatStat(player.totalHps)}</span></div>
-                                <div class="player-stat-row"><span class="player-stat-label"><i class="fa-solid fa-sparkles"></i> ${t('crit')}</span><span class="player-stat-value">${player.critRate.toFixed(1)}%</span></div>
-                                <div class="player-stat-row"><span class="player-stat-label"><i class="fa-solid fa-chart-line"></i> ${t('peakDps')}</span><span class="player-stat-value">${formatStat(player.peakDps)}</span></div>
-                            </div>
-                        </div>`).join('')}
-                    </div>`;
+                        </div>`;
+                    
+                    playerBarsContainer.innerHTML += playerBarHTML;
+                });
             } catch (error) {
                 console.error('Erro ao carregar detalhes:', error);
                 alert(t('errorDetails'));
@@ -593,38 +759,60 @@
             loadFightList();
         }
 
-        // Event listener do seletor de idioma
-        document.getElementById('language-selector').addEventListener('change', (e) => {
-            currentLanguage = e.target.value;
-            localStorage.setItem('historyLanguage', currentLanguage);
-            applyTranslations();
-            // Recarregar lista/detalhes para aplicar traduções
-            if (currentView === 'list') {
-                loadFightList();
-            } else {
-                showFightDetails(currentFightId);
-            }
-        });
-
-        document.getElementById('refresh-btn').addEventListener('click', () => currentView === 'list' ? loadFightList() : showFightDetails(currentFightId));
-        document.getElementById('clear-all-btn').addEventListener('click', async () => {
-            if (confirm(t('confirmClear'))) {
-                try {
-                    await fetch('/api/fight-history/clear', { method: 'POST' });
-                    goBackToList();
-                } catch (err) {
-                    console.error('Erro ao limpar histórico:', err);
-                    alert(t('errorClear'));
+        // Função de inicialização
+        function initHistory() {
+            // Event listener do seletor de idioma
+            document.getElementById('language-selector').addEventListener('change', (e) => {
+                currentLanguage = e.target.value;
+                localStorage.setItem('historyLanguage', currentLanguage);
+                applyTranslations();
+                // Recarregar lista/detalhes para aplicar traduções
+                if (currentView === 'list') {
+                    loadFightList();
+                } else if (currentFightId) {
+                    showFightDetails(currentFightId, currentSortMode);
                 }
-            }
-        });
-        document.getElementById('back-btn').addEventListener('click', goBackToList);
+            });
 
-        // Aplicar idioma salvo ao carregar
-        document.getElementById('language-selector').value = currentLanguage;
-        applyTranslations();
-        loadFightList();
-        setInterval(() => { if (currentView === 'list') loadFightList(); }, 5000);
+            document.getElementById('refresh-btn').addEventListener('click', () => currentView === 'list' ? loadFightList() : showFightDetails(currentFightId, currentSortMode));
+            document.getElementById('back-btn').addEventListener('click', goBackToList);
+
+            // Aplicar idioma salvo ao carregar
+            document.getElementById('language-selector').value = currentLanguage;
+            applyTranslations();
+            
+            // Carregar lista de lutas automaticamente
+            loadFightList();
+            
+            // Atualizar automaticamente a cada 5 segundos
+            setInterval(() => { 
+                if (currentView === 'list') loadFightList(); 
+            }, 5000);
+
+            // Conectar ao Socket.IO para atualizações em tempo real
+            setupSocketIO();
+        }
+
+        // Configurar Socket.IO
+        function setupSocketIO() {
+            const socket = io();
+
+            // Escutar evento de nova luta salva
+            socket.on('fight-saved', (data) => {
+                // Se estiver na lista, recarregar automaticamente
+                if (currentView === 'list') {
+                    loadFightList();
+                }
+            });
+        }
+
+        // Inicializar quando o documento estiver pronto
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initHistory);
+        } else {
+            // DOM já está pronto, executar imediatamente
+            initHistory();
+        }
     </script>
 </body>
 </html>

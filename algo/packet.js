@@ -280,7 +280,19 @@ class PacketProcessor {
         const attrCollection = aoiSyncDelta.Attrs;
         if (attrCollection && attrCollection.Attrs) {
             if (isTargetPlayer) {
-                this._processPlayerAttrs(targetUuid.toNumber(), attrCollection.Attrs);
+                const playerUid = targetUuid.toNumber();
+                this._processPlayerAttrs(playerUid, attrCollection.Attrs);
+                
+                // Tentar obter nome do playerMap se não veio nos atributos
+                const uidStr = String(playerUid);
+                if (this.userDataManager.playerMap.has(uidStr)) {
+                    const nameFromPlayerMap = this.userDataManager.playerMap.get(uidStr);
+                    const currentUser = this.userDataManager.users.get(playerUid);
+                    if (currentUser && currentUser.name && currentUser.name.startsWith('Player ')) {
+                        this.logger.info(`Using cached name from playerMap for UID ${playerUid}: ${nameFromPlayerMap}`);
+                        this.userDataManager.setName(playerUid, nameFromPlayerMap);
+                    }
+                }
             } else if (isTargetMonster) {
                 this._processEnemyAttrs(targetUuid.toNumber(), attrCollection.Attrs);
             }
@@ -570,12 +582,14 @@ class PacketProcessor {
     }
 
     _processPlayerAttrs(playerUid, attrs) {
+        let hasName = false;
         for (const attr of attrs) {
             if (!attr.Id || !attr.RawData) continue;
             const reader = pbjs.Reader.create(attr.RawData);
 
             switch (attr.Id) {
                 case AttrType.AttrName:
+                    hasName = true;
                     const playerName = reader.string();
                     this.logger.debug(`_processPlayerAttrs: Setting player name for UID ${playerUid}: ${playerName}`);
                     this.userDataManager.setName(playerUid, playerName);
@@ -631,6 +645,11 @@ class PacketProcessor {
                     break;
             }
         }
+        
+        // Log se o jogador foi detectado mas não tem nome
+        if (!hasName) {
+            this.logger.warn(`Player ${playerUid} detected but AttrName not in packet. Waiting for name update...`);
+        }
     }
 
     _processEnemyAttrs(enemyUid, attrs) {
@@ -685,6 +704,17 @@ class PacketProcessor {
                         break;
                     case pb.EEntityType.EntChar:
                         this._processPlayerAttrs(entityUid, attrCollection.Attrs);
+                        
+                        // Tentar obter nome do playerMap se não veio nos atributos
+                        const uidStr = String(entityUid);
+                        if (this.userDataManager.playerMap.has(uidStr)) {
+                            const nameFromPlayerMap = this.userDataManager.playerMap.get(uidStr);
+                            const currentUser = this.userDataManager.users.get(entityUid);
+                            if (currentUser && currentUser.name && currentUser.name.startsWith('Player ')) {
+                                this.logger.info(`Using cached name from playerMap for UID ${entityUid}: ${nameFromPlayerMap}`);
+                                this.userDataManager.setName(entityUid, nameFromPlayerMap);
+                            }
+                        }
                         break;
                     default:
                         // this.logger.debug('Get AttrCollection for Unknown EntType' + entity.EntType);

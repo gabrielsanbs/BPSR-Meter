@@ -5,12 +5,10 @@ const socket = io();
 socket.on('game-connected', (data) => {
     if (data.connected) {
         gameConnected = true;
-        console.log('[CONNECTION] Conectado ao jogo! gameConnected=true');
         
         // IMPORTANTE: Parar qualquer timer de sync que esteja rodando
         if (syncTimerInterval) {
             stopSyncTimer();
-            console.log('[CONNECTION] Timer de sync parado ao conectar');
         }
         
         // Forçar atualização do ícone imediatamente
@@ -71,6 +69,8 @@ const professionMap = {
     let gameConnected = false; // Estado de conexão com o jogo
     let lastPlayerCount = 0; // Controle para evitar resize desnecessário
     let resizeThrottleTimeout = null; // Throttle para updateWindowSize
+    let maxPlayersToShow = 6; // Número máximo de jogadores a exibir (configurável)
+    let autoResetEnabled = false; // Estado do reset automático
 
     const dpsTimerDiv = document.getElementById('dps-timer');
     const playerBarsContainer = document.getElementById('player-bars-container');
@@ -225,7 +225,6 @@ const professionMap = {
                     startX = e.screenX;
                     startY = e.screenY;
                     dragIndicator.style.cursor = 'grabbing';
-                    console.log('[DRAG] mousedown - startX:', startX, 'startY:', startY);
                     e.preventDefault(); // Prevenir seleção de texto
                 }
             });
@@ -235,8 +234,6 @@ const professionMap = {
                     // Calcular quanto o mouse se moveu desde o início
                     const deltaX = e.screenX - startX;
                     const deltaY = e.screenY - startY;
-                    
-                    console.log('[DRAG] mousemove - screenX:', e.screenX, 'screenY:', e.screenY, 'deltaX:', deltaX, 'deltaY:', deltaY);
                     
                     // Enviar delta para o processo principal
                     window.electronAPI.windowDragMove(deltaX, deltaY);
@@ -251,7 +248,6 @@ const professionMap = {
                 if (isDragging) {
                     isDragging = false;
                     dragIndicator.style.cursor = 'grab';
-                    console.log('[DRAG] mouseup - drag finalizado');
                 }
             });
 
@@ -260,7 +256,6 @@ const professionMap = {
                 if (isDragging) {
                     isDragging = false;
                     dragIndicator.style.cursor = 'grab';
-                    console.log('[DRAG] mouseleave - drag cancelado');
                 }
             });
         }
@@ -301,13 +296,12 @@ const professionMap = {
         
         // Só fazer resize se o número de players mudou (evita fundo preto em updates constantes)
         if (numPlayers === lastPlayerCount && resizeThrottleTimeout) {
-            console.log('[RESIZE] Pulando resize - mesmo número de players:', numPlayers);
             return;
         }
         
         lastPlayerCount = numPlayers;
         
-        // Throttle agressivo - só resize a cada 200ms
+        // Throttle para evitar resize excessivo
         if (resizeThrottleTimeout) {
             clearTimeout(resizeThrottleTimeout);
         }
@@ -320,7 +314,7 @@ const professionMap = {
             const barHeight = 55; // Altura de cada barra de jugador
             const barGap = 8;    // Espacio entre barras
 
-            const numPlayersCapped = Math.min(numPlayers, 10); // Limitar a 10 barras
+            const numPlayersCapped = Math.min(numPlayers, maxPlayersToShow); // Limitar conforme configuração
 
             let barsHeight = 0;
             if (numPlayersCapped > 0) {
@@ -343,18 +337,16 @@ const professionMap = {
             const finalWidth = Math.round(baseWidth * currentZoom);
             const finalHeight = Math.round(totalContentHeightUnscaled * currentZoom);
             
-            console.log('[RESIZE] Aplicando resize - players:', numPlayers, 'mapNotice:', mapNoticeHeight, 'width:', finalWidth, 'height:', finalHeight);
             window.electronAPI.resizeWindow(finalWidth, finalHeight);
             
             resizeThrottleTimeout = null;
-        }, 200); // 200ms de throttle
+        }, 150); // 100ms de throttle para resposta mais rápida
     }
 
     function resetDpsMeter() {
         fetch('/api/clear');
         dpsTimerDiv.style.display = 'none';
         dpsTimerDiv.innerText = '';
-        console.log('Medidor reiniciado.');
         lastTotalDamage = 0;
         lastDamageChangeTime = Date.now();
         stopSyncTimer(); // Detener el temporizador de sincronización al reiniciar
@@ -365,7 +357,6 @@ const professionMap = {
         // No modificar el estado visual aquí, se gestiona en updateSyncButtonState
         try {
             await fetch('/api/sync', { method: 'POST' });
-            console.log('Datos sincronizados internamente.');
         } catch (error) {
             console.error('Error al sincronizar datos:', error);
         }
@@ -376,16 +367,16 @@ const professionMap = {
         clearTimeout(syncTimerDisplayTimeout); // Limpiar cualquier timeout pendiente
 
         // PRIORIDADE MÁXIMA: Se conectado ao jogo, NUNCA mostrar ícone de loading
+        // Também esconder se há timer ativo (significa que há dados/luta)
         if (gameConnected) {
             syncIcon.style.display = 'none';
             syncIcon.classList.remove('spinning');
             syncTimerSpan.style.display = 'none';
             syncTimerSpan.innerText = '';
-            console.log('[LOADING] Jogo conectado - TUDO escondido (timer ativo:', !!syncTimerInterval, ')');
             return; // PARAR AQUI - não processar mais nada
         }
 
-        // Só chega aqui se NÃO conectado ao jogo
+        // Só chega aqui se NÃO conectado ao jogo E sem jogadores
         if (syncTimerInterval) { // Se o temporizador está ativo (há conta regresiva)
             if (syncCountdown <= 60) {
                 // Mostrar temporizador, ocultar icono
@@ -393,13 +384,11 @@ const professionMap = {
                 syncIcon.classList.remove('spinning');
                 syncTimerSpan.innerText = `${syncCountdown}s`;
                 syncTimerSpan.style.display = 'block';
-                console.log('[LOADING] Temporizador ativo - mostrando countdown:', syncCountdown);
             } else {
                 // Mostrar icono girando, ocultar temporizador
                 syncIcon.style.display = 'block';
                 syncIcon.classList.add('spinning');
                 syncTimerSpan.style.display = 'none';
-                console.log('[LOADING] Temporizador ativo - mostrando ícone girando');
             }
         } else { // Si el temporizador no está activo
             // Mostrar ícone girando quando desconectado e sem timer
@@ -407,7 +396,6 @@ const professionMap = {
             syncIcon.classList.add('spinning');
             syncTimerSpan.style.display = 'none';
             syncTimerSpan.innerText = '';
-            console.log('[LOADING] Sem timer - mostrando ícone girando');
         }
     }
 
@@ -432,7 +420,6 @@ const professionMap = {
         syncTimerInterval = null;
         clearTimeout(syncTimerDisplayTimeout); // Limpiar el timeout si existe
         updateSyncButtonState(); // Restablecer el estado del indicador
-        console.log('[LOADING] Timer parado, gameConnected=', gameConnected);
     }
 
     function formatTimer(ms) {
@@ -544,6 +531,12 @@ const professionMap = {
                 fetch('/api/diccionario'),
                 fetch('/api/settings')
             ]);
+            
+            // Verificar status das respostas
+            if (!dataRes.ok || !diccRes.ok || !settingsRes.ok) {
+                throw new Error(`Fetch failed: data=${dataRes.status}, dicc=${diccRes.status}, settings=${settingsRes.status}`);
+            }
+            
             const userData = await dataRes.json();
             const diccionarioData = await diccRes.json();
             const currentGlobalSettings = await settingsRes.json();
@@ -552,14 +545,8 @@ const professionMap = {
             userArray = userArray.filter(u => u.total_damage && u.total_damage.total > 0);
 
             if (!userArray || userArray.length === 0) {
-                // Só mostrar loading se NÃO estiver conectado ao jogo
-                if (!gameConnected) {
-                    loadingIndicator.style.display = 'flex';
-                    console.log('[LOADING] Sem dados e sem conexão - mostrando loading');
-                } else {
-                    loadingIndicator.style.display = 'none';
-                    console.log('[LOADING] Sem dados mas conectado - escondendo loading');
-                }
+                // NUNCA mostrar loading se há jogadores ativos (mesmo que array vazio agora)
+                loadingIndicator.style.display = 'none';
                 playerBarsContainer.style.display = 'none'; // Ocultar el contenedor de barras
                 updateSyncButtonState();
                 return;
@@ -573,10 +560,8 @@ const professionMap = {
             const hasTemporaryNames = userArray.some(u => u.name && u.name.startsWith('Player '));
             if (hasTemporaryNames && mapNoticeVisible && mapChangeNotice) {
                 mapChangeNotice.style.display = 'block';
-                console.log('[MAP-NOTICE] Players com nomes temporários detectados - mostrando aviso');
             } else if (mapChangeNotice) {
                 mapChangeNotice.style.display = 'none';
-                console.log('[MAP-NOTICE] Sem nomes temporários ou aviso oculto');
             }
 
             const sumaTotalDamage = userArray.reduce((acc, u) => acc + (u.total_damage && u.total_damage.total ? Number(u.total_damage.total) : 0), 0);
@@ -618,7 +603,7 @@ const professionMap = {
                 userArray.sort((a, b) => (b.total_damage && b.total_damage.total ? Number(b.total_damage.total) : 0) - (a.total_damage && a.total_damage.total ? Number(a.total_damage.total) : 0));
             }
             
-            userArray = userArray.slice(0, 20);
+            userArray = userArray.slice(0, maxPlayersToShow);
 
             if (isLiteMode) {
                 container.innerHTML = userArray.map((u, index) => {
@@ -773,7 +758,6 @@ const professionMap = {
                 body: JSON.stringify({ paused }),
             });
             const data = await res.json();
-            console.log(data.msg);
             isPaused = data.paused;
             return isPaused;
         } catch (err) {
@@ -788,7 +772,7 @@ const professionMap = {
                 fetchDataAndRender();
                 updateLogsUI();
             }
-        }, 70); // Otimizado: 50ms → 250ms (4 atualizações/segundo é suficiente)
+        }, 70); // Atualização rápida para resposta imediata
     }
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -834,7 +818,7 @@ const professionMap = {
 
 
     // Gerenciamento do histórico de lutas
-    let autoResetEnabled = false;
+    // autoResetEnabled já declarado no topo do arquivo
 
     // Abrir janela de histórico
     function openHistoryWindow() {
@@ -852,65 +836,51 @@ const professionMap = {
             });
         }
 
-        // Botão de limpar histórico
-        const clearHistoryButton = document.getElementById('clear-history-button');
-        if (clearHistoryButton) {
-            clearHistoryButton.addEventListener('click', async (e) => {
-                e.stopPropagation();
-                if (confirm('Deseja limpar todo o histórico de lutas?')) {
-                    try {
-                        await fetch('/api/fight-history/clear', { method: 'POST' });
-                        console.log('Histórico limpo com sucesso!');
-                    } catch (err) {
-                        console.error('Erro ao limpar histórico:', err);
-                    }
+        // Botão de configurações - abre nova janela
+        const settingsButton = document.getElementById('settings-button');
+        if (settingsButton) {
+            settingsButton.addEventListener('click', () => {
+                if (window.electronAPI && window.electronAPI.openSettingsWindow) {
+                    window.electronAPI.openSettingsWindow();
                 }
             });
         }
 
-        // Botão de reset automático
-        const autoResetButton = document.getElementById('auto-reset-toggle');
-        if (autoResetButton) {
-            // Carregar estado inicial
-            fetch('/api/settings')
-                .then(res => res.json())
-                .then(data => {
-                    autoResetEnabled = data.data.autoResetOnFightEnd || false;
-                    updateAutoResetButton();
-                })
-                .catch(err => console.error('Erro ao carregar configurações:', err));
+        // Carregar configurações salvas
+        loadAndApplySettings();
 
-            autoResetButton.addEventListener('click', async () => {
-                autoResetEnabled = !autoResetEnabled;
-                
-                try {
-                    await fetch('/api/settings', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ autoResetOnFightEnd: autoResetEnabled })
-                    });
-                    
-                    updateAutoResetButton();
-                    console.log(`Reset automático: ${autoResetEnabled ? 'Ativado' : 'Desativado'}`);
-                } catch (err) {
-                    console.error('Erro ao alterar configuração:', err);
-                }
+        // Escutar mudanças nas configurações
+        if (window.electronAPI && window.electronAPI.onSettingsChanged) {
+            window.electronAPI.onSettingsChanged((settings) => {
+                applySettings(settings);
             });
-        }
-
-        function updateAutoResetButton() {
-            const button = document.getElementById('auto-reset-toggle');
-            if (!button) return;
-
-            if (autoResetEnabled) {
-                button.classList.add('active');
-                button.title = 'Reset Automático: Ativado (Clique para desativar)';
-            } else {
-                button.classList.remove('active');
-                button.title = 'Reset Automático: Desativado (Clique para ativar)';
-            }
         }
     });
+
+    function loadAndApplySettings() {
+        const settings = JSON.parse(localStorage.getItem('dpsMeterSettings') || '{}');
+        applySettings(settings);
+    }
+
+    function applySettings(settings) {
+        // Aplicar tamanho máximo da lista
+        if (settings.maxPlayers !== undefined) {
+            maxPlayersToShow = settings.maxPlayers;
+            
+            // Re-renderizar para mostrar/ocultar jogadores imediatamente
+            if (typeof fetchDataAndRender === 'function') {
+                fetchDataAndRender();
+            }
+            
+            // Redimensionar janela
+            updateWindowSize();
+        }
+
+        // Aplicar reset automático
+        if (settings.autoReset !== undefined) {
+            autoResetEnabled = settings.autoReset;
+        }
+    }
 
     // Script para eliminar el texto de depuración de VSCode
     document.addEventListener('DOMContentLoaded', () => {

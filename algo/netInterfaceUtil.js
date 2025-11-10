@@ -1,11 +1,38 @@
 const { exec } = require('child_process');
 const cap = require('cap');
 
-// Filter virtual adapters
-const VIRTUAL_KEYWORDS = ['zerotier', 'vmware', 'hyper-v', 'virtual', 'loopback', 'tap', 'bluetooth', 'wan miniport'];
+// Filter virtual adapters (excluindo TAP para permitir VPNs de jogos)
+const VIRTUAL_KEYWORDS = ['zerotier', 'vmware', 'hyper-v', 'virtual', 'loopback', 'bluetooth', 'wan miniport'];
+
+// VPNs de jogos permitidas (usam TAP/TUN adapters)
+const GAMING_VPN_KEYWORDS = [
+    'exitlag',
+    'noping', 
+    'wtfast',
+    'mudfish',
+    'pingzapper',
+    'pingenhancer',
+    'haste',
+    'outfox',
+    'battleping'
+];
 
 function isVirtual(name) {
     const lower = name.toLowerCase();
+    
+    // Permitir VPNs de jogos explicitamente (mesmo com TAP)
+    if (GAMING_VPN_KEYWORDS.some(vpn => lower.includes(vpn))) {
+        return false;
+    }
+    
+    // PERMITIR TAP adapters por padrão (para compatibilidade com VPNs de jogos)
+    // Apenas bloquear se for TAP + outros keywords virtuais
+    if (lower.includes('tap')) {
+        // Se é TAP mas também tem keywords virtuais óbvios, bloquear
+        const isObviousVirtual = ['vmware', 'hyper-v', 'virtualbox', 'zerotier'].some(k => lower.includes(k));
+        return isObviousVirtual; // Permitir TAP a menos que seja claramente virtual
+    }
+    
     return VIRTUAL_KEYWORDS.some((keyword) => lower.includes(keyword));
 }
 

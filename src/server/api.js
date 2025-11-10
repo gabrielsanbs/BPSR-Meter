@@ -6,10 +6,12 @@ const path = require('path');
 const fsPromises = require('fs').promises;
 const fs = require('fs');
 
-const SETTINGS_PATH = path.join('./settings.json');
 const LOGS_DPS_PATH = path.join('./logs_dps.json');
 
-function initializeApi(app, server, io, userDataManager, logger, globalSettings, sniffer) {
+function initializeApi(app, server, io, userDataManager, logger, globalSettings, sniffer, settingsPath) {
+    // settingsPath agora é passado como parâmetro
+    const SETTINGS_PATH = settingsPath;
+    
     app.use(cors());
     app.use(express.json());
     app.use(express.static(path.join(__dirname, '..', '..', 'public'))); // Ajustar la ruta
@@ -347,6 +349,32 @@ function initializeApi(app, server, io, userDataManager, logger, globalSettings,
             code: 0,
             msg: 'Histórico de lutas limpo com sucesso!'
         });
+    });
+
+    // Alias para limpar histórico (usado em settings.html)
+    app.post('/api/clear-history', async (req, res) => {
+        await userDataManager.clearFightHistory();
+        res.json({
+            code: 0,
+            msg: 'Histórico de lutas limpo com sucesso!'
+        });
+    });
+
+    // Limpar cache de usuários
+    app.post('/api/clear-cache', async (req, res) => {
+        try {
+            await userDataManager.clearUserCache();
+            res.json({
+                code: 0,
+                msg: 'Cache de usuários limpo com sucesso!'
+            });
+        } catch (error) {
+            logger.error('Erro ao limpar cache:', error);
+            res.status(500).json({
+                code: -1,
+                msg: 'Erro ao limpar cache de usuários'
+            });
+        }
     });
 
     app.post('/api/fight/end', async (req, res) => {

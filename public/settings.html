@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configurações - BPSR Meter</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            --bg-primary: #1a1d29;
+            --bg-secondary: #252837;
+            --bg-tertiary: #2d3142;
+            --text-primary: #e0e0e0;
+            --text-secondary: #aaa;
+            --accent-blue: #4fc3f7;
+            --accent-green: #28a745;
+            --accent-red: #dc3545;
+            --accent-yellow: #ffc107;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --text-shadow: 0 0 2px rgba(0, 0, 0, 0.7), 0 0 4px rgba(0, 0, 0, 0.5);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: transparent;
+            color: var(--text-primary);
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .settings-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background: linear-gradient(135deg, rgba(26, 29, 41, 0.95) 0%, rgba(37, 40, 55, 0.95) 100%);
+            backdrop-filter: blur(10px);
+        }
+
+        /* Header igual à tela principal */
+        header.controls {
+            background: rgba(26, 29, 41, 0.9);
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 1px solid var(--border-color);
+            min-height: 50px;
+            cursor: move;
+            -webkit-app-region: drag;
+        }
+
+        header.controls button,
+        header.controls .control-button,
+        header.controls select {
+            -webkit-app-region: no-drag;
+        }
+
+        .control-button {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.13);
+            color: var(--text-primary);
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .control-button:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-1px);
+        }
+
+        .header-title {
+            flex-grow: 1;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: 10px;
+        }
+
+        /* Conteúdo */
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .settings-section {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+
+        .settings-section-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--accent-blue);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .setting-item:last-child {
+            border-bottom: none;
+        }
+
+        .setting-label {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .setting-label-text {
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .setting-label-description {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .setting-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Toggle Switch */
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 26px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 13px;
+            cursor: pointer;
+            transition: background 0.3s;
+            border: 1px solid var(--border-color);
+        }
+
+        .toggle-switch.active {
+            background: var(--accent-green);
+        }
+
+        .toggle-switch-slider {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s;
+        }
+
+        .toggle-switch.active .toggle-switch-slider {
+            transform: translateX(24px);
+        }
+
+        /* Number Input */
+        .number-input-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .number-input {
+            width: 70px;
+            height: 32px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-primary);
+            text-align: center;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .number-button {
+            width: 28px;
+            height: 28px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            color: var(--text-primary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .number-button:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-primary);
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-1px);
+        }
+
+        .btn-danger {
+            background: rgba(220, 53, 69, 0.2);
+            border-color: var(--accent-red);
+            color: var(--accent-red);
+        }
+
+        .btn-danger:hover {
+            background: rgba(220, 53, 69, 0.3);
+        }
+
+        .btn-primary {
+            background: rgba(79, 195, 247, 0.2);
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+        }
+
+        .btn-primary:hover {
+            background: rgba(79, 195, 247, 0.3);
+        }
+
+        /* Scrollbar */
+        .content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .content::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .content::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+
+        .content::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .range-value {
+            min-width: 30px;
+            text-align: center;
+            font-weight: 600;
+            color: var(--accent-blue);
+        }
+    </style>
+</head>
+<body>
+    <div class="settings-container">
+        <header class="controls">
+            <div style="position: relative; width: 32px; height: 32px; margin-right: 10px;">
+                <img src="/icon.png" alt="Logo" style="height: 32px;">
+            </div>
+            <div class="header-title">
+                <i class="fa-solid fa-gear"></i>
+                <span data-i18n="title">Configurações</span>
+            </div>
+            <!-- Seletor de idioma -->
+            <select id="language-selector" style="padding: 6px 10px; border-radius: 6px; background: rgba(20, 22, 31, 0.9); color: #ffffff; border: 1px solid var(--border-color); cursor: pointer; font-family: 'Inter', sans-serif; font-size: 0.85rem; margin-left: auto; margin-right: 10px;">
+                <option value="pt-BR" style="background: rgba(20, 22, 31, 0.95); color: #ffffff;">🇧🇷 PT</option>
+                <option value="en" style="background: rgba(20, 22, 31, 0.95); color: #ffffff;">🇺🇸 EN</option>
+                <option value="es" style="background: rgba(20, 22, 31, 0.95); color: #ffffff;">🇪🇸 ES</option>
+            </select>
+            <button class="control-button" id="minimize-button" title="Minimizar">
+                <i class="fa-solid fa-window-minimize"></i>
+            </button>
+            <button class="control-button" id="close-button" title="Fechar">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </header>
+
+        <div class="content">
+            <!-- Seção de Visualização -->
+            <div class="settings-section">
+                <div class="settings-section-title">
+                    <i class="fa-solid fa-display"></i>
+                    <span data-i18n="display">Visualização</span>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-label">
+                        <span class="setting-label-text" data-i18n="listSize">Tamanho da Lista</span>
+                        <span class="setting-label-description" data-i18n="listSizeDesc">Quantidade de jogadores exibidos no medidor (padrão: 6)</span>
+                    </div>
+                    <div class="setting-control">
+                        <div class="number-input-container">
+                            <button class="number-button" id="decrease-players">
+                                <i class="fa-solid fa-minus"></i>
+                            </button>
+                            <input type="number" id="max-players-input" class="number-input" min="1" max="50" value="6">
+                            <button class="number-button" id="increase-players">
+                                <i class="fa-solid fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Seção de Comportamento -->
+            <div class="settings-section">
+                <div class="settings-section-title">
+                    <i class="fa-solid fa-sliders"></i>
+                    <span data-i18n="behavior">Comportamento</span>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-label">
+                        <span class="setting-label-text" data-i18n="autoReset">Reset Automático</span>
+                        <span class="setting-label-description" data-i18n="autoResetDesc">Reinicia automaticamente o medidor após período de inatividade</span>
+                    </div>
+                    <div class="setting-control">
+                        <div class="toggle-switch" id="auto-reset-toggle">
+                            <div class="toggle-switch-slider"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Seção de Dados -->
+            <div class="settings-section">
+                <div class="settings-section-title">
+                    <i class="fa-solid fa-database"></i>
+                    <span data-i18n="actions">Ações</span>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-label">
+                        <span class="setting-label-text" data-i18n="clearHistory">Limpar Histórico</span>
+                        <span class="setting-label-description" data-i18n="clearHistoryDesc">Remove todas as lutas salvas no histórico</span>
+                    </div>
+                    <div class="setting-control">
+                        <button class="btn btn-danger" id="clear-history-button">
+                            <i class="fa-solid fa-trash"></i>
+                            <span data-i18n="clearHistoryBtn">Limpar</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-label">
+                        <span class="setting-label-text" data-i18n="clearCache">Limpar Cache de Usuários</span>
+                        <span class="setting-label-description" data-i18n="clearCacheDesc">Remove dados em cache de jogadores (nomes, classes, etc)</span>
+                    </div>
+                    <div class="setting-control">
+                        <button class="btn btn-danger" id="clear-cache-button">
+                            <i class="fa-solid fa-broom"></i>
+                            <span data-i18n="clearCacheBtn">Limpar Cache</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Seção do Desenvolvedor -->
+            <div class="settings-section" style="background: linear-gradient(135deg, rgba(79, 195, 247, 0.1), rgba(76, 175, 80, 0.1)); border: 1px solid rgba(79, 195, 247, 0.3);">
+                <div class="settings-section-title">
+                    <i class="fa-solid fa-heart" style="color: #ff6b9d;"></i>
+                    <span data-i18n="devSupport">Apoie o Desenvolvedor</span>
+                </div>
+                <div class="setting-item" style="flex-direction: column; align-items: flex-start; gap: 15px;">
+                    <div class="setting-label" style="width: 100%;">
+                        <span class="setting-label-description" data-i18n="devSupportDesc" style="text-align: center; width: 100%; color: var(--text-primary);">Este projeto é desenvolvido com ❤️ e é open-source</span>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
+                        <a href="https://github.com/gabrielsanbs/BPSR-Meter" target="_blank" class="btn btn-primary" style="text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px;">
+                            <i class="fa-brands fa-github" style="font-size: 1.2rem;"></i>
+                            <span data-i18n="devGithub">Visite no GitHub</span>
+                        </a>
+                        <div style="text-align: center; color: var(--accent-yellow); font-size: 0.9rem; font-weight: 500;">
+                            <i class="fa-solid fa-star"></i>
+                            <span data-i18n="devStar">Dar uma ⭐ ajuda muito!</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sistema de Traduções
+        const translations = {
+            'pt-BR': {
+                title: 'Configurações',
+                display: 'Visualização',
+                listSize: 'Tamanho da Lista',
+                listSizeDesc: 'Quantidade de jogadores exibidos no medidor (padrão: 6)',
+                behavior: 'Comportamento',
+                autoReset: 'Reset Automático',
+                autoResetDesc: 'Reinicia automaticamente os dados ao fim de cada luta',
+                actions: 'Ações',
+                clearHistory: 'Limpar Histórico',
+                clearHistoryDesc: 'Remove todas as lutas salvas permanentemente',
+                clearHistoryBtn: 'Limpar',
+                clearCache: 'Limpar Cache de Usuários',
+                clearCacheDesc: 'Remove dados em cache de jogadores (nomes, classes, etc)',
+                clearCacheBtn: 'Limpar Cache',
+                confirmClear: 'Tem certeza que deseja limpar todo o histórico de lutas? Esta ação não pode ser desfeita.',
+                confirmClearCache: 'Tem certeza que deseja limpar o cache de usuários? Os dados serão reconstruídos automaticamente.',
+                clearSuccess: 'Histórico limpo com sucesso!',
+                clearCacheSuccess: 'Cache limpo com sucesso!',
+                clearError: 'Erro ao limpar histórico.',
+                clearCacheError: 'Erro ao limpar cache.',
+                devSupport: 'Apoie o Desenvolvedor',
+                devSupportDesc: 'Este projeto é desenvolvido com ❤️ e é open-source',
+                devGithub: 'Visite no GitHub',
+                devStar: 'Dar uma ⭐ ajuda muito!'
+            },
+            'en': {
+                title: 'Settings',
+                display: 'Display',
+                listSize: 'List Size',
+                listSizeDesc: 'Number of players displayed in the meter (default: 6)',
+                behavior: 'Behavior',
+                autoReset: 'Auto Reset',
+                autoResetDesc: 'Automatically resets data at the end of each fight',
+                actions: 'Actions',
+                clearHistory: 'Clear History',
+                clearHistoryDesc: 'Permanently removes all saved fights',
+                clearHistoryBtn: 'Clear',
+                clearCache: 'Clear User Cache',
+                clearCacheDesc: 'Remove cached player data (names, classes, etc)',
+                clearCacheBtn: 'Clear Cache',
+                confirmClear: 'Are you sure you want to clear all fight history? This action cannot be undone.',
+                confirmClearCache: 'Are you sure you want to clear the user cache? Data will be automatically rebuilt.',
+                clearSuccess: 'History cleared successfully!',
+                clearCacheSuccess: 'Cache cleared successfully!',
+                clearError: 'Error clearing history.',
+                clearCacheError: 'Error clearing cache.',
+                devSupport: 'Support the Developer',
+                devSupportDesc: 'This project is developed with ❤️ and is open-source',
+                devGithub: 'Visit on GitHub',
+                devStar: 'Giving a ⭐ helps a lot!'
+            },
+            'es': {
+                title: 'Configuración',
+                display: 'Visualización',
+                listSize: 'Tamaño de Lista',
+                listSizeDesc: 'Cantidad de jugadores mostrados en el medidor (predeterminado: 6)',
+                behavior: 'Comportamiento',
+                autoReset: 'Reinicio Automático',
+                autoResetDesc: 'Reinicia automáticamente los datos al final de cada pelea',
+                actions: 'Acciones',
+                clearHistory: 'Borrar Historial',
+                clearHistoryDesc: 'Elimina permanentemente todas las peleas guardadas',
+                clearHistoryBtn: 'Borrar',
+                clearCache: 'Borrar Caché de Usuarios',
+                clearCacheDesc: 'Elimina datos en caché de jugadores (nombres, clases, etc)',
+                clearCacheBtn: 'Borrar Caché',
+                confirmClear: '¿Está seguro de que desea borrar todo el historial de peleas? Esta acción no se puede deshacer.',
+                confirmClearCache: '¿Está seguro de que desea borrar el caché de usuarios? Los datos se reconstruirán automáticamente.',
+                clearSuccess: '¡Historial borrado con éxito!',
+                clearCacheSuccess: '¡Caché borrado con éxito!',
+                clearError: 'Error al borrar el historial.',
+                clearCacheError: 'Error al borrar el caché.',
+                devSupport: 'Apoya al Desarrollador',
+                devSupportDesc: 'Este proyecto es desarrollado con ❤️ y es open-source',
+                devGithub: 'Visitar en GitHub',
+                devStar: '¡Dar una ⭐ ayuda mucho!'
+            }
+        };
+
+        let currentLanguage = localStorage.getItem('appLanguage') || 'pt-BR';
+
+        function t(key) {
+            return translations[currentLanguage][key] || key;
+        }
+
+        function applyTranslations() {
+            document.querySelectorAll('[data-i18n]').forEach(element => {
+                const key = element.getAttribute('data-i18n');
+                element.textContent = t(key);
+            });
+        }
+
+        // Carregar configurações salvas
+        function loadSettings() {
+            const settings = JSON.parse(localStorage.getItem('dpsMeterSettings') || '{}');
+            
+            // Aplicar tamanho da lista
+            const maxPlayers = settings.maxPlayers || 6;
+            document.getElementById('max-players-input').value = maxPlayers;
+            
+            // Aplicar reset automático
+            const autoReset = settings.autoReset || false;
+            const autoResetToggle = document.getElementById('auto-reset-toggle');
+            if (autoReset) autoResetToggle.classList.add('active');
+        }
+
+        // Salvar configurações
+        async function saveSettings() {
+            const maxPlayers = parseInt(document.getElementById('max-players-input').value);
+            const autoReset = document.getElementById('auto-reset-toggle').classList.contains('active');
+            
+            const settings = {
+                maxPlayers: maxPlayers,
+                autoReset: autoReset
+            };
+            
+            // Salvar no localStorage
+            localStorage.setItem('dpsMeterSettings', JSON.stringify(settings));
+            
+            // Salvar autoReset no backend (globalSettings)
+            try {
+                await fetch('/api/settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ autoResetOnFightEnd: autoReset })
+                });
+            } catch (error) {
+                console.error('Erro ao salvar configurações no backend:', error);
+            }
+            
+            // Notificar janela principal sobre mudanças
+            if (window.electronAPI) {
+                window.electronAPI.settingsChanged(settings);
+            }
+        }
+
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSettings();
+
+            // Fechar janela
+            const closeButton = document.getElementById('close-button');
+            if (closeButton) {
+                closeButton.addEventListener('click', () => {
+                    if (window.electronAPI && window.electronAPI.closeWindow) {
+                        window.electronAPI.closeWindow();
+                    } else {
+                        window.close();
+                    }
+                });
+            }
+
+            // Minimizar janela
+            const minimizeButton = document.getElementById('minimize-button');
+            if (minimizeButton) {
+                minimizeButton.addEventListener('click', () => {
+                    if (window.electronAPI && window.electronAPI.minimizeWindow) {
+                        window.electronAPI.minimizeWindow();
+                    }
+                });
+            }
+
+            // Controle de número de jogadores
+            const maxPlayersInput = document.getElementById('max-players-input');
+            const decreaseBtn = document.getElementById('decrease-players');
+            const increaseBtn = document.getElementById('increase-players');
+
+            decreaseBtn.addEventListener('click', () => {
+                let value = parseInt(maxPlayersInput.value);
+                if (value > 1) {
+                    maxPlayersInput.value = value - 1;
+                    saveSettings();
+                }
+            });
+
+            increaseBtn.addEventListener('click', () => {
+                let value = parseInt(maxPlayersInput.value);
+                if (value < 50) {
+                    maxPlayersInput.value = value + 1;
+                    saveSettings();
+                }
+            });
+
+            maxPlayersInput.addEventListener('change', () => {
+                let value = parseInt(maxPlayersInput.value);
+                if (value < 1) maxPlayersInput.value = 1;
+                if (value > 50) maxPlayersInput.value = 50;
+                saveSettings();
+            });
+
+            // Também aplicar ao digitar (input event) para atualização em tempo real
+            maxPlayersInput.addEventListener('input', () => {
+                let value = parseInt(maxPlayersInput.value);
+                if (!isNaN(value) && value >= 1 && value <= 50) {
+                    saveSettings();
+                }
+            });
+
+            // Toggle switches
+            document.querySelectorAll('.toggle-switch').forEach(toggle => {
+                toggle.addEventListener('click', () => {
+                    toggle.classList.toggle('active');
+                    saveSettings();
+                });
+            });
+
+            // Limpar histórico
+            document.getElementById('clear-history-button').addEventListener('click', async () => {
+                if (confirm(t('confirmClear'))) {
+                    try {
+                        const response = await fetch('/api/fight-history/clear', { method: 'POST' });
+                        if (response.ok) {
+                            alert(t('clearSuccess'));
+                        } else {
+                            alert(t('clearError'));
+                        }
+                    } catch (error) {
+                        console.error('Erro ao limpar histórico:', error);
+                        alert(t('clearError'));
+                    }
+                }
+            });
+
+            // Limpar cache de usuários
+            document.getElementById('clear-cache-button').addEventListener('click', async () => {
+                if (confirm(t('confirmClearCache'))) {
+                    try {
+                        const response = await fetch('/api/clear-cache', { method: 'POST' });
+                        if (response.ok) {
+                            alert(t('clearCacheSuccess'));
+                        } else {
+                            alert(t('clearCacheError'));
+                        }
+                    } catch (error) {
+                        console.error('Erro ao limpar cache:', error);
+                        alert(t('clearCacheError'));
+                    }
+                }
+            });
+
+            // Seletor de idioma
+            const languageSelector = document.getElementById('language-selector');
+            languageSelector.value = currentLanguage;
+            languageSelector.addEventListener('change', (e) => {
+                currentLanguage = e.target.value;
+                localStorage.setItem('appLanguage', currentLanguage);
+                applyTranslations();
+            });
+
+            // Aplicar traduções iniciais
+            applyTranslations();
+        });
+    </script>
+</body>
+</html>

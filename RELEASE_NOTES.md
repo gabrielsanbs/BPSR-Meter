@@ -1,4 +1,4 @@
-# 🎯 BPSR Meter v3.0.5
+# 🎯 BPSR Meter v3.1.0
 
 [[Português](#português)] | [[English](#english)] | [[Español](#español)]
 
@@ -6,41 +6,47 @@
 
 ## Português
 
-**🚨 CORREÇÕES CRÍTICAS v3.0.5:**
-- 🔥 **BUG CRÍTICO CORRIGIDO:** Cache e histórico agora realmente preservados entre atualizações!
-  - Arquivos salvos em `%APPDATA%\bpsr-meter` (persistente) ao invés da pasta do programa
-  - Instalador não deleta mais seus dados ao atualizar
-- 🔥 **BUG NO PAUSE CORRIGIDO:** Múltiplos pause/unpause não inflam mais o DPS/HPS
-  - Cálculo correto do tempo pausado acumulado
-  - DPS/HPS precisos mesmo após várias pausas
+**✨ NOVIDADES v3.1.0:**
 
-**🇧🇷 NOVIDADES v3.0.4:**
-- ✅ **Tradução completa para PT-BR!** Todas as mensagens do sistema agora em português
-- ✅ Diagnóstico de erros aprimorado com mensagens claras e soluções
-- ✅ Timeout aumentado (10s → 15s) para PCs mais lentos
-- ✅ Detecção automática de erros: EADDRINUSE, MODULE_NOT_FOUND, EACCES
-- ✅ Tela de carregamento animada durante inicialização
-- ✅ Logs mais detalhados (versões Node.js/Electron, plataforma)
-- 📚 Novo arquivo TROUBLESHOOTING.md com guia completo de soluções
+### ⚙️ Tela de Configurações Completa
+- **Configurações em tempo real** sem necessidade de reiniciar
+- **Limite de jogadores** (1-20 visíveis)
+- **Reset automático** de lutas
+- **Limpeza de cache** de usuários
+- **Seletor de idioma** integrado (PT-BR 🇧🇷, EN 🇺🇸, ES 🇪🇸)
 
-**🔧 CORREÇÕES v3.0.3:**
-- ✅ Cadeado travado agora permite cliques passarem para o jogo
-- ✅ Botões do header funcionam normalmente quando travado
-- ✅ Click-through corrigido: cliques passam pelo medidor pro jogo
+### 📜 Histórico com 4 Modos de Ordenação
+- **DPS** - Ordernar por dano por segundo
+- **DMG Total** - Ordenar por dano total
+- **HPS** - Ordenar por cura por segundo
+- **Healing Total** - Ordenar por cura total
+- Numeração sequencial em todas as lutas (#1, #2, #3...)
+- Ícones de classe para 27 especializações
+- Auto-salvamento ao trocar mapas
 
-**💾 PRESERVAÇÃO DE DADOS:**
-- ✅ **[v3.0.5 CORRIGIDO]** Cache e histórico **realmente** preservados entre atualizações
-- ✅ Pergunta ao desinstalar se quer remover dados
-- ✅ Logs temporários removidos automaticamente
+### 🌐 Suporte Completo a VPNs de Jogos
+- **ExitLag** ✅
+- **NoPing** ✅
+- **WTFast** ✅
+- **Mudfish** ✅
+- **PingZapper, PingEnhancer, Haste, Outfox, BattlePing** ✅
+- Detecção automática de adaptadores TAP
+- Sem configuração manual necessária
 
-**✨ Novidades anteriores (v3.0.1):**
-- 🌍 Histórico multilíngue (PT-BR, EN, ES)
-- 🗺️ Notificação automática de mudança de mapa
-- ⚡ 90% menos CPU e disco
-- 🐛 Corrigidos: drag, fundo preto, loading icon
+### 🎯 Melhorias de Interface
+- ✅ **Ícone spinning removido** quando sem luta ativa
+- ✅ **Botões sem efeito de seleção** após clique
+- ✅ Tela de loading redesenhada com ícone principal
+- ✅ Interface ajusta automaticamente ao número de jogadores
+- ✅ Transições suaves e responsivas
+
+### � Correções de Bugs
+- 🔥 **Corrigido:** Erro de conexão (`app is not defined`) ao atualizar status
+- 🔥 **Corrigido:** Combate não salvava ao trocar mapas rapidamente
+- � **Corrigido:** Adaptadores TAP agora funcionam com VPNs de jogos
 
 **📥 Como instalar:**
-1. Baixe: `BPSR Meter (by gabrielsanbs) Setup 3.0.5.exe`
+1. Baixe: `BPSR Meter (by gabrielsanbs) Setup 3.1.0.exe`
 2. Execute o instalador
 3. Pronto! Programa detecta o jogo automaticamente
 
@@ -50,9 +56,9 @@
 
 **❓ Dúvidas?**
 - Não aparece? Instale Npcap 1.83+ e execute como Administrador
-- Como mudo idioma? Use o seletor no histórico de lutas
-- Muito CPU? Versão 3.0.5 é 90% otimizada
-- Funciona com ExitLag? Sim, totalmente compatível
+- Como mudo idioma? Use o seletor nas **Configurações** ou **Histórico**
+- Posso ordenar por HPS? Sim! 4 modos: **DPS**, **DMG Total**, **HPS**, **Healing Total**
+- Funciona com ExitLag/NoPing? Sim, suporte automático para todas as VPNs gaming
 - **Erro ao iniciar?** Veja [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
 
 **🙏 Créditos:**
@@ -66,41 +72,47 @@
 
 ## English
 
-**🚨 CRITICAL FIXES v3.0.5:**
-- 🔥 **CRITICAL BUG FIXED:** Cache and history now truly preserved between updates!
-  - Files saved in `%APPDATA%\bpsr-meter` (persistent) instead of program folder
-  - Installer no longer deletes your data when updating
-- 🔥 **PAUSE BUG FIXED:** Multiple pause/unpause no longer inflate DPS/HPS
-  - Correct calculation of accumulated paused time
-  - Accurate DPS/HPS even after multiple pauses
+**✨ WHAT'S NEW v3.1.0:**
 
-**🇧🇷 NEW IN v3.0.4:**
-- ✅ **Complete PT-BR translation!** All system messages now in Portuguese
-- ✅ Enhanced error diagnostics with clear messages and solutions
-- ✅ Timeout increased (10s → 15s) for slower PCs
-- ✅ Automatic error detection: EADDRINUSE, MODULE_NOT_FOUND, EACCES
-- ✅ Animated loading screen during initialization
-- ✅ More detailed logs (Node.js/Electron versions, platform)
-- 📚 New TROUBLESHOOTING.md file with comprehensive solutions guide
+### ⚙️ Complete Settings Screen
+- **Real-time settings** without restart needed
+- **Player limit** (1-20 visible)
+- **Auto-reset** fights
+- **User cache cleanup**
+- **Integrated language selector** (PT-BR 🇧🇷, EN 🇺🇸, ES 🇪🇸)
 
-**🔧 FIXES v3.0.3:**
-- ✅ Locked meter now allows clicks to pass through to the game
-- ✅ Header buttons work normally when locked
-- ✅ Click-through fixed: clicks pass through the meter to the game
+### 📜 History with 4 Sorting Modes
+- **DPS** - Sort by damage per second
+- **Total DMG** - Sort by total damage
+- **HPS** - Sort by healing per second
+- **Total Healing** - Sort by total healing
+- Sequential numbering in all fights (#1, #2, #3...)
+- Class icons for 27 specializations
+- Auto-save when changing maps
 
-**💾 DATA PRESERVATION:**
-- ✅ **[v3.0.5 FIXED]** Cache and history **truly** preserved between updates
-- ✅ Asks on uninstall if you want to remove saved data
-- ✅ Temporary logs automatically removed
+### 🌐 Full Gaming VPN Support
+- **ExitLag** ✅
+- **NoPing** ✅
+- **WTFast** ✅
+- **Mudfish** ✅
+- **PingZapper, PingEnhancer, Haste, Outfox, BattlePing** ✅
+- Automatic TAP adapter detection
+- No manual configuration needed
 
-**✨ Previous Updates (v3.0.1):**
-- 🌍 Multilingual history (PT-BR, EN, ES)
-- 🗺️ Automatic map change notification
-- ⚡ 90% less CPU and disk usage
-- 🐛 Fixed: drag, black background, loading icon
+### 🎯 Interface Improvements
+- ✅ **Spinning icon removed** when no active fight
+- ✅ **Buttons without selection effect** after click
+- ✅ Loading screen redesigned with main icon
+- ✅ Interface automatically adjusts to player count
+- ✅ Smooth and responsive transitions
+
+### � Bug Fixes
+- 🔥 **Fixed:** Connection error (`app is not defined`) when updating status
+- 🔥 **Fixed:** Fight not saving when changing maps quickly
+- � **Fixed:** TAP adapters now work with gaming VPNs
 
 **📥 How to Install:**
-1. Download: `BPSR Meter (by gabrielsanbs) Setup 3.0.5.exe`
+1. Download: `BPSR Meter (by gabrielsanbs) Setup 3.1.0.exe`
 2. Run the installer
 3. Done! Program auto-detects the game
 
@@ -110,9 +122,9 @@
 
 **❓ FAQ:**
 - Not appearing? Install Npcap 1.83+ and run as Administrator
-- How to change language? Use the selector in fight history
-- High CPU usage? v3.0.5 is 90% optimized
-- Works with ExitLag? Yes, fully compatible
+- How to change language? Use the selector in **Settings** or **History**
+- Can I sort by HPS? Yes! 4 modes: **DPS**, **Total DMG**, **HPS**, **Total Healing**
+- Works with ExitLag/NoPing? Yes, automatic support for all gaming VPNs
 - **Startup errors?** See [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
 
 **🙏 Credits:**
@@ -126,41 +138,47 @@
 
 ## Español
 
-**🚨 CORRECCIONES CRÍTICAS v3.0.5:**
-- 🔥 **BUG CRÍTICO CORREGIDO:** ¡Caché e historial ahora realmente preservados entre actualizaciones!
-  - Archivos guardados en `%APPDATA%\bpsr-meter` (persistente) en lugar de la carpeta del programa
-  - El instalador ya no elimina tus datos al actualizar
-- 🔥 **BUG DE PAUSA CORREGIDO:** Múltiples pause/unpause ya no inflan el DPS/HPS
-  - Cálculo correcto del tiempo pausado acumulado
-  - DPS/HPS precisos incluso después de múltiples pausas
+**✨ NOVEDADES v3.1.0:**
 
-**🇧🇷 NUEVO EN v3.0.4:**
-- ✅ **¡Traducción completa a PT-BR!** Todos los mensajes del sistema ahora en portugués
-- ✅ Diagnóstico de errores mejorado con mensajes claros y soluciones
-- ✅ Timeout aumentado (10s → 15s) para PCs más lentos
-- ✅ Detección automática de errores: EADDRINUSE, MODULE_NOT_FOUND, EACCES
-- ✅ Pantalla de carga animada durante la inicialización
-- ✅ Logs más detallados (versiones Node.js/Electron, plataforma)
-- 📚 Nuevo archivo TROUBLESHOOTING.md con guía completa de soluciones
+### ⚙️ Pantalla de Configuración Completa
+- **Configuración en tiempo real** sin necesidad de reiniciar
+- **Límite de jugadores** (1-20 visibles)
+- **Reset automático** de combates
+- **Limpieza de caché** de usuarios
+- **Selector de idioma** integrado (PT-BR 🇧🇷, EN 🇺🇸, ES 🇪🇸)
 
-**🔧 CORRECCIONES v3.0.3:**
-- ✅ Medidor trabado ahora permite que los clics pasen al juego
-- ✅ Los botones del header funcionan normalmente cuando está trabado
-- ✅ Click-through corregido: los clics pasan a través del medidor al juego
+### 📜 Historial con 4 Modos de Ordenación
+- **DPS** - Ordenar por daño por segundo
+- **DMG Total** - Ordenar por daño total
+- **HPS** - Ordenar por cura por segundo
+- **Healing Total** - Ordenar por cura total
+- Numeración secuencial en todos los combates (#1, #2, #3...)
+- Iconos de clase para 27 especializaciones
+- Auto-guardado al cambiar mapas
 
-**💾 PRESERVACIÓN DE DATOS:**
-- ✅ **[v3.0.5 CORREGIDO]** Caché e historial **realmente** preservados entre actualizaciones
-- ✅ Pregunta al desinstalar si desea remover datos guardados
-- ✅ Registros temporales eliminados automáticamente
+### 🌐 Soporte Completo para VPNs Gaming
+- **ExitLag** ✅
+- **NoPing** ✅
+- **WTFast** ✅
+- **Mudfish** ✅
+- **PingZapper, PingEnhancer, Haste, Outfox, BattlePing** ✅
+- Detección automática de adaptadores TAP
+- Sin configuración manual necesaria
 
-**✨ Actualizaciones Anteriores (v3.0.1):**
-- 🌍 Historial multilingüe (PT-BR, EN, ES)
-- 🗺️ Notificación automática de cambio de mapa
-- ⚡ 90% menos CPU y disco
-- 🐛 Corregidos: arrastre, fondo negro, icono de carga
+### 🎯 Mejoras de Interfaz
+- ✅ **Icono giratorio removido** cuando no hay combate activo
+- ✅ **Botones sin efecto de selección** después del clic
+- ✅ Pantalla de carga rediseñada con icono principal
+- ✅ La interfaz se ajusta automáticamente al número de jugadores
+- ✅ Transiciones suaves y responsivas
+
+### 🔧 Correcciones de Bugs
+- 🔥 **Corregido:** Error de conexión (`app is not defined`) al actualizar estado
+- 🔥 **Corregido:** Combate no se guardaba al cambiar mapas rápidamente
+- � **Corregido:** Los adaptadores TAP ahora funcionan con VPNs gaming
 
 **📥 Cómo instalar:**
-1. Descarga: `BPSR Meter (by gabrielsanbs) Setup 3.0.5.exe`
+1. Descarga: `BPSR Meter (by gabrielsanbs) Setup 3.1.0.exe`
 2. Ejecuta el instalador
 3. ¡Listo! El programa detecta el juego automáticamente
 
@@ -170,9 +188,9 @@
 
 **❓ Preguntas Frecuentes:**
 - ¿No aparece? Instala Npcap 1.83+ y ejecuta como Administrador
-- ¿Cómo cambio el idioma? Usa el selector en el historial de luchas
-- ¿Alto uso de CPU? v3.0.5 está optimizado al 90%
-- ¿Funciona con ExitLag? Sí, totalmente compatible
+- ¿Cómo cambio el idioma? Usa el selector en **Configuración** o **Historial**
+- ¿Puedo ordenar por HPS? ¡Sí! 4 modos: **DPS**, **DMG Total**, **HPS**, **Healing Total**
+- ¿Funciona con ExitLag/NoPing? Sí, soporte automático para todas las VPNs gaming
 - **¿Errores al iniciar?** Ver [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
 
 **🙏 Créditos:**

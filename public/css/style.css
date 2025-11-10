@@ -511,7 +511,9 @@ input[type="text"] {
 #guardar-btn:hover {
     background: #6a6e9a;
 }
-.control-button { width: 32px; height: 32px; background-color: rgba(0,0,0,0.2); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 50%; color: var(--text-primary); font-size: 0.9rem; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 4px; -webkit-app-region: no-drag; }
+.control-button { width: 32px; height: 32px; background-color: rgba(0,0,0,0.2); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 50%; color: var(--text-primary); font-size: 0.9rem; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 4px; -webkit-app-region: no-drag; outline: none; user-select: none; }
+.control-button:focus { outline: none; background-color: rgba(0,0,0,0.2); }
+.control-button:active { background-color: rgba(255, 255, 255, 0.1); }
 #reset-button { background-color: rgba(219, 104, 121, 0.5); }
 #reset-button:hover { background-color: rgba(219, 104, 121, 0.7); }
 

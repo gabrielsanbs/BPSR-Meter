@@ -1,7 +1,7 @@
 <div align="center">
   <img src="portada.png" alt="BPSR Meter" width="800"/>
   
-  # BPSR Meter v3.0.5 (by gabrielsanbs)
+  # BPSR Meter v3.1.0 (by gabrielsanbs)
   
   ### Medidor de DPS em Tempo Real para Blue Protocol
   
@@ -16,7 +16,7 @@
 
 ## 🎯 Sobre Esta Versão
 
-**BPSR Meter v3.0.5** é uma versão completamente reformulada e otimizada do medidor de DPS para Blue Protocol. Esta versão inclui novas funcionalidades, melhorias de performance e uma interface mais polida.
+**BPSR Meter v3.1.0** é uma versão completamente reformulada e otimizada do medidor de DPS para Blue Protocol. Esta versão inclui novas funcionalidades, melhorias de performance, suporte completo a VPNs de jogos e uma interface mais polida.
 
 **Desenvolvido por:** [gabrielsanbs](https://github.com/gabrielsanbs)  
 **Fork de:** [BPSR-Meter](https://github.com/mrsnakke/BPSR-Meter) por MrSnakeVT  
@@ -26,17 +26,32 @@
 
 ---
 
-## ✨ Novidades da Versão 3.0.5
+## ✨ Novidades da Versão 3.1.0
 
-### 📜 Histórico de Combates Multilingue
+### ⚙️ Tela de Configurações Completa
+<div align="center">
+  <img src="BPSR_Meter_SETTINGS.png" alt="Configurações" width="650"/>
+</div>
+
+- **Configurações em tempo real** sem necessidade de reiniciar
+- **Limite de jogadores exibidos** (1-20 jogadores)
+- **Reset automático** de lutas
+- **Limpeza de cache** de usuários
+- **Seletor de idioma** integrado (PT-BR 🇧🇷, EN 🇺🇸, ES 🇪🇸)
+- Interface arrastável e moderna
+
+### 📜 Histórico de Combates Avançado
 <div align="center">
   <img src="BPSR_Meter_HISTORY.png" alt="Histórico de Combates" width="650"/>
 </div>
 
+- **4 modos de ordenação:** DPS, DMG Total, HPS, Healing Total
 - **3 idiomas suportados:** Português 🇧🇷, English 🇺🇸, Español 🇪🇸
-- Histórico completo de todas as batalhas
+- Histórico completo com **numeração sequencial** (Luta #1, #2, #3...)
 - Estatísticas detalhadas por luta (DPS, dano total, críticos, sorte)
+- **Ícones de classe** para todas as 27 especializações
 - Ranking de jogadores em cada combate
+- **Auto-salvamento** ao trocar de mapa/servidor
 - Dados persistem entre sessões
 
 ### 🔔 Aviso de Mudança de Mapa
@@ -48,17 +63,30 @@
 - Lembra você de mudar de mapa para atualizar nomes dos jogadores
 - Botão para mostrar/ocultar o aviso
 
+### 🌐 Suporte Completo a VPNs de Jogos
+- **ExitLag** ✅
+- **NoPing** ✅
+- **WTFast** ✅
+- **Mudfish** ✅
+- **PingZapper, PingEnhancer, Haste, Outfox, BattlePing** ✅
+- Detecção automática de adaptadores TAP de VPNs
+- Sem necessidade de configuração manual
+
 ### ⚡ Otimizações de Performance
 - **90% menos escritas em disco** com sistema de cache inteligente
 - **Uso reduzido de CPU** através de debounce de 3 segundos
-- **Interface mais fluida** sem travamentos
+- **Interface mais fluida** com update de 50ms
 - Cache otimizado (salva apenas dados essenciais)
+- **Auto-salvamento inteligente** de histórico ao trocar mapas
 
-### 🎯 Melhorias na Interface
-- ✅ Sistema de arrastar janela totalmente refeito
-- ✅ Sem fundo preto ao redimensionar
-- ✅ Indicador de carregamento inteligente
-- ✅ Transições suaves e responsivas
+### 🎯 Interface Improvements
+- ✅ **Loading screen** redesigned with main icon
+- ✅ Window dragging system completely rebuilt
+- ✅ **No black background** when resizing
+- ✅ **Spinning icon removed** when no active fight
+- ✅ **Buttons without selection effect** after click
+- ✅ Smooth and responsive transitions
+- ✅ Interface automatically adjusts to player count
 
 ---
 
@@ -69,11 +97,11 @@
 2. Execute `npcap-1.83.exe`
 3. ⚠️ **Importante:** Marque a opção **"WinPcap API-compatible Mode"**
 
-### Passo 2: Instalar BPSR Meter
-1. Baixe o instalador na seção [Releases](../../releases)
-2. Execute `BPSR Meter (by gabrielsanbs) Setup 3.0.5.exe`
-3. Siga as instruções do instalador
-4. Ao terminar, você verá uma mensagem de agradecimento
+### Step 2: Install BPSR Meter
+1. Download the installer in the [Releases](../../releases) section
+2. Run `BPSR Meter (by gabrielsanbs) Setup 3.1.0.exe`
+3. Follow the installer instructions
+4. When finished, you will see a thank you message
 
 ### Passo 3: Primeira Execução
 1. **Execute como Administrador** (botão direito → Executar como administrador)
@@ -97,7 +125,8 @@
 - **➕➖ Zoom:** Aumenta ou diminui o tamanho
 - **❌ Fechar:** Fecha a aplicação
 - **🧹 F10:** Limpa os dados do combate atual
-- **📜 Histórico:** Abre histórico de batalhas (multilingue)
+- **📜 Histórico:** Abre histórico de batalhas (ordenação por DPS/HPS)
+- **⚙️ Configurações:** Abre tela de settings em tempo real
 - **🔔 Aviso:** Mostra/esconde notificação de mapa
 
 #### Modos de Visualização:
@@ -105,10 +134,18 @@
 - **DPS:** Otimizado para classes de dano
 - **Lite (Healer):** Otimizado para healers (HPS em destaque)
 
-#### 🌐 Modo ExitLag:
-- Clique no botão ExitLag para ativar
-- Desativa limpeza automática ao trocar instâncias
+#### 🌐 Suporte a VPNs de Jogos:
+- **Suporte automático** para ExitLag, NoPing, WTFast, Mudfish e outras VPNs
+- Detecta e permite adaptadores TAP de VPNs de jogos
 - **Config no ExitLag:** Opções → "Método de redireção de pacotes" → **"Antiguo-NDIS"**
+- Não requer configuração adicional para outras VPNs
+
+#### ⚙️ Configurações:
+- **Limite de jogadores:** 1-20 jogadores visíveis
+- **Reset automático:** Limpa dados automaticamente
+- **Idioma:** PT-BR, English, Español
+- **Cache:** Limpeza de cache de usuários
+- **Histórico:** Limpeza completa de lutas salvas
 
 
 ---
@@ -127,11 +164,23 @@ Para o Npcap acessar adaptadores de rede e monitorar pacotes do jogo.
 **✝️ Tem versão para healer?**  
 Sim! Modo "Lite" tem botão para alternar entre DPS e Healer, mostrando HPS em destaque.
 
-**📜 O histórico salva todas as lutas?**  
-Sim, com estatísticas detalhadas e persistência entre sessões.
+**📜 Does the history save all fights?**  
+Yes! Automatically saves up to 20 fights with detailed statistics. Persists between sessions and **auto-saves when changing maps**.
 
-**🌐 Posso mudar o idioma?**  
-Sim, na janela de Histórico: Português 🇧🇷, English 🇺🇸, Español 🇪🇸
+**🌐 Can I change the language?**  
+Yes! In the **Settings** or **History** window: Português 🇧🇷, English 🇺🇸, Español 🇪🇸
+
+**🔀 Can I sort by HPS in history?**  
+Yes! 4 sorting modes: **DPS**, **Total DMG**, **HPS**, **Total Healing**
+
+**🌐 Does it work with ExitLag/NoPing?**  
+Yes! **Automatic support** for all popular gaming VPNs (ExitLag, NoPing, WTFast, Mudfish, etc)
+
+**🔀 Posso ordenar por HPS no histórico?**  
+Sim! 4 modos de ordenação: **DPS**, **DMG Total**, **HPS**, **Healing Total**
+
+**🌐 Funciona com ExitLag/NoPing?**  
+Sim! **Suporte automático** para todas as VPNs de jogos populares (ExitLag, NoPing, WTFast, Mudfish, etc)
 
 **🌏 Funciona no servidor chinês?**  
 Sim, funciona perfeitamente.
@@ -148,7 +197,8 @@ Sim, funciona perfeitamente.
 **Não mostra dados:**
 - Inicie o jogo ANTES do medidor
 - Execute como administrador
-- Verifique se está na interface de rede correta (VPN/Wi-Fi)
+- Se usar **VPN de jogo** (ExitLag, NoPing), o medidor deve detectar automaticamente
+- Verifique logs em `%APPDATA%/bpsr-meter/iniciar_log.txt`
 
 **Dúvidas ou bugs:**
 - Veja logs em `%APPDATA%/bpsr-meter`
@@ -190,7 +240,7 @@ AGPL-3.0 - Veja [LICENSE](LICENSE) para detalhes.
 <div align="center">
   <img src="portada.png" alt="BPSR Meter" width="800"/>
   
-  # BPSR Meter v3.0.5 (by gabrielsanbs)
+  # BPSR Meter v3.1.0 (by gabrielsanbs)
   
   ### Real-Time DPS Meter for Blue Protocol
   
@@ -205,7 +255,7 @@ AGPL-3.0 - Veja [LICENSE](LICENSE) para detalhes.
 
 ## 🎯 About This Version
 
-**BPSR Meter v3.0.5** is a completely redesigned and optimized version of the DPS meter for Blue Protocol. This version includes new features, performance improvements, and a more polished interface.
+**BPSR Meter v3.1.0** is a completely redesigned and optimized version of the DPS meter for Blue Protocol. This version includes new features, performance improvements, full gaming VPN support, and a more polished interface.
 
 **Developed by:** [gabrielsanbs](https://github.com/gabrielsanbs)  
 **Forked from:** [BPSR-Meter](https://github.com/mrsnakke/BPSR-Meter) by MrSnakeVT  
@@ -224,17 +274,32 @@ AGPL-3.0 - Veja [LICENSE](LICENSE) para detalhes.
 ---
 ---
 
-## ✨ What's New in v3.0.5
+## ✨ What's New in v3.1.0
 
-### 📜 Multilingual Combat History
+### ⚙️ Complete Settings Screen
+<div align="center">
+  <img src="BPSR_Meter_SETTINGS.png" alt="Settings" width="650"/>
+</div>
+
+- **Real-time configuration** without restart required
+- **Player display limit** (1-20 players)
+- **Auto-reset** fights
+- **Cache cleanup** for users
+- **Integrated language selector** (PT-BR 🇧🇷, EN 🇺🇸, ES 🇪🇸)
+- Draggable and modern interface
+
+### 📜 Advanced Combat History
 <div align="center">
   <img src="BPSR_Meter_HISTORY.png" alt="Combat History" width="650"/>
 </div>
 
+- **4 sorting modes:** DPS, Total DMG, HPS, Total Healing
 - **3 languages supported:** Português 🇧🇷, English 🇺🇸, Español 🇪🇸
-- Complete history of all battles
+- Complete history with **sequential numbering** (Fight #1, #2, #3...)
 - Detailed per-fight statistics (DPS, total damage, crits, luck)
+- **Class icons** for all 27 specializations
 - Player rankings in each combat
+- **Auto-save** when changing map/server
 - Data persists between sessions
 
 ### 🔔 Map Change Notice
@@ -246,17 +311,30 @@ AGPL-3.0 - Veja [LICENSE](LICENSE) para detalhes.
 - Reminds you to change maps to update player names
 - Toggle button to show/hide notice
 
+### 🌐 Full Gaming VPN Support
+- **ExitLag** ✅
+- **NoPing** ✅
+- **WTFast** ✅
+- **Mudfish** ✅
+- **PingZapper, PingEnhancer, Haste, Outfox, BattlePing** ✅
+- Automatic detection of VPN TAP adapters
+- No manual configuration needed
+
 ### ⚡ Performance Optimizations
 - **90% less disk writes** with intelligent cache system
 - **Reduced CPU usage** through 3-second debounce
-- **Smoother interface** without freezing
+- **Smoother interface** with 50ms update rate
 - Optimized cache (saves only essential data)
+- **Smart auto-save** of history when changing maps
 
 ### 🎯 Interface Improvements
+- ✅ **Loading screen** redesigned with main icon
 - ✅ Completely rebuilt window drag system
-- ✅ No black background when resizing
-- ✅ Smart loading indicator
+- ✅ **No black background** when resizing
+- ✅ **Spinning icon removed** when no active fight
+- ✅ **Buttons without selection effect** after click
 - ✅ Smooth and responsive transitions
+- ✅ Interface automatically adjusts to player count
 
 ---
 
@@ -269,7 +347,7 @@ AGPL-3.0 - Veja [LICENSE](LICENSE) para detalhes.
 
 ### Step 2: Install BPSR Meter
 1. Download installer from [Releases](../../releases)
-2. Run `BPSR Meter (by gabrielsanbs) Setup 3.0.5.exe`
+2. Run `BPSR Meter (by gabrielsanbs) Setup 3.1.0.exe`
 3. Follow installer instructions
 4. You'll see a thank you message when finished
 
@@ -289,12 +367,13 @@ AGPL-3.0 - Veja [LICENSE](LICENSE) para detalhes.
 | Advanced Mode | DPS Mode | Healer Mode |
 
 #### Buttons:
-- **🔄 Drag:** Click and drag arrows to move window
-- **🔒 Lock/Unlock:** Lock window (clicks pass through to game)
+- **🔄 Drag:** Click and drag the arrows to move the window
+- **🔒 Lock/Unlock:** Locks the window (clicks pass to the game)
 - **➕➖ Zoom:** Increase or decrease size
 - **❌ Close:** Close application
 - **🧹 F10:** Clear current combat data
-- **📜 History:** Open battle history (multilingual)
+- **📜 History:** Open battle history (DPS/HPS sorting)
+- **⚙️ Settings:** Open real-time settings screen
 - **🔔 Notice:** Show/hide map notification
 
 #### Display Modes:
@@ -302,13 +381,18 @@ AGPL-3.0 - Veja [LICENSE](LICENSE) para detalhes.
 - **DPS:** Optimized for damage classes
 - **Lite (Healer):** Optimized for healers (HPS highlighted)
 
-#### 🌐 ExitLag Mode:
-- Click ExitLag button to activate
-- Disables automatic clearing when changing instances
-- **ExitLag Config:** Options → "Packets Redirection Method" → **"Legacy-NDIS"**
-- **ExitLag Configuration:** 
-  - Go to Options → "Packets Redirection Method"
-  - Make sure it's set to **"Legacy-NDIS"**
+#### 🌐 Gaming VPN Support:
+- **Automatic support** for ExitLag, NoPing, WTFast, Mudfish and other VPNs
+- Detects and allows TAP adapters from gaming VPNs
+- **ExitLag Config:** Options → "Packet Redirection Method" → **"Legacy-NDIS"**
+- No additional configuration required for other VPNs
+
+#### ⚙️ Settings:
+- **Player limit:** 1-20 visible players
+- **Auto-reset:** Clears data automatically
+- **Language:** PT-BR, English, Español
+- **Cache:** User cache cleanup
+- **History:** Complete cleanup of saved fights
 
 ---
 
@@ -331,7 +415,8 @@ If the application isn't working correctly:
 #### Not showing data:
 1. Make sure the game is running **before** starting the meter
 2. Verify you ran the meter **as administrator**
-3. If using VPN or multiple connections, the meter might be listening on the wrong one
+3. If using **gaming VPN** (ExitLag, NoPing), the meter should detect automatically
+4. Check logs in `%APPDATA%/bpsr-meter/iniciar_log.txt`
 
 #### Black background or incorrect interface:
 - This version already has fixes for this issue
@@ -371,10 +456,16 @@ Npcap needs low-level network adapter access to monitor game packets.
 Yes! "Lite" mode has a button to switch between DPS and Healer, showing HPS highlighted.
 
 **📜 Does history save all fights?**  
-Yes, with detailed statistics and persistence between sessions.
+Yes! Automatically saves up to 20 fights with detailed statistics. Persists between sessions and **auto-saves when changing maps**.
 
 **🌐 Can I change language?**  
-Yes, in History window: Português, English 🇺🇸, Español 🇪🇸
+Yes! In **Settings** or **History** window: Português 🇧🇷, English 🇺🇸, Español 🇪🇸
+
+**🔀 Can I sort by HPS in history?**  
+Yes! 4 sorting modes: **DPS**, **Total DMG**, **HPS**, **Total Healing**
+
+**🌐 Does it work with ExitLag/NoPing?**  
+Yes! **Automatic support** for all popular gaming VPNs (ExitLag, NoPing, WTFast, Mudfish, etc)
 
 **🌏 Works on Chinese server?**  
 Yes, works perfectly.
@@ -433,7 +524,7 @@ AGPL-3.0 - See [LICENSE](LICENSE) for details.
 <div align="center">
   <img src="portada.png" alt="BPSR Meter" width="800"/>
   
-  # BPSR Meter v3.0.5 (by gabrielsanbs)
+  # BPSR Meter v3.1.0 (by gabrielsanbs)
   
   ### Medidor de DPS en Tiempo Real para Blue Protocol
   
@@ -448,7 +539,7 @@ AGPL-3.0 - See [LICENSE](LICENSE) for details.
 
 ## 🎯 Sobre Esta Versión
 
-**BPSR Meter v3.0.5** es una versión completamente rediseñada y optimizada del medidor de DPS para Blue Protocol. Esta versión incluye nuevas funcionalidades, mejoras de rendimiento y una interfaz más pulida.
+**BPSR Meter v3.1.0** es una versión completamente rediseñada y optimizada del medidor de DPS para Blue Protocol. Esta versión incluye nuevas funcionalidades, mejoras de rendimiento, soporte completo para VPNs gaming y una interfaz más pulida.
 
 **Desarrollado por:** [gabrielsanbs](https://github.com/gabrielsanbs)  
 **Fork de:** [BPSR-Meter](https://github.com/mrsnakke/BPSR-Meter) por MrSnakeVT  
@@ -458,17 +549,32 @@ AGPL-3.0 - See [LICENSE](LICENSE) for details.
 
 ---
 
-## ✨ Novedades de v3.0.5
+## ✨ Novedades de v3.1.0
 
-### 📜 Historial de Combates Multilingüe
+### ⚙️ Pantalla de Configuración Completa
 <div align="center">
-  <img src="BPSR_Meter_HISTORY.png" alt="Historial de Combates" width="650"/>
+  <img src="BPSR_Meter_SETTINGS.png" alt="Configuraciones" width="650"/>
 </div>
 
+- **Configuración en tiempo real** sin necesidad de reiniciar
+- **Límite de jugadores mostrados** (1-20 jugadores)
+- **Reset automático** de combates
+- **Limpieza de caché** de usuarios
+- **Selector de idioma** integrado (PT-BR 🇧🇷, EN 🇺🇸, ES 🇪🇸)
+- Interfaz arrastrable y moderna
+
+### 📜 Historial de Combate Avanzado
+<div align="center">
+  <img src="BPSR_Meter_HISTORY.png" alt="Historial de Combate" width="650"/>
+</div>
+
+- **4 modos de ordenación:** DPS, DMG Total, HPS, Healing Total
 - **3 idiomas soportados:** Português 🇧🇷, English 🇺🇸, Español 🇪🇸
-- Historial completo de todas las batallas
-- Estadísticas detalladas por pelea (DPS, daño total, críticos, suerte)
+- Historial completo con **numeración secuencial** (Combate #1, #2, #3...)
+- Estadísticas detalladas por combate (DPS, daño total, críticos, suerte)
+- **Iconos de clase** para las 27 especializaciones
 - Ranking de jugadores en cada combate
+- **Auto-guardado** al cambiar de mapa/servidor
 - Datos persisten entre sesiones
 
 ### 🔔 Aviso de Cambio de Mapa
@@ -480,17 +586,30 @@ AGPL-3.0 - See [LICENSE](LICENSE) for details.
 - Te recuerda cambiar de mapa para actualizar nombres de jugadores
 - Botón para mostrar/ocultar el aviso
 
+### 🌐 Soporte Completo para VPNs Gaming
+- **ExitLag** ✅
+- **NoPing** ✅
+- **WTFast** ✅
+- **Mudfish** ✅
+- **PingZapper, PingEnhancer, Haste, Outfox, BattlePing** ✅
+- Detección automática de adaptadores TAP de VPNs
+- Sin necesidad de configuración manual
+
 ### ⚡ Optimizaciones de Rendimiento
 - **90% menos escrituras en disco** con sistema de caché inteligente
 - **Uso reducido de CPU** mediante debounce de 3 segundos
-- **Interfaz más fluida** sin congelamientos
+- **Interfaz más fluida** con actualización de 50ms
 - Caché optimizado (guarda solo datos esenciales)
+- **Auto-guardado inteligente** del historial al cambiar mapas
 
 ### 🎯 Mejoras en la Interfaz
+- ✅ **Pantalla de carga** rediseñada con icono principal
 - ✅ Sistema de arrastre de ventana completamente rehecho
-- ✅ Sin fondo negro al redimensionar
-- ✅ Indicador de carga inteligente
+- ✅ **Sin fondo negro** al redimensionar
+- ✅ **Icono giratorio removido** cuando no hay combate activo
+- ✅ **Botones sin efecto de selección** después del clic
 - ✅ Transiciones suaves y responsivas
+- ✅ Interfaz se ajusta automáticamente al número de jugadores
 
 ---
 
@@ -503,7 +622,7 @@ AGPL-3.0 - See [LICENSE](LICENSE) for details.
 
 ### Paso 2: Instalar BPSR Meter
 1. Descarga el instalador en [Releases](../../releases)
-2. Ejecuta `BPSR Meter (by gabrielsanbs) Setup 3.0.5.exe`
+2. Ejecuta `BPSR Meter (by gabrielsanbs) Setup 3.1.0.exe`
 3. Sigue las instrucciones del instalador
 4. Al terminar, verás un mensaje de agradecimiento
 
@@ -528,7 +647,8 @@ AGPL-3.0 - See [LICENSE](LICENSE) for details.
 - **➕➖ Zoom:** Aumenta o disminuye el tamaño
 - **❌ Cerrar:** Cierra la aplicación
 - **🧹 F10:** Limpia los datos del combate actual
-- **📜 Historial:** Abre historial de batallas (multilingüe)
+- **📜 Historial:** Abre historial de batallas (ordenación DPS/HPS)
+- **⚙️ Configuración:** Abre pantalla de settings en tiempo real
 - **🔔 Aviso:** Muestra/oculta notificación de mapa
 
 #### Modos de Visualización:
@@ -536,10 +656,18 @@ AGPL-3.0 - See [LICENSE](LICENSE) for details.
 - **DPS:** Optimizado para clases de daño
 - **Lite (Healer):** Optimizado para sanadores (HPS destacado)
 
-#### 🌐 Modo ExitLag:
-- Haz clic en el botón ExitLag para activar
-- Desactiva limpieza automática al cambiar instancias
+#### 🌐 Soporte para VPNs Gaming:
+- **Soporte automático** para ExitLag, NoPing, WTFast, Mudfish y otras VPNs
+- Detecta y permite adaptadores TAP de VPNs gaming
 - **Config en ExitLag:** Opciones → "Método de redirección de paquetes" → **"Antiguo-NDIS"**
+- No requiere configuración adicional para otras VPNs
+
+#### ⚙️ Configuración:
+- **Límite de jugadores:** 1-20 jugadores visibles
+- **Reset automático:** Limpia datos automáticamente
+- **Idioma:** PT-BR, English, Español
+- **Caché:** Limpieza de caché de usuarios
+- **Historial:** Limpieza completa de combates guardados
 
 ---
 
@@ -549,7 +677,7 @@ AGPL-3.0 - See [LICENSE](LICENSE) for details.
 No modifica archivos del juego ni inyecta código. Herramientas de solo lectura tienen riesgo de baneo extremadamente bajo. **Usa bajo tu propia responsabilidad.**
 
 **⚡ ¿Afecta los FPS?**  
-No. v3.0.5 está optimizada: 90% menos escrituras en disco, caché inteligente, bajo uso de CPU.
+No. v3.1.0 está optimizada: 90% menos escrituras en disco, caché inteligente, bajo uso de CPU.
 
 **🛡️ ¿Por qué ejecutar como administrador?**  
 Npcap necesita acceso de bajo nivel a adaptadores de red para monitorear paquetes del juego.
@@ -558,10 +686,16 @@ Npcap necesita acceso de bajo nivel a adaptadores de red para monitorear paquete
 ¡Sí! Modo "Lite" tiene botón para alternar entre DPS y Healer, mostrando HPS destacado.
 
 **📜 ¿El historial guarda todas las peleas?**  
-Sí, con estadísticas detalladas y persistencia entre sesiones.
+¡Sí! Guarda automáticamente hasta 20 combates con estadísticas detalladas. Persiste entre sesiones y **auto-guarda al cambiar mapas**.
 
 **🌐 ¿Puedo cambiar el idioma?**  
-Sí, en la ventana Historial: Português 🇧🇷, English 🇺🇸, Español 🇪🇸
+¡Sí! En la ventana de **Configuración** o **Historial**: Português 🇧🇷, English 🇺🇸, Español 🇪🇸
+
+**🔀 ¿Puedo ordenar por HPS en el historial?**  
+¡Sí! 4 modos de ordenación: **DPS**, **DMG Total**, **HPS**, **Healing Total**
+
+**🌐 ¿Funciona con ExitLag/NoPing?**  
+¡Sí! **Soporte automático** para todas las VPNs gaming populares (ExitLag, NoPing, WTFast, Mudfish, etc)
 
 **🌏 ¿Funciona en el servidor chino?**  
 Sí, funciona perfectamente.
@@ -578,7 +712,8 @@ Sí, funciona perfectamente.
 **No muestra datos:**
 - Inicia el juego ANTES del medidor
 - Ejecuta como administrador
-- Verifica interfaz de red correcta (VPN/Wi-Fi)
+- Si usas **VPN gaming** (ExitLag, NoPing), el medidor debe detectar automáticamente
+- Verifica logs en `%APPDATA%/bpsr-meter/iniciar_log.txt`
 
 **Dudas o bugs:**
 - Revisa logs en `%APPDATA%/bpsr-meter`

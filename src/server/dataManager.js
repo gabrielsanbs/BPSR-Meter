@@ -821,9 +821,19 @@ class UserDataManager {
 
     /** Limpiar todos los datos de usuario */
     async clearAll() {
-        // Se autoResetOnFightEnd estiver ativo, salvar a luta antes de limpar
-        if (this.fightActive && this.users.size > 0) {
-            await this.saveFightToHistory();
+        // SEMPRE salvar se houver jogadores com dados, independente de fightActive
+        // Isso garante que mudanças de mapa/servidor não percam o histórico
+        if (this.users.size > 0) {
+            // Verificar se há pelo menos um jogador com dano ou cura
+            const hasValidData = Array.from(this.users.values()).some(user => 
+                (user.damageStats && user.damageStats.stats.total > 0) || 
+                (user.healingStats && user.healingStats.stats.total > 0)
+            );
+            
+            if (hasValidData) {
+                this.logger.info('Salvando luta antes de limpar (mudança de servidor/mapa)');
+                await this.saveFightToHistory();
+            }
         }
         
         this.users = new Map();
@@ -912,6 +922,16 @@ class UserDataManager {
         
         // Salvar no arquivo JSON
         await this.saveFightHistoryToFile();
+
+        // Notificar clientes conectados via Socket.IO
+        if (this.io) {
+            this.io.emit('fight-saved', {
+                fightId: fightData.id,
+                playerCount: fightData.players.length,
+                duration: fightData.duration
+            });
+            this.logger.debug('Evento fight-saved emitido via Socket.IO');
+        }
     }
 
     /** Obter histórico de lutas */
@@ -924,6 +944,30 @@ class UserDataManager {
         this.fightHistory = [];
         await this.saveFightHistoryToFile();
         this.logger.info('Histórico de lutas limpo!');
+    }
+
+    /** Limpar cache de usuários */
+    async clearUserCache() {
+        try {
+            // Deletar arquivo de cache
+            await fsPromises.unlink(this.USER_CACHE_PATH);
+            this.logger.info('Arquivo de cache deletado:', this.USER_CACHE_PATH);
+            
+            // Limpar cache em memória
+            this.userCache.clear();
+            
+            // Recarregar cache (vazio)
+            await this.loadUserCache();
+            
+            this.logger.info('Cache de usuários limpo com sucesso!');
+        } catch (error) {
+            if (error.code === 'ENOENT') {
+                this.logger.info('Arquivo de cache não existe, nada para limpar');
+            } else {
+                this.logger.error('Erro ao limpar cache:', error);
+                throw error;
+            }
+        }
     }
 
     /** Verificar se deve finalizar a luta (30s sem dano) */
@@ -1007,7 +1051,7 @@ class UserDataManager {
     checkTimeoutClear() {
         if (!this.globalSettings.autoClearOnTimeout || this.users.size === 0) return;
         const currentTime = Date.now();
-        if (this.lastLogTime && currentTime - this.lastLogTime > 20000) {
+        if (this.lastLogTime && currentTime - this.lastLogTime > 30000) { // 30 segundos
             this.clearAll();
             this.logger.info('Timeout reached, statistics cleared!');
         }
