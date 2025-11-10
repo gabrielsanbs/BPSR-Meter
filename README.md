@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="portada.png" alt="BPSR Meter" width="800"/>
+  <img src="portada_v31.png" alt="BPSR Meter" width="800"/>
   
   # BPSR Meter v3.1.0 (by gabrielsanbs)
   
@@ -9,7 +9,7 @@
   
   [[English](#english)] | [[Español](#español)]
   
-  <img src="BPSR_Meter_NEW.png" alt="Interface Principal" width="700"/>
+  <img src="BPSR_Meter_Main_v31.png" alt="Interface Principal" width="700"/>
 </div>
 
 ---
@@ -30,7 +30,7 @@
 
 ### ⚙️ Tela de Configurações Completa
 <div align="center">
-  <img src="BPSR_Meter_Settings.png" alt="Configurações" width="650"/>
+  <img src="BPSR_Meter_Settings_v31.png" alt="Configurações" width="650"/>
 </div>
 
 - **Configurações em tempo real** sem necessidade de reiniciar
@@ -42,7 +42,7 @@
 
 ### 📜 Histórico de Combates Avançado
 <div align="center">
-  <img src="BPSR_Meter_HISTORY.png" alt="Histórico de Combates" width="650"/>
+  <img src="BPSR_Meter_History_v31.png" alt="Histórico de Combates" width="650"/>
 </div>
 
 - **4 modos de ordenação:** DPS, DMG Total, HPS, Healing Total
@@ -238,7 +238,7 @@ AGPL-3.0 - Veja [LICENSE](LICENSE) para detalhes.
 <a name="english"></a>
 
 <div align="center">
-  <img src="portada.png" alt="BPSR Meter" width="800"/>
+  <img src="portada_v31.png" alt="BPSR Meter" width="800"/>
   
   # BPSR Meter v3.1.0 (by gabrielsanbs)
   
@@ -248,7 +248,7 @@ AGPL-3.0 - Veja [LICENSE](LICENSE) para detalhes.
   
   [[Português](#)] | [[Español](#español)]
   
-  <img src="BPSR_Meter_NEW.png" alt="Main Interface" width="700"/>
+  <img src="BPSR_Meter_Main_v31.png" alt="Main Interface" width="700"/>
 </div>
 
 ---
@@ -278,7 +278,7 @@ AGPL-3.0 - Veja [LICENSE](LICENSE) para detalhes.
 
 ### ⚙️ Complete Settings Screen
 <div align="center">
-  <img src="BPSR_Meter_Settings.png" alt="Settings" width="650"/>
+  <img src="BPSR_Meter_Settings_v31.png" alt="Settings" width="650"/>
 </div>
 
 - **Real-time configuration** without restart required
@@ -290,7 +290,7 @@ AGPL-3.0 - Veja [LICENSE](LICENSE) para detalhes.
 
 ### 📜 Advanced Combat History
 <div align="center">
-  <img src="BPSR_Meter_HISTORY.png" alt="Combat History" width="650"/>
+  <img src="BPSR_Meter_History_v31.png" alt="Combat History" width="650"/>
 </div>
 
 - **4 sorting modes:** DPS, Total DMG, HPS, Total Healing
@@ -362,7 +362,7 @@ AGPL-3.0 - Veja [LICENSE](LICENSE) para detalhes.
 
 ### 🎛️ Main Controls
 
-| ![Advanced](Advanced.png) | ![DPS](DPS.png) | ![Healer](Lite.png) |
+| ![Advanced](Advanced_v31.png) | ![DPS](DPS_v31.png) | ![Healer](Lite_v31.png) |
 |:---:|:---:|:---:|
 | Advanced Mode | DPS Mode | Healer Mode |
 
@@ -522,7 +522,7 @@ AGPL-3.0 - See [LICENSE](LICENSE) for details.
 <a name="español"></a>
 
 <div align="center">
-  <img src="portada.png" alt="BPSR Meter" width="800"/>
+  <img src="portada_v31.png" alt="BPSR Meter" width="800"/>
   
   # BPSR Meter v3.1.0 (by gabrielsanbs)
   
@@ -532,7 +532,7 @@ AGPL-3.0 - See [LICENSE](LICENSE) for details.
   
   [[Português](#)] | [[English](#english)]
   
-  <img src="BPSR_Meter_NEW.png" alt="Interfaz Principal" width="700"/>
+  <img src="BPSR_Meter_Main_v31.png" alt="Interfaz Principal" width="700"/>
 </div>
 
 ---
@@ -553,7 +553,7 @@ AGPL-3.0 - See [LICENSE](LICENSE) for details.
 
 ### ⚙️ Pantalla de Configuración Completa
 <div align="center">
-  <img src="BPSR_Meter_Settings.png" alt="Configuraciones" width="650"/>
+  <img src="BPSR_Meter_Settings_v31.png" alt="Configuraciones" width="650"/>
 </div>
 
 - **Configuración en tiempo real** sin necesidad de reiniciar
@@ -565,7 +565,7 @@ AGPL-3.0 - See [LICENSE](LICENSE) for details.
 
 ### 📜 Historial de Combate Avanzado
 <div align="center">
-  <img src="BPSR_Meter_HISTORY.png" alt="Historial de Combate" width="650"/>
+  <img src="BPSR_Meter_History_v31.png" alt="Historial de Combate" width="650"/>
 </div>
 
 - **4 modos de ordenación:** DPS, DMG Total, HPS, Healing Total
@@ -637,7 +637,7 @@ AGPL-3.0 - See [LICENSE](LICENSE) for details.
 
 ### 🎛️ Controles Principales
 
-| ![Advanced](Advanced.png) | ![DPS](DPS.png) | ![Healer](Lite.png) |
+| ![Avanzado](Advanced_v31.png) | ![DPS](DPS_v31.png) | ![Healer](Lite_v31.png) |
 |:---:|:---:|:---:|
 | Modo Avanzado | Modo DPS | Modo Healer |
 
