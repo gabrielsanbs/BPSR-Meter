@@ -64,6 +64,13 @@ class Sniffer {
         this.pauseStart = null; // Timestamp cuando se pausó
         this.io = null; // Socket.io instance para emitir eventos
         this.isConnected = false; // Status de conexão
+        
+        // Sistema de detecção de servidor robusto para VPNs (ExitLag, etc)
+        this.serverDetectionTimestamp = 0; // Último timestamp de detecção válida
+        this.serverChangeGracePeriod = 5000; // 5 segundos de tolerância para mudanças de IP/porta
+        this.lastValidServerPacket = 0; // Último pacote válido do servidor
+        this.consecutiveServerChanges = 0; // Contador de mudanças consecutivas
+        this.serverHistory = new Map(); // Histórico de servidores vistos recentemente
     }
 
     setPaused(paused) {
@@ -110,6 +117,81 @@ class Sniffer {
         this.tcp_next_seq = -1;
         this.tcp_last_time = 0;
         this.tcp_cache.clear();
+    }
+
+    isRealServerChange(src_server) {
+        const now = Date.now();
+        
+        // Se nunca detectamos um servidor, aceitar imediatamente
+        if (!this.current_server || this.current_server === '') {
+            console.log(`[SERVER-DETECT] Primeiro servidor detectado: ${src_server}`);
+            return true;
+        }
+        
+        // Se o servidor é o mesmo, não é mudança
+        if (this.current_server === src_server) {
+            this.serverHistory.set(src_server, now);
+            this.consecutiveServerChanges = 0;
+            return false;
+        }
+        
+        // Verificar se estamos dentro do período de graça (5 segundos)
+        const timeSinceLastDetection = now - this.serverDetectionTimestamp;
+        
+        // Se a última detecção foi há menos de 5 segundos E
+        // tivemos pacotes válidos recentemente (último 2 segundos)
+        const timeSinceLastValidPacket = now - this.lastValidServerPacket;
+        
+        console.log(`[SERVER-DETECT] Analisando mudança de servidor:`);
+        console.log(`  Current: ${this.current_server}`);
+        console.log(`  New: ${src_server}`);
+        console.log(`  Tempo desde última detecção: ${timeSinceLastDetection}ms`);
+        console.log(`  Tempo desde último pacote válido: ${timeSinceLastValidPacket}ms`);
+        console.log(`  Período de graça: ${this.serverChangeGracePeriod}ms`);
+        console.log(`  Mudanças consecutivas: ${this.consecutiveServerChanges}`);
+        
+        if (timeSinceLastDetection < this.serverChangeGracePeriod && timeSinceLastValidPacket < 2000) {
+            // Provavelmente é flutuação de VPN/ExitLag, ignorar mudança
+            this.consecutiveServerChanges++;
+            console.log(`  ✓ IGNORANDO mudança (VPN flutuação #${this.consecutiveServerChanges})`);
+            return false;
+        }
+        
+        // Limpar histórico antigo (> 30 segundos)
+        for (const [server, timestamp] of this.serverHistory) {
+            if (now - timestamp > 30000) {
+                this.serverHistory.delete(server);
+            }
+        }
+        
+        // Se vimos este servidor recentemente (últimos 30 segundos), não é mudança real
+        if (this.serverHistory.has(src_server)) {
+            const lastSeen = this.serverHistory.get(src_server);
+            if (now - lastSeen < 30000) {
+                // Servidor conhecido, apenas rotação de IP da VPN
+                this.consecutiveServerChanges++;
+                console.log(`  ✓ IGNORANDO mudança (servidor conhecido no histórico, visto há ${now - lastSeen}ms)`);
+                return false;
+            }
+        }
+        
+        // Se passou do período de graça OU não tivemos pacotes recentes,
+        // é provável que seja uma mudança real de servidor
+        console.log(`  ✗ MUDANÇA REAL DE SERVIDOR DETECTADA!`);
+        console.log(`     Razão: Tempo desde detecção (${timeSinceLastDetection}ms) >= ${this.serverChangeGracePeriod}ms`);
+        console.log(`     OU pacote válido há muito tempo (${timeSinceLastValidPacket}ms >= 2000ms)`);
+        this.consecutiveServerChanges = 0;
+        return true;
+    }
+
+    updateServerTracking(src_server) {
+        const now = Date.now();
+        console.log(`[SERVER-TRACK] Atualizando tracking: ${src_server}`);
+        this.current_server = src_server;
+        this.serverDetectionTimestamp = now;
+        this.lastValidServerPacket = now;
+        this.serverHistory.set(src_server, now);
+        this.consecutiveServerChanges = 0;
     }
 
     getTCPPacket(frameBuffer, ethOffset) {
@@ -197,7 +279,10 @@ class Sniffer {
 
         await this.tcp_lock.acquire();
         try {
-            if (this.current_server !== src_server) {
+            // Usar o novo sistema de detecção de servidor robusto
+            const isServerChange = this.isRealServerChange(src_server);
+            
+            if (isServerChange) {
                 try {
                     if (buf[4] == 0) {
                         const data = buf.subarray(10);
@@ -211,14 +296,23 @@ class Sniffer {
                                 const signature = Buffer.from([0x00, 0x63, 0x33, 0x53, 0x42, 0x00]);
                                 if (Buffer.compare(data1.subarray(5, 5 + signature.length), signature)) break;
                                 try {
-                                    // Já verificamos this.current_server !== src_server no bloco externo (linha 200)
-                                    this.current_server = src_server;
+                                    // Mudança real de servidor detectada
+                                    this.updateServerTracking(src_server);
                                     this.clearTcpCache();
                                     this.tcp_next_seq = tcpPacket.info.seqno + buf.length;
                                     this.userDataManager.refreshEnemyCache();
                                     if (this.globalSettings.autoClearOnServerChange && this.userDataManager.lastLogTime !== 0 && this.userDataManager.users.size !== 0) {
+                                        console.log(`[CLEAR-ALL] Chamando clearAll() devido a mudança de servidor`);
+                                        console.log(`  autoClearOnServerChange: ${this.globalSettings.autoClearOnServerChange}`);
+                                        console.log(`  lastLogTime: ${this.userDataManager.lastLogTime}`);
+                                        console.log(`  users.size: ${this.userDataManager.users.size}`);
                                         this.userDataManager.clearAll(this.globalSettings);
                                         console.log('¡Servidor cambiado, estadísticas limpiadas!');
+                                    } else {
+                                        console.log(`[CLEAR-ALL] NÃO chamando clearAll():`);
+                                        console.log(`  autoClearOnServerChange: ${this.globalSettings.autoClearOnServerChange}`);
+                                        console.log(`  lastLogTime: ${this.userDataManager.lastLogTime}`);
+                                        console.log(`  users.size: ${this.userDataManager.users.size}`);
                                     }
                                     console.log('Servidor de juego detectado. Midiendo DPS...');
                                     // Emitir evento de conexão estabelecida
@@ -243,14 +337,23 @@ class Sniffer {
                             Buffer.compare(buf.subarray(0, 10), signature.subarray(0, 10)) === 0 &&
                             Buffer.compare(buf.subarray(14, 14 + 6), signature.subarray(14, 14 + 6)) === 0
                         ) {
-                            // Já verificamos this.current_server !== src_server no bloco externo (linha 200)
-                            this.current_server = src_server;
+                            // Mudança real de servidor detectada
+                            this.updateServerTracking(src_server);
                             this.clearTcpCache();
                             this.tcp_next_seq = tcpPacket.info.seqno + buf.length;
                             this.userDataManager.refreshEnemyCache();
                             if (this.globalSettings.autoClearOnServerChange && this.userDataManager.lastLogTime !== 0 && this.userDataManager.users.size !== 0) {
+                                console.log(`[CLEAR-ALL] Chamando clearAll() devido a mudança de servidor (pacote 0x62)`);
+                                console.log(`  autoClearOnServerChange: ${this.globalSettings.autoClearOnServerChange}`);
+                                console.log(`  lastLogTime: ${this.userDataManager.lastLogTime}`);
+                                console.log(`  users.size: ${this.userDataManager.users.size}`);
                                 this.userDataManager.clearAll(this.globalSettings);
                                 console.log('¡Servidor cambiado, estadísticas limpiadas!');
+                            } else {
+                                console.log(`[CLEAR-ALL] NÃO chamando clearAll() (pacote 0x62):`);
+                                console.log(`  autoClearOnServerChange: ${this.globalSettings.autoClearOnServerChange}`);
+                                console.log(`  lastLogTime: ${this.userDataManager.lastLogTime}`);
+                                console.log(`  users.size: ${this.userDataManager.users.size}`);
                             }
                             console.log('Servidor de juego detectado por paquete de inicio de sesión. Midiendo DPS...');
                             // Emitir evento de conexão estabelecida
@@ -262,6 +365,16 @@ class Sniffer {
                     }
                 } catch (e) {}
                 return;
+            }
+            
+            // Atualizar timestamp de último pacote válido (não é mudança de servidor)
+            if (!isServerChange && this.current_server === src_server) {
+                const now = Date.now();
+                const timeSinceLastPacket = now - this.lastValidServerPacket;
+                if (timeSinceLastPacket > 1000) { // Log apenas se passou mais de 1 segundo
+                    console.log(`[PACKET] Recebido pacote válido após ${timeSinceLastPacket}ms`);
+                }
+                this.lastValidServerPacket = now;
             }
 
             if (this.tcp_next_seq === -1) {

@@ -1,4 +1,4 @@
-# 🎯 BPSR Meter v3.1.1
+# 🎯 BPSR Meter v3.1.2
 
 [[Português](#português)] | [[English](#english)] | [[Español](#español)]
 
@@ -6,18 +6,19 @@
 
 ## Português
 
-**🔥 HOTFIX v3.1.1:**
+**🔥 HOTFIX v3.1.2:**
 
-### 🐛 Correção Crítica - ExitLag e VPNs
-- **CORRIGIDO:** Loop infinito de detecção de servidor com ExitLag
+### 🐛 Correção REAL - ExitLag e VPNs
+- **CORRIGIDO (FOR REAL):** Loop infinito de detecção de servidor com ExitLag
 - **CORRIGIDO:** Geração massiva de entradas no histórico (centenas por segundo)
 - **CORRIGIDO:** Mensagem "Servidor de juego detectado" repetindo infinitamente
 - **CORRIGIDO:** Reset constante de estatísticas ao usar VPNs de jogo
+- **CORRIGIDO:** Cada hit do jogador resetava a conexão
 - Aplicação agora estável com ExitLag, NoPing, WTFast e outras VPNs
 
-**Problema anterior:** VPNs roteiam pacotes através de múltiplos IPs, causando detecção falsa de "novo servidor" a cada pacote, gerando loop infinito.
+**Problema real:** VPNs mudam a **porta de origem** a cada pacote. O código verificava `IP_origem:PORTA_origem -> IP_destino:PORTA_destino`, então cada pacote parecia vir de uma "nova conexão".
 
-**Solução:** Removida verificação redundante que causava o loop. Agora detecta servidor apenas uma vez por sessão real.
+**Solução definitiva:** Agora verifica apenas `IP_destino:PORTA_destino` (servidor do jogo), ignorando origem (cliente/VPN) que muda constantemente.
 
 ---
 
@@ -87,18 +88,19 @@
 
 ## English
 
-**🔥 HOTFIX v3.1.1:**
+**🔥 HOTFIX v3.1.2:**
 
-### 🐛 Critical Fix - ExitLag and VPNs
-- **FIXED:** Infinite server detection loop with ExitLag
+### 🐛 REAL Fix - ExitLag and VPNs
+- **FIXED (FOR REAL):** Infinite server detection loop with ExitLag
 - **FIXED:** Massive history entry generation (hundreds per second)
 - **FIXED:** "Servidor de juego detectado" message repeating infinitely
 - **FIXED:** Constant stats reset when using gaming VPNs
+- **FIXED:** Every player hit was resetting the connection
 - Application now stable with ExitLag, NoPing, WTFast and other VPNs
 
-**Previous issue:** VPNs route packets through multiple IPs, causing false "new server" detection on every packet, creating infinite loop.
+**Real problem:** VPNs change the **source port** on every packet. Code was checking `source_IP:source_PORT -> dest_IP:dest_PORT`, so every packet looked like a "new connection".
 
-**Solution:** Removed redundant check causing the loop. Now detects server only once per real session.
+**Definitive solution:** Now only checks `dest_IP:dest_PORT` (game server), ignoring source (client/VPN) which changes constantly.
 
 ---
 
@@ -168,18 +170,19 @@
 
 ## Español
 
-**🔥 HOTFIX v3.1.1:**
+**🔥 HOTFIX v3.1.2:**
 
-### 🐛 Corrección Crítica - ExitLag y VPNs
-- **CORREGIDO:** Bucle infinito de detección de servidor con ExitLag
+### 🐛 Corrección REAL - ExitLag y VPNs
+- **CORREGIDO (DE VERDAD):** Bucle infinito de detección de servidor con ExitLag
 - **CORREGIDO:** Generación masiva de entradas en historial (cientos por segundo)
 - **CORREGIDO:** Mensaje "Servidor de juego detectado" repitiéndose infinitamente
 - **CORREGIDO:** Reseteo constante de estadísticas al usar VPNs de juego
+- **CORREGIDO:** Cada golpe del jugador reseteaba la conexión
 - Aplicación ahora estable con ExitLag, NoPing, WTFast y otras VPNs
 
-**Problema anterior:** VPNs enrutan paquetes a través de múltiples IPs, causando detección falsa de "nuevo servidor" en cada paquete, creando bucle infinito.
+**Problema real:** VPNs cambian el **puerto de origen** en cada paquete. El código verificaba `IP_origen:PUERTO_origen -> IP_destino:PUERTO_destino`, entonces cada paquete parecía venir de una "nueva conexión".
 
-**Solución:** Eliminada verificación redundante que causaba el bucle. Ahora detecta servidor solo una vez por sesión real.
+**Solución definitiva:** Ahora solo verifica `IP_destino:PUERTO_destino` (servidor del juego), ignorando origen (cliente/VPN) que cambia constantemente.
 
 ---
 
