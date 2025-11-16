@@ -257,7 +257,6 @@ class UserData {
             this.skillUsage.set(skillId, new StatisticData(this, '伤害', element));
         }
         this.skillUsage.get(skillId).addRecord(damage, isCrit, isCauseLucky, hpLessenValue);
-        this.skillUsage.get(skillId).realtimeWindow.length = 0;
 
         const subProfession = getSubProfessionBySkillId(skillId);
         if (subProfession) {
@@ -281,7 +280,6 @@ class UserData {
             this.skillUsage.set(skillId, new StatisticData(this, '治疗', element));
         }
         this.skillUsage.get(skillId).addRecord(healing, isCrit, isCauseLucky);
-        this.skillUsage.get(skillId).realtimeWindow.length = 0;
 
         const subProfession = getSubProfessionBySkillId(skillId - 1000000000);
         if (subProfession) {
@@ -301,6 +299,11 @@ class UserData {
     updateRealtimeDps() {
         this.damageStats.updateRealtimeStats();
         this.healingStats.updateRealtimeStats();
+        
+        // Limpar janelas de skills individuais para economizar memória
+        for (const skillStat of this.skillUsage.values()) {
+            skillStat.updateRealtimeStats();
+        }
     }
 
     getTotalDps() {
@@ -450,6 +453,8 @@ class UserDataManager {
             hp: new Map(),
             maxHp: new Map(),
         };
+
+        this.isClearing = false;
     }
 
     async initialize() {
@@ -821,6 +826,12 @@ class UserDataManager {
 
     /** Limpiar todos los datos de usuario */
     async clearAll() {
+        if (this.isClearing) {
+            this.logger.debug('clearAll já está em andamento, ignorando chamada duplicada');
+            return;
+        }
+        this.isClearing = true;
+        try {
         // SEMPRE salvar se houver jogadores com dados, independente de fightActive
         // Isso garante que mudanças de mapa/servidor não percam o histórico
         if (this.users.size > 0) {
@@ -840,6 +851,9 @@ class UserDataManager {
         this.startTime = Date.now();
         this.lastDamageTime = Date.now();
         this.fightActive = false;
+        } finally {
+            this.isClearing = false;
+        }
     }
 
     /** Iniciar uma nova luta */

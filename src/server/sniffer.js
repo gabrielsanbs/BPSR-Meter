@@ -1,7 +1,6 @@
 const cap = require('cap');
 const decoders = cap.decoders;
 const PROTOCOL = decoders.PROTOCOL;
-const Readable = require('stream').Readable;
 const findDefaultNetworkDevice = require('../../algo/netInterfaceUtil'); // Ajustar la ruta
 const { Lock } = require('./dataManager'); // Importar Lock desde dataManager
 
@@ -10,6 +9,17 @@ const Cap = cap.Cap;
 const NPCAP_INSTALLER_PATH = require('path').join(__dirname, '..', '..', 'Dist', 'npcap-1.83.exe'); // Ajustar la ruta
 const fs = require('fs');
 const { spawn } = require('child_process');
+const LONG_HANDSHAKE_SIGNATURE = Buffer.from([0x00, 0x63, 0x33, 0x53, 0x42, 0x00]);
+const SHORT_HANDSHAKE_SIGNATURE = Buffer.from([
+    0x00, 0x00, 0x00, 0x62,
+    0x00, 0x03,
+    0x00, 0x00, 0x00, 0x01,
+    0x00, 0x11, 0x45, 0x14,
+    0x00, 0x00, 0x00, 0x00,
+    0x0a, 0x4e, 0x08, 0x01, 0x22, 0x24
+]);
+const MAX_HANDSHAKE_SCAN_BYTES = 8192; // evita leituras enormes em buffers corrompidos
+const MAX_HANDSHAKE_SEGMENT_BYTES = 65536; // limite adicional por segmento
 
 async function checkAndInstallNpcap(logger) {
     try {
@@ -50,6 +60,7 @@ class Sniffer {
         this.userDataManager = userDataManager;
         this.globalSettings = globalSettings; // Pasar globalSettings al sniffer
         this.current_server = '';
+        this.currentServerKey = '';
         this._data = Buffer.alloc(0);
         this.tcp_next_seq = -1;
         this.tcp_cache = new Map();
@@ -67,6 +78,82 @@ class Sniffer {
         
         // Sistema simples de detecção de servidor
         this.lastValidServerPacket = 0; // Último pacote válido do servidor (para timeout)
+        this.serverChangeGracePeriod = this.globalSettings.fastServerChangeDetection ? 10000 : 30000;
+        this.pendingServerNotice = null; // evita spam de logs antes da assinatura
+        this.lastServerChangeTime = 0;
+        this.awaitingServerData = false;
+        this.serverDataDeadline = 0;
+        this.serverDetectionTimestamp = 0;
+        this.serverHistory = new Map();
+        this.consecutiveServerChanges = 0;
+    }
+
+    detectHandshakeType(buf) {
+        if (!buf || !Buffer.isBuffer(buf)) return null;
+
+        // Assinatura longa (0x63...)
+        if (buf.length > 16 && buf[4] === 0) {
+            let offset = 10;
+            const scanLimit = Math.min(buf.length, offset + MAX_HANDSHAKE_SCAN_BYTES);
+            while (offset + 4 <= scanLimit) {
+                const remaining = scanLimit - offset;
+                if (remaining < 4) break;
+                const expectedLength = buf.readUInt32BE(offset);
+                if (expectedLength <= 4 || expectedLength > MAX_HANDSHAKE_SEGMENT_BYTES) break;
+                if (offset + expectedLength > scanLimit) break;
+                const chunkStart = offset + 4;
+                const chunkEnd = chunkStart + expectedLength - 4;
+                const chunk = buf.subarray(chunkStart, chunkEnd);
+                if (chunk.length >= 5 + LONG_HANDSHAKE_SIGNATURE.length) {
+                    const signatureSlice = chunk.subarray(5, 5 + LONG_HANDSHAKE_SIGNATURE.length);
+                    if (Buffer.compare(signatureSlice, LONG_HANDSHAKE_SIGNATURE) === 0) {
+                        return 'long';
+                    }
+                }
+                offset += expectedLength;
+            }
+        }
+        // Assinatura curta (0x62...)
+        if (buf.length === 0x62) {
+            if (
+                Buffer.compare(buf.subarray(0, 10), SHORT_HANDSHAKE_SIGNATURE.subarray(0, 10)) === 0 &&
+                Buffer.compare(buf.subarray(14, 14 + 6), SHORT_HANDSHAKE_SIGNATURE.subarray(14, 14 + 6)) === 0
+            ) {
+                return 'short';
+            }
+        }
+        return null;
+    }
+
+    async applyServerChange(handshakeType, src_server, buf, tcpPacket) {
+        if (handshakeType === 'long') {
+            console.log('[SERVER] Carregando novo mapa...');
+        } else if (handshakeType === 'short') {
+            console.log('[SERVER] Mudança de sala detectada.');
+        } else {
+            console.log('[SERVER] Mudança de servidor detectada.');
+        }
+        this.updateServerTracking(src_server);
+        this.clearTcpCache();
+        this.tcp_next_seq = tcpPacket.info.seqno + buf.length;
+        this.userDataManager.refreshEnemyCache();
+        if (this.globalSettings.autoClearOnServerChange && this.userDataManager.lastLogTime !== 0 && this.userDataManager.users.size !== 0) {
+            await this.userDataManager.clearAll(this.globalSettings);
+            console.log('[SERVER] Luta salva. Medindo nova luta...');
+        }
+        if (!this.isConnected && this.io) {
+            this.isConnected = true;
+            this.io.emit('game-connected', { connected: true });
+        }
+        // Após o handshake, esperamos que o jogo abra um novo socket real.
+        // Concedemos uma janela para aceitar a próxima chave sem limpar novamente.
+        this.awaitingServerData = true;
+        const extraBuffer = 5000; // 5s adicionais cobrem loads mais lentos
+        this.serverDataDeadline = Date.now() + this.serverChangeGracePeriod + extraBuffer;
+    }
+
+    updateGracePeriod() {
+        this.serverChangeGracePeriod = this.globalSettings.fastServerChangeDetection ? 10000 : 30000;
     }
 
     setPaused(paused) {
@@ -115,27 +202,66 @@ class Sniffer {
         this.tcp_cache.clear();
     }
 
+    normalizeConnectionKey(serverStr) {
+        if (!serverStr) return '';
+        const parts = serverStr.split(' -> ');
+        if (parts.length === 2) {
+            const normalized = [parts[0].trim(), parts[1].trim()].sort().join(' <-> ');
+            return normalized;
+        }
+        return serverStr.trim();
+    }
+
     isRealServerChange(src_server) {
         const now = Date.now();
+        if (!this.lastValidServerPacket) {
+            this.lastValidServerPacket = now;
+        }
+        this.updateGracePeriod();
+        const newServerKey = this.normalizeConnectionKey(src_server);
         
         // Se nunca detectamos um servidor, aceitar imediatamente
         if (!this.current_server || this.current_server === '') {
-            console.log(`[SERVER-DETECT] Primeiro servidor detectado`);
+            this.currentServerKey = newServerKey;
             return true;
         }
         
-        // Atualizar timestamp do último pacote válido (para sistema de timeout)
-        this.lastValidServerPacket = now;
+        // Se o servidor é o mesmo (considerando ambas direções), manter timestamp atualizado
+        if (this.currentServerKey === newServerKey) {
+            this.lastValidServerPacket = now;
+            this.pendingServerNotice = null;
+            this.awaitingServerData = false;
+            return false;
+        }
+
+        if (this.awaitingServerData) {
+            if (!this.serverDataDeadline || now <= this.serverDataDeadline) {
+                this.current_server = src_server;
+                this.currentServerKey = newServerKey;
+                this.lastValidServerPacket = now;
+                this.pendingServerNotice = null;
+                this.awaitingServerData = false;
+                return false;
+            }
+            this.awaitingServerData = false;
+        }
         
-        // Ignorar todas as mudanças de servidor após o primeiro
-        // O sistema de timeout (autoClearOnTimeout) vai gerar histórico quando necessário
-        return false;
+        // Verificar tempo desde o último pacote válido antes de aceitar novo servidor
+        const timeSinceLastValid = now - this.lastValidServerPacket;
+        if (timeSinceLastValid < this.serverChangeGracePeriod) {
+            return false;
+        }
+        
+        return true;
     }
 
     updateServerTracking(src_server) {
         const now = Date.now();
         this.current_server = src_server;
+        this.currentServerKey = this.normalizeConnectionKey(src_server);
         this.lastValidServerPacket = now;
+        this.pendingServerNotice = null;
+        this.lastServerChangeTime = now;
     }
 
     getTCPPacket(frameBuffer, ethOffset) {
@@ -220,86 +346,39 @@ class Sniffer {
         const srcport = tcpPacket.info.srcport;
         const dstport = tcpPacket.info.dstport;
         const src_server = srcaddr + ':' + srcport + ' -> ' + dstaddr + ':' + dstport;
+        const normalizedServerKey = this.normalizeConnectionKey(src_server);
+        const handshakeType = this.detectHandshakeType(buf);
+        const now = Date.now();
+        const timeSinceLastValid = this.lastValidServerPacket ? now - this.lastValidServerPacket : Infinity;
 
         await this.tcp_lock.acquire();
         try {
-            // Usar o novo sistema de detecção de servidor robusto
-            const isServerChange = this.isRealServerChange(src_server);
+            let isServerChange = false;
+            if (
+                handshakeType &&
+                normalizedServerKey !== this.currentServerKey &&
+                timeSinceLastValid >= this.serverChangeGracePeriod
+            ) {
+                isServerChange = true;
+            } else {
+                isServerChange = this.isRealServerChange(src_server);
+            }
             
             if (isServerChange) {
-                try {
-                    if (buf[4] == 0) {
-                        const data = buf.subarray(10);
-                        if (data.length) {
-                            const stream = Readable.from(data, { objectMode: false });
-                            let data1;
-                            do {
-                                const len_buf = stream.read(4);
-                                if (!len_buf) break;
-                                data1 = stream.read(len_buf.readUInt32BE() - 4);
-                                const signature = Buffer.from([0x00, 0x63, 0x33, 0x53, 0x42, 0x00]);
-                                if (Buffer.compare(data1.subarray(5, 5 + signature.length), signature)) break;
-                                try {
-                                    // Mudança real de servidor detectada
-                                    this.updateServerTracking(src_server);
-                                    this.clearTcpCache();
-                                    this.tcp_next_seq = tcpPacket.info.seqno + buf.length;
-                                    this.userDataManager.refreshEnemyCache();
-                                    if (this.globalSettings.autoClearOnServerChange && this.userDataManager.lastLogTime !== 0 && this.userDataManager.users.size !== 0) {
-                                        this.userDataManager.clearAll(this.globalSettings);
-                                        console.log('[SERVER] Dados salvos e limpos após mudança de servidor');
-                                    }
-                                    console.log('Servidor de juego detectado. Midiendo DPS...');
-                                    // Emitir evento de conexão estabelecida
-                                    if (!this.isConnected && this.io) {
-                                        this.isConnected = true;
-                                        this.io.emit('game-connected', { connected: true });
-                                    }
-                                } catch (e) {}
-                            } while (data1 && data1.length);
-                        }
-                    }
-                    if (buf.length === 0x62) {
-                        const signature = Buffer.from([
-                            0x00, 0x00, 0x00, 0x62,
-                            0x00, 0x03,
-                            0x00, 0x00, 0x00, 0x01,
-                            0x00, 0x11, 0x45, 0x14,
-                            0x00, 0x00, 0x00, 0x00,
-                            0x0a, 0x4e, 0x08, 0x01, 0x22, 0x24
-                        ]);
-                        if (
-                            Buffer.compare(buf.subarray(0, 10), signature.subarray(0, 10)) === 0 &&
-                            Buffer.compare(buf.subarray(14, 14 + 6), signature.subarray(14, 14 + 6)) === 0
-                        ) {
-                            // Mudança real de servidor detectada
-                            this.updateServerTracking(src_server);
-                            this.clearTcpCache();
-                            this.tcp_next_seq = tcpPacket.info.seqno + buf.length;
-                            this.userDataManager.refreshEnemyCache();
-                            if (this.globalSettings.autoClearOnServerChange && this.userDataManager.lastLogTime !== 0 && this.userDataManager.users.size !== 0) {
-                                this.userDataManager.clearAll(this.globalSettings);
-                                console.log('[SERVER] Dados salvos e limpos após mudança de servidor');
-                            }
-                            console.log('Servidor de juego detectado por paquete de inicio de sesión. Midiendo DPS...');
-                            // Emitir evento de conexão estabelecida
-                            if (!this.isConnected && this.io) {
-                                this.isConnected = true;
-                                this.io.emit('game-connected', { connected: true });
-                            }
-                        }
-                    }
-                } catch (e) {}
+                if (handshakeType) {
+                    await this.applyServerChange(handshakeType, src_server, buf, tcpPacket);
+                }
                 return;
             }
             
             // Atualizar timestamp de último pacote válido (não é mudança de servidor)
-            if (!isServerChange && this.current_server === src_server) {
+            if (!isServerChange && normalizedServerKey === this.currentServerKey) {
                 const now = Date.now();
                 this.lastValidServerPacket = now;
                 // IMPORTANTE: Atualizar também serverDetectionTimestamp para evitar
                 // detecção de mudança de servidor após períodos longos sem pacotes
                 this.serverDetectionTimestamp = now;
+                this.awaitingServerData = false;
             }
 
             if (this.tcp_next_seq === -1) {
@@ -384,16 +463,28 @@ class Sniffer {
         }
         this.capInstance.setMinBytes && this.capInstance.setMinBytes(0);
         this.capInstance.on('packet', async (nbytes, trunc) => {
-            this.eth_queue.push(Buffer.from(buffer.subarray(0, nbytes)));
+            // Limitar fila para evitar acúmulo de memória se processamento for lento
+            if (this.eth_queue.length < 1000) {
+                this.eth_queue.push(Buffer.from(buffer.subarray(0, nbytes)));
+            }
         });
 
         (async () => {
             while (true) {
-                if (this.eth_queue.length) {
-                    const pkt = this.eth_queue.shift();
-                    this.processEthPacket(pkt);
-                } else {
+                if (!this.eth_queue.length) {
                     await new Promise((r) => setTimeout(r, 1));
+                    continue;
+                }
+
+                const pkt = this.eth_queue.shift();
+                if (!pkt) {
+                    continue;
+                }
+
+                try {
+                    await this.processEthPacket(pkt);
+                } catch (err) {
+                    this.logger.error('Erro ao processar pacote:', err);
                 }
             }
         })();
@@ -419,7 +510,9 @@ class Sniffer {
                 this.serverDetectionTimestamp = 0;
                 this.lastValidServerPacket = 0;
                 this.consecutiveServerChanges = 0;
-                this.serverHistory.clear();
+                if (this.serverHistory && typeof this.serverHistory.clear === 'function') {
+                    this.serverHistory.clear();
+                }
             }
         }, 10000);
     }
