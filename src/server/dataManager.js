@@ -871,7 +871,9 @@ class UserDataManager {
 
     /** Salvar luta atual no histórico */
     async saveFightToHistory() {
-        if (this.users.size === 0) return;
+        if (this.users.size === 0) {
+            return;
+        }
 
         const endTime = Date.now();
         const duration = endTime - this.startTime;

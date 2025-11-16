@@ -3,5 +3,6 @@
     "autoClearOnTimeout": true,
     "onlyRecordEliteDummy": false,
     "autoResetOnFightEnd": false,
-    "enableFightHistory": true
+    "enableFightHistory": true,
+    "fastServerChangeDetection": false
 }

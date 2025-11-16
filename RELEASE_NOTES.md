@@ -1,4 +1,4 @@
-# 🎯 BPSR Meter v3.1.2
+# 🎯 BPSR Meter v3.1.1
 
 [[Português](#português)] | [[English](#english)] | [[Español](#español)]
 
@@ -6,19 +6,16 @@
 
 ## Português
 
-**🔥 HOTFIX v3.1.2:**
+**🔥 CORREÇÕES IMPORTANTES v3.1.1:**
 
-### 🐛 Correção REAL - ExitLag e VPNs
-- **CORRIGIDO (FOR REAL):** Loop infinito de detecção de servidor com ExitLag
-- **CORRIGIDO:** Geração massiva de entradas no histórico (centenas por segundo)
-- **CORRIGIDO:** Mensagem "Servidor de juego detectado" repetindo infinitamente
-- **CORRIGIDO:** Reset constante de estatísticas ao usar VPNs de jogo
-- **CORRIGIDO:** Cada hit do jogador resetava a conexão
-- Aplicação agora estável com ExitLag, NoPing, WTFast e outras VPNs
+### 🎮 Compatibilidade Total com ExitLag e VPNs
+- **CORRIGIDO:** Reset constante de DPS ao usar ExitLag e VPNs de jogo
+- **CORRIGIDO:** Alternância de portas do jogo causando múltiplos resets
+- **SIMPLIFICADO:** Sistema de detecção agora ignora mudanças de IP/porta durante o jogo
+- **MELHORADO:** Histórico gerado apenas por timeout (inatividade), não por mudança de servidor
+- **LOGS:** Console limpo sem spam de detecções
 
-**Problema real:** VPNs mudam a **porta de origem** a cada pacote. O código verificava `IP_origem:PORTA_origem -> IP_destino:PORTA_destino`, então cada pacote parecia vir de uma "nova conexão".
-
-**Solução definitiva:** Agora verifica apenas `IP_destino:PORTA_destino` (servidor do jogo), ignorando origem (cliente/VPN) que muda constantemente.
+**Como funciona:** O sistema detecta o primeiro servidor e ignora todas as flutuações de IP/porta. O histórico é salvo automaticamente quando fica sem receber dados (timeout configurável).
 
 ---
 
@@ -88,19 +85,16 @@
 
 ## English
 
-**🔥 HOTFIX v3.1.2:**
+**🔥 IMPORTANT FIXES v3.1.1:**
 
-### 🐛 REAL Fix - ExitLag and VPNs
-- **FIXED (FOR REAL):** Infinite server detection loop with ExitLag
-- **FIXED:** Massive history entry generation (hundreds per second)
-- **FIXED:** "Servidor de juego detectado" message repeating infinitely
-- **FIXED:** Constant stats reset when using gaming VPNs
-- **FIXED:** Every player hit was resetting the connection
-- Application now stable with ExitLag, NoPing, WTFast and other VPNs
+### 🎮 Full Compatibility with ExitLag and VPNs
+- **FIXED:** Constant DPS reset when using ExitLag and gaming VPNs
+- **FIXED:** Game port alternation causing multiple resets
+- **SIMPLIFIED:** Detection system now ignores IP/port changes during gameplay
+- **IMPROVED:** History generated only by timeout (inactivity), not server changes
+- **LOGS:** Clean console without detection spam
 
-**Real problem:** VPNs change the **source port** on every packet. Code was checking `source_IP:source_PORT -> dest_IP:dest_PORT`, so every packet looked like a "new connection".
-
-**Definitive solution:** Now only checks `dest_IP:dest_PORT` (game server), ignoring source (client/VPN) which changes constantly.
+**How it works:** The system detects the first server and ignores all IP/port fluctuations. History is automatically saved when no data is received (configurable timeout).
 
 ---
 
@@ -170,19 +164,16 @@
 
 ## Español
 
-**🔥 HOTFIX v3.1.2:**
+**🔥 CORRECCIONES IMPORTANTES v3.1.1:**
 
-### 🐛 Corrección REAL - ExitLag y VPNs
-- **CORREGIDO (DE VERDAD):** Bucle infinito de detección de servidor con ExitLag
-- **CORREGIDO:** Generación masiva de entradas en historial (cientos por segundo)
-- **CORREGIDO:** Mensaje "Servidor de juego detectado" repitiéndose infinitamente
-- **CORREGIDO:** Reseteo constante de estadísticas al usar VPNs de juego
-- **CORREGIDO:** Cada golpe del jugador reseteaba la conexión
-- Aplicación ahora estable con ExitLag, NoPing, WTFast y otras VPNs
+### 🎮 Compatibilidad Total con ExitLag y VPNs
+- **CORREGIDO:** Reseteo constante de DPS al usar ExitLag y VPNs de juego
+- **CORREGIDO:** Alternancia de puertos del juego causando múltiples reseteos
+- **SIMPLIFICADO:** Sistema de detección ahora ignora cambios de IP/puerto durante el juego
+- **MEJORADO:** Historial generado solo por timeout (inactividad), no por cambios de servidor
+- **LOGS:** Consola limpia sin spam de detecciones
 
-**Problema real:** VPNs cambian el **puerto de origen** en cada paquete. El código verificaba `IP_origen:PUERTO_origen -> IP_destino:PUERTO_destino`, entonces cada paquete parecía venir de una "nueva conexión".
-
-**Solución definitiva:** Ahora solo verifica `IP_destino:PUERTO_destino` (servidor del juego), ignorando origen (cliente/VPN) que cambia constantemente.
+**Cómo funciona:** El sistema detecta el primer servidor e ignora todas las fluctuaciones de IP/puerto. El historial se guarda automáticamente cuando no se reciben datos (timeout configurable).
 
 ---
 

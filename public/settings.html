@@ -350,11 +350,11 @@
                 </div>
                 <div class="setting-item">
                     <div class="setting-label">
-                        <span class="setting-label-text" data-i18n="autoReset">Reset Automático</span>
-                        <span class="setting-label-description" data-i18n="autoResetDesc">Reinicia automaticamente o medidor após período de inatividade</span>
+                        <span class="setting-label-text" data-i18n="fastReset">Reset Rápido (10s)</span>
+                        <span class="setting-label-description" data-i18n="fastResetDesc">Detecta mudança de mapa/servidor em 10s ao invés de 30s. Recomendado para uso com ExitLag/VPNs de jogos.</span>
                     </div>
                     <div class="setting-control">
-                        <div class="toggle-switch" id="auto-reset-toggle">
+                        <div class="toggle-switch" id="fast-reset-toggle">
                             <div class="toggle-switch-slider"></div>
                         </div>
                     </div>
@@ -427,8 +427,8 @@
                 listSize: 'Tamanho da Lista',
                 listSizeDesc: 'Quantidade de jogadores exibidos no medidor (padrão: 6)',
                 behavior: 'Comportamento',
-                autoReset: 'Reset Automático',
-                autoResetDesc: 'Reinicia automaticamente os dados ao fim de cada luta',
+                fastReset: 'Reset Rápido (10s)',
+                fastResetDesc: 'Detecta mudança de mapa/servidor em 10s ao invés de 30s. Recomendado para uso com ExitLag/VPNs de jogos.',
                 actions: 'Ações',
                 clearHistory: 'Limpar Histórico',
                 clearHistoryDesc: 'Remove todas as lutas salvas permanentemente',
@@ -453,8 +453,8 @@
                 listSize: 'List Size',
                 listSizeDesc: 'Number of players displayed in the meter (default: 6)',
                 behavior: 'Behavior',
-                autoReset: 'Auto Reset',
-                autoResetDesc: 'Automatically resets data at the end of each fight',
+                fastReset: 'Fast Reset (10s)',
+                fastResetDesc: 'Detects map/server change in 10s instead of 30s. Recommended for use with ExitLag/gaming VPNs.',
                 actions: 'Actions',
                 clearHistory: 'Clear History',
                 clearHistoryDesc: 'Permanently removes all saved fights',
@@ -479,8 +479,8 @@
                 listSize: 'Tamaño de Lista',
                 listSizeDesc: 'Cantidad de jugadores mostrados en el medidor (predeterminado: 6)',
                 behavior: 'Comportamiento',
-                autoReset: 'Reinicio Automático',
-                autoResetDesc: 'Reinicia automáticamente los datos al final de cada pelea',
+                fastReset: 'Reset Rápido (10s)',
+                fastResetDesc: 'Detecta cambio de mapa/servidor en 10s en lugar de 30s. Recomendado para uso con ExitLag/VPNs de juegos.',
                 actions: 'Acciones',
                 clearHistory: 'Borrar Historial',
                 clearHistoryDesc: 'Elimina permanentemente todas las peleas guardadas',
@@ -522,31 +522,31 @@
             const maxPlayers = settings.maxPlayers || 6;
             document.getElementById('max-players-input').value = maxPlayers;
             
-            // Aplicar reset automático
-            const autoReset = settings.autoReset || false;
-            const autoResetToggle = document.getElementById('auto-reset-toggle');
-            if (autoReset) autoResetToggle.classList.add('active');
+            // Aplicar reset rápido
+            const fastReset = settings.fastReset || false;
+            const fastResetToggle = document.getElementById('fast-reset-toggle');
+            if (fastReset) fastResetToggle.classList.add('active');
         }
 
         // Salvar configurações
         async function saveSettings() {
             const maxPlayers = parseInt(document.getElementById('max-players-input').value);
-            const autoReset = document.getElementById('auto-reset-toggle').classList.contains('active');
+            const fastReset = document.getElementById('fast-reset-toggle').classList.contains('active');
             
             const settings = {
                 maxPlayers: maxPlayers,
-                autoReset: autoReset
+                fastReset: fastReset
             };
             
             // Salvar no localStorage
             localStorage.setItem('dpsMeterSettings', JSON.stringify(settings));
             
-            // Salvar autoReset no backend (globalSettings)
+            // Salvar fastReset no backend (globalSettings)
             try {
                 await fetch('/api/settings', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ autoResetOnFightEnd: autoReset })
+                    body: JSON.stringify({ fastServerChangeDetection: fastReset })
                 });
             } catch (error) {
                 console.error('Erro ao salvar configurações no backend:', error);
