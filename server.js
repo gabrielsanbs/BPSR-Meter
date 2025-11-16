@@ -49,7 +49,7 @@ try {
     process.exit(1);
 }
 
-const VERSION = '3.0.5';
+const VERSION = '3.1.1';
 
 let globalSettings = {
     autoClearOnServerChange: true,

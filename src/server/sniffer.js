@@ -211,21 +211,20 @@ class Sniffer {
                                 const signature = Buffer.from([0x00, 0x63, 0x33, 0x53, 0x42, 0x00]);
                                 if (Buffer.compare(data1.subarray(5, 5 + signature.length), signature)) break;
                                 try {
-                                    if (this.current_server !== src_server) {
-                                        this.current_server = src_server;
-                                        this.clearTcpCache();
-                                        this.tcp_next_seq = tcpPacket.info.seqno + buf.length;
-                                        this.userDataManager.refreshEnemyCache();
-                                        if (this.globalSettings.autoClearOnServerChange && this.userDataManager.lastLogTime !== 0 && this.userDataManager.users.size !== 0) {
-                                            this.userDataManager.clearAll(this.globalSettings);
-                                            console.log('¡Servidor cambiado, estadísticas limpiadas!');
-                                        }
-                                        console.log('Servidor de juego detectado. Midiendo DPS...');
-                                        // Emitir evento de conexão estabelecida
-                                        if (!this.isConnected && this.io) {
-                                            this.isConnected = true;
-                                            this.io.emit('game-connected', { connected: true });
-                                        }
+                                    // Já verificamos this.current_server !== src_server no bloco externo (linha 200)
+                                    this.current_server = src_server;
+                                    this.clearTcpCache();
+                                    this.tcp_next_seq = tcpPacket.info.seqno + buf.length;
+                                    this.userDataManager.refreshEnemyCache();
+                                    if (this.globalSettings.autoClearOnServerChange && this.userDataManager.lastLogTime !== 0 && this.userDataManager.users.size !== 0) {
+                                        this.userDataManager.clearAll(this.globalSettings);
+                                        console.log('¡Servidor cambiado, estadísticas limpiadas!');
+                                    }
+                                    console.log('Servidor de juego detectado. Midiendo DPS...');
+                                    // Emitir evento de conexão estabelecida
+                                    if (!this.isConnected && this.io) {
+                                        this.isConnected = true;
+                                        this.io.emit('game-connected', { connected: true });
                                     }
                                 } catch (e) {}
                             } while (data1 && data1.length);
@@ -244,21 +243,20 @@ class Sniffer {
                             Buffer.compare(buf.subarray(0, 10), signature.subarray(0, 10)) === 0 &&
                             Buffer.compare(buf.subarray(14, 14 + 6), signature.subarray(14, 14 + 6)) === 0
                         ) {
-                            if (this.current_server !== src_server) {
-                                this.current_server = src_server;
-                                this.clearTcpCache();
-                                this.tcp_next_seq = tcpPacket.info.seqno + buf.length;
-                                this.userDataManager.refreshEnemyCache();
-                                if (this.globalSettings.autoClearOnServerChange && this.userDataManager.lastLogTime !== 0 && this.userDataManager.users.size !== 0) {
-                                    this.userDataManager.clearAll(this.globalSettings);
-                                    console.log('¡Servidor cambiado, estadísticas limpiadas!');
-                                }
-                                console.log('Servidor de juego detectado por paquete de inicio de sesión. Midiendo DPS...');
-                                // Emitir evento de conexão estabelecida
-                                if (!this.isConnected && this.io) {
-                                    this.isConnected = true;
-                                    this.io.emit('game-connected', { connected: true });
-                                }
+                            // Já verificamos this.current_server !== src_server no bloco externo (linha 200)
+                            this.current_server = src_server;
+                            this.clearTcpCache();
+                            this.tcp_next_seq = tcpPacket.info.seqno + buf.length;
+                            this.userDataManager.refreshEnemyCache();
+                            if (this.globalSettings.autoClearOnServerChange && this.userDataManager.lastLogTime !== 0 && this.userDataManager.users.size !== 0) {
+                                this.userDataManager.clearAll(this.globalSettings);
+                                console.log('¡Servidor cambiado, estadísticas limpiadas!');
+                            }
+                            console.log('Servidor de juego detectado por paquete de inicio de sesión. Midiendo DPS...');
+                            // Emitir evento de conexão estabelecida
+                            if (!this.isConnected && this.io) {
+                                this.isConnected = true;
+                                this.io.emit('game-connected', { connected: true });
                             }
                         }
                     }

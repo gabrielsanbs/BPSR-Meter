@@ -1,10 +1,25 @@
-# 🎯 BPSR Meter v3.1.0
+# 🎯 BPSR Meter v3.1.1
 
 [[Português](#português)] | [[English](#english)] | [[Español](#español)]
 
 ---
 
 ## Português
+
+**🔥 HOTFIX v3.1.1:**
+
+### 🐛 Correção Crítica - ExitLag e VPNs
+- **CORRIGIDO:** Loop infinito de detecção de servidor com ExitLag
+- **CORRIGIDO:** Geração massiva de entradas no histórico (centenas por segundo)
+- **CORRIGIDO:** Mensagem "Servidor de juego detectado" repetindo infinitamente
+- **CORRIGIDO:** Reset constante de estatísticas ao usar VPNs de jogo
+- Aplicação agora estável com ExitLag, NoPing, WTFast e outras VPNs
+
+**Problema anterior:** VPNs roteiam pacotes através de múltiplos IPs, causando detecção falsa de "novo servidor" a cada pacote, gerando loop infinito.
+
+**Solução:** Removida verificação redundante que causava o loop. Agora detecta servidor apenas uma vez por sessão real.
+
+---
 
 **✨ NOVIDADES v3.1.0:**
 
@@ -72,6 +87,21 @@
 
 ## English
 
+**🔥 HOTFIX v3.1.1:**
+
+### 🐛 Critical Fix - ExitLag and VPNs
+- **FIXED:** Infinite server detection loop with ExitLag
+- **FIXED:** Massive history entry generation (hundreds per second)
+- **FIXED:** "Servidor de juego detectado" message repeating infinitely
+- **FIXED:** Constant stats reset when using gaming VPNs
+- Application now stable with ExitLag, NoPing, WTFast and other VPNs
+
+**Previous issue:** VPNs route packets through multiple IPs, causing false "new server" detection on every packet, creating infinite loop.
+
+**Solution:** Removed redundant check causing the loop. Now detects server only once per real session.
+
+---
+
 **✨ WHAT'S NEW v3.1.0:**
 
 ### ⚙️ Complete Settings Screen
@@ -137,6 +167,21 @@
 ---
 
 ## Español
+
+**🔥 HOTFIX v3.1.1:**
+
+### 🐛 Corrección Crítica - ExitLag y VPNs
+- **CORREGIDO:** Bucle infinito de detección de servidor con ExitLag
+- **CORREGIDO:** Generación masiva de entradas en historial (cientos por segundo)
+- **CORREGIDO:** Mensaje "Servidor de juego detectado" repitiéndose infinitamente
+- **CORREGIDO:** Reseteo constante de estadísticas al usar VPNs de juego
+- Aplicación ahora estable con ExitLag, NoPing, WTFast y otras VPNs
+
+**Problema anterior:** VPNs enrutan paquetes a través de múltiples IPs, causando detección falsa de "nuevo servidor" en cada paquete, creando bucle infinito.
+
+**Solución:** Eliminada verificación redundante que causaba el bucle. Ahora detecta servidor solo una vez por sesión real.
+
+---
 
 **✨ NOVEDADES v3.1.0:**
 
