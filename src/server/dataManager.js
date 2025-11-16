@@ -1053,9 +1053,12 @@ class UserDataManager {
     checkTimeoutClear() {
         if (!this.globalSettings.autoClearOnTimeout || this.users.size === 0) return;
         const currentTime = Date.now();
-        if (this.lastLogTime && currentTime - this.lastLogTime > 30000) { // 30 segundos
+        // Usar 10s se fastServerChangeDetection = true, senão 30s
+        const timeoutDuration = this.globalSettings.fastServerChangeDetection ? 10000 : 30000;
+        if (this.lastLogTime && currentTime - this.lastLogTime > timeoutDuration) {
             this.clearAll();
-            this.logger.info('Timeout reached, statistics cleared!');
+            const timeoutSec = timeoutDuration / 1000;
+            this.logger.info(`Timeout reached (${timeoutSec}s), statistics cleared!`);
         }
     }
 }
