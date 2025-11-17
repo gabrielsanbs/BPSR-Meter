@@ -653,6 +653,10 @@ class PacketProcessor {
     }
 
     _processEnemyAttrs(enemyUid, attrs) {
+        let attrIdValue = null;
+        let currentHp = null;
+        let currentMaxHp = null;
+        
         for (const attr of attrs) {
             if (!attr.Id || !attr.RawData) continue;
             const reader = pbjs.Reader.create(attr.RawData);
@@ -665,6 +669,8 @@ class PacketProcessor {
                     break;
                 case AttrType.AttrId:
                     const attrId = reader.int32();
+                    attrIdValue = attrId;
+                    this.userDataManager.enemyCache.attrId.set(enemyUid, attrId);
                     const name = monsterNames[attrId];
                     if (name) {
                         this.logger.info(`Found moster name ${name} for id ${enemyUid}`);
@@ -673,15 +679,28 @@ class PacketProcessor {
                     break;
                 case AttrType.AttrHp:
                     const enemyHp = reader.int32();
+                    currentHp = enemyHp;
                     this.userDataManager.enemyCache.hp.set(enemyUid, enemyHp);
                     break;
                 case AttrType.AttrMaxHp:
                     const enemyMaxHp = reader.int32();
+                    currentMaxHp = enemyMaxHp;
                     this.userDataManager.enemyCache.maxHp.set(enemyUid, enemyMaxHp);
                     break;
                 default:
                     // this.logger.debug(`Found unknown attrId ${attr.Id} for E${enemyUid} ${attr.RawData.toString('base64')}`);
                     break;
+            }
+        }
+        
+        // Reportar HP para BPTimer se temos todos os dados necessários
+        if (currentHp !== null || currentMaxHp !== null) {
+            const monsterId = attrIdValue || this.userDataManager.enemyCache.attrId.get(enemyUid);
+            const hp = currentHp !== null ? currentHp : this.userDataManager.enemyCache.hp.get(enemyUid);
+            const maxHp = currentMaxHp !== null ? currentMaxHp : this.userDataManager.enemyCache.maxHp.get(enemyUid);
+            
+            if (monsterId && hp !== undefined && maxHp !== undefined) {
+                this.userDataManager.reportBossHP(enemyUid, monsterId, hp, maxHp);
             }
         }
     }

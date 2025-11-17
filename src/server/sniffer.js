@@ -289,6 +289,11 @@ class Sniffer {
         this.lastValidServerPacket = now;
         this.pendingServerNotice = null;
         this.lastServerChangeTime = now;
+        
+        // Atualizar linha do servidor no userDataManager para BPTimer
+        if (this.userDataManager && typeof this.userDataManager.setServerLine === 'function') {
+            this.userDataManager.setServerLine(src_server);
+        }
     }
 
     getTCPPacket(frameBuffer, ethOffset) {

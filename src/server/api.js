@@ -268,6 +268,12 @@ function initializeApi(app, server, io, userDataManager, logger, globalSettings,
         const newSettings = req.body;
         Object.assign(globalSettings, newSettings); // Actualizar globalSettings directamente
         await fsPromises.writeFile(SETTINGS_PATH, JSON.stringify(globalSettings, null, 2), 'utf8');
+        
+        // Atualizar configurações do BPTimer se mudaram
+        if ('bptimerEnabled' in newSettings || 'bptimerApiKey' in newSettings) {
+            userDataManager.updateBPTimerSettings();
+        }
+        
         res.json({ code: 0, data: globalSettings });
     });
 
@@ -398,6 +404,29 @@ function initializeApi(app, server, io, userDataManager, logger, globalSettings,
         }
         
         res.json(status);
+    });
+
+    // Endpoints para BPTimer
+    app.post('/api/bptimer/test', async (req, res) => {
+        const { apiKey } = req.body;
+        
+        if (!apiKey || apiKey.trim() === '') {
+            return res.json({
+                success: false,
+                message: 'API Key não fornecida'
+            });
+        }
+        
+        try {
+            const result = await userDataManager.testBPTimerConnection(apiKey);
+            res.json(result);
+        } catch (error) {
+            logger.error('Erro ao testar conexão BPTimer:', error);
+            res.json({
+                success: false,
+                message: error.message || 'Erro desconhecido'
+            });
+        }
     });
 
     io.on('connection', (socket) => {

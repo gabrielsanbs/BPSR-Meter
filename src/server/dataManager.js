@@ -452,9 +452,14 @@ class UserDataManager {
             name: new Map(),
             hp: new Map(),
             maxHp: new Map(),
+            attrId: new Map(), // Monster ID para BPTimer
         };
 
         this.isClearing = false;
+        
+        // BPTimer integration
+        this.bpTimerClient = null;
+        this.currentServerLine = 1; // Canal atual
     }
 
     async initialize() {
@@ -462,6 +467,80 @@ class UserDataManager {
         await this.loadFightHistory();
         // Carregar cache de usuários
         await this.loadUserCache();
+        // Inicializar BPTimer client
+        await this.initializeBPTimer();
+    }
+    
+    /** Inicializar cliente BPTimer */
+    async initializeBPTimer() {
+        try {
+            const { BPTimerClient } = require('@woheedev/bptimer-api-client');
+            
+            const enabled = this.globalSettings.bptimerEnabled !== false; // Default: true
+            const apiKey = this.globalSettings.bptimerApiKey || '';
+            
+            this.bpTimerClient = new BPTimerClient({
+                api_url: 'https://db.bptimer.com',
+                api_key: apiKey,
+                enabled: enabled && apiKey.trim().length > 0,
+                logger: {
+                    info: (message) => this.logger.info(`[BPTimer] ${message}`),
+                    debug: (message) => this.logger.debug(`[BPTimer] ${message}`)
+                },
+                log_level: 'info'
+            });
+            
+            if (enabled && apiKey.trim().length > 0) {
+                this.logger.info('BPTimer client inicializado e habilitado');
+            } else {
+                this.logger.info('BPTimer client inicializado mas desabilitado');
+            }
+        } catch (error) {
+            this.logger.error('Erro ao inicializar BPTimer client:', error);
+            this.bpTimerClient = null;
+        }
+    }
+    
+    /** Atualizar configurações do BPTimer */
+    updateBPTimerSettings() {
+        if (!this.bpTimerClient) return;
+        
+        try {
+            const enabled = this.globalSettings.bptimerEnabled !== false;
+            const apiKey = this.globalSettings.bptimerApiKey || '';
+            
+            this.bpTimerClient.setEnabled(enabled && apiKey.trim().length > 0);
+            
+            // Recriar client se a API key mudou
+            if (apiKey && apiKey.trim().length > 0) {
+                this.initializeBPTimer();
+            }
+        } catch (error) {
+            this.logger.error('Erro ao atualizar configurações BPTimer:', error);
+        }
+    }
+    
+    /** Testar conexão com BPTimer API */
+    async testBPTimerConnection(apiKey) {
+        try {
+            const { BPTimerClient } = require('@woheedev/bptimer-api-client');
+            
+            const testClient = new BPTimerClient({
+                api_url: 'https://db.bptimer.com',
+                api_key: apiKey,
+                enabled: true,
+                log_level: 'silent'
+            });
+            
+            const result = await testClient.testConnection();
+            return result;
+        } catch (error) {
+            this.logger.error('Erro ao testar conexão BPTimer:', error);
+            return {
+                success: false,
+                message: error.message || 'Erro desconhecido'
+            };
+        }
     }
 
     /** Carregar cache de usuários do arquivo JSON */
@@ -750,6 +829,62 @@ class UserDataManager {
         const user = this.getUser(uid);
         user.attr[key] = value;
     }
+    
+    /** Definir canal/linha do servidor atual */
+    setServerLine(serverString) {
+        if (!serverString || typeof serverString !== 'string') return;
+        
+        // Tentar extrair número da linha do nome do servidor
+        // Formato esperado pode ser algo como "10.0.2.12:17000 -> 54.199.123.45:17000"
+        // ou outros formatos que contenham número de linha
+        const match = serverString.match(/line[_\s-]?(\d+)|l(\d+)|canal[_\s-]?(\d+)/i);
+        if (match) {
+            this.currentServerLine = parseInt(match[1] || match[2] || match[3]);
+        }
+        
+        // Se não encontrar, usar hash simples baseado no IP do servidor
+        const ipMatch = serverString.match(/(\d+\.\d+\.\d+\.\d+):(\d+)/);
+        if (ipMatch && !match) {
+            const [, ip, port] = ipMatch;
+            // Usar último octeto do IP + porta como identificador de linha
+            const lastOctet = parseInt(ip.split('.').pop());
+            const portNum = parseInt(port);
+            this.currentServerLine = ((lastOctet + portNum) % 20) + 1; // Linhas de 1 a 20
+        }
+    }
+    
+    /** Reportar HP de boss para BPTimer */
+    async reportBossHP(enemyUid, monsterId, hp, maxHp) {
+        if (!this.bpTimerClient || !this.bpTimerClient.isEnabled()) return;
+        
+        // Verificar se é um boss rastreado
+        if (!monsterId || hp === undefined || maxHp === undefined || maxHp === 0) return;
+        
+        try {
+            const hpPct = Math.round((hp / maxHp) * 100);
+            
+            // Apenas reportar se HP mudou significativamente (mudança de 5% pelo menos)
+            const lastReportedKey = `${monsterId}-${this.currentServerLine}`;
+            const lastReported = this.lastBPTimerReport || new Map();
+            if (lastReported.has(lastReportedKey)) {
+                const lastHp = lastReported.get(lastReportedKey);
+                if (Math.abs(hpPct - lastHp) < 5) return; // Menos de 5% de mudança
+            }
+            
+            const result = await this.bpTimerClient.reportHP({
+                monster_id: monsterId,
+                hp_pct: hpPct,
+                line: this.currentServerLine
+            });
+            
+            if (result.success) {
+                if (!this.lastBPTimerReport) this.lastBPTimerReport = new Map();
+                this.lastBPTimerReport.set(lastReportedKey, hpPct);
+            }
+        } catch (error) {
+            this.logger.error('Erro ao reportar HP para BPTimer:', error);
+        }
+    }
 
     /** Actualizar DPS y HPS en tiempo real para todos los usuarios */
     updateAllRealtimeDps() {
@@ -822,6 +957,7 @@ class UserDataManager {
         this.enemyCache.name.clear();
         this.enemyCache.hp.clear();
         this.enemyCache.maxHp.clear();
+        this.enemyCache.attrId.clear();
     }
 
     /** Limpiar todos los datos de usuario */

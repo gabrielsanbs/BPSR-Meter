@@ -361,10 +361,50 @@
                 </div>
             </div>
 
-            <!-- Seção de Dados -->
+            <!-- Seção de Integração BPTimer -->
             <div class="settings-section">
                 <div class="settings-section-title">
-                    <i class="fa-solid fa-database"></i>
+                    <i class="fa-solid fa-cloud"></i>
+                    <span data-i18n="bptimerIntegration">Integração BPTimer</span>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-label">
+                        <span class="setting-label-text" data-i18n="bptimerEnable">Habilitar BPTimer</span>
+                        <span class="setting-label-description" data-i18n="bptimerEnableDesc">Envia dados de HP de bosses para a comunidade BPTimer automaticamente</span>
+                    </div>
+                    <div class="setting-control">
+                        <div class="toggle-switch active" id="bptimer-toggle">
+                            <div class="toggle-slider"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-label">
+                        <span class="setting-label-text" data-i18n="bptimerApiKey">API Key</span>
+                        <span class="setting-label-description" data-i18n="bptimerApiKeyDesc">Obtenha sua chave em <a href="https://bptimer.com/api-key" style="color: var(--accent-blue);">bptimer.com/api-key</a></span>
+                    </div>
+                    <div class="setting-control" style="flex-grow: 1;">
+                        <input type="password" id="bptimer-api-key" placeholder="cole-sua-api-key-aqui" style="width: 100%; padding: 8px 12px; border-radius: 6px; background: rgba(20, 22, 31, 0.9); color: #ffffff; border: 1px solid var(--border-color); font-family: 'Inter', sans-serif; font-size: 0.85rem;">
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-label">
+                        <span class="setting-label-text" data-i18n="bptimerStatus">Status da Conexão</span>
+                        <span class="setting-label-description" id="bptimer-status-text" style="color: var(--text-secondary);">Não configurado</span>
+                    </div>
+                    <div class="setting-control">
+                        <button class="btn btn-primary" id="test-bptimer-connection" style="padding: 6px 12px; font-size: 0.85rem;">
+                            <i class="fa-solid fa-plug"></i>
+                            <span data-i18n="bptimerTestConnection">Testar Conexão</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Seção de Ações -->
+            <div class="settings-section">
+                <div class="settings-section-title">
+                    <i class="fa-solid fa-bolt"></i>
                     <span data-i18n="actions">Ações</span>
                 </div>
                 <div class="setting-item">
@@ -445,7 +485,19 @@
                 devSupport: 'Apoie o Desenvolvedor',
                 devSupportDesc: 'Este projeto é desenvolvido com ❤️ e é open-source',
                 devGithub: 'Visite no GitHub',
-                devStar: 'Dar uma ⭐ ajuda muito!'
+                devStar: 'Dar uma ⭐ ajuda muito!',
+                bptimerIntegration: 'Integração BPTimer',
+                bptimerEnable: 'Habilitar BPTimer',
+                bptimerEnableDesc: 'Envia dados de HP de bosses para a comunidade BPTimer automaticamente',
+                bptimerApiKey: 'API Key',
+                bptimerApiKeyDesc: 'Obtenha sua chave em bptimer.com/api-key',
+                bptimerStatus: 'Status da Conexão',
+                bptimerTestConnection: 'Testar Conexão',
+                bptimerNotConfigured: 'Não configurado',
+                bptimerConnected: 'Conectado ✓',
+                bptimerDisconnected: 'Desconectado ✗',
+                bptimerTesting: 'Testando...',
+                bptimerError: 'Erro na conexão'
             },
             'en': {
                 title: 'Settings',
@@ -471,7 +523,19 @@
                 devSupport: 'Support the Developer',
                 devSupportDesc: 'This project is developed with ❤️ and is open-source',
                 devGithub: 'Visit on GitHub',
-                devStar: 'Giving a ⭐ helps a lot!'
+                devStar: 'Giving a ⭐ helps a lot!',
+                bptimerIntegration: 'BPTimer Integration',
+                bptimerEnable: 'Enable BPTimer',
+                bptimerEnableDesc: 'Automatically sends boss HP data to BPTimer community',
+                bptimerApiKey: 'API Key',
+                bptimerApiKeyDesc: 'Get your key at bptimer.com/api-key',
+                bptimerStatus: 'Connection Status',
+                bptimerTestConnection: 'Test Connection',
+                bptimerNotConfigured: 'Not configured',
+                bptimerConnected: 'Connected ✓',
+                bptimerDisconnected: 'Disconnected ✗',
+                bptimerTesting: 'Testing...',
+                bptimerError: 'Connection error'
             },
             'es': {
                 title: 'Configuración',
@@ -497,7 +561,19 @@
                 devSupport: 'Apoya al Desarrollador',
                 devSupportDesc: 'Este proyecto es desarrollado con ❤️ y es open-source',
                 devGithub: 'Visitar en GitHub',
-                devStar: '¡Dar una ⭐ ayuda mucho!'
+                devStar: '¡Dar una ⭐ ayuda mucho!',
+                bptimerIntegration: 'Integración BPTimer',
+                bptimerEnable: 'Habilitar BPTimer',
+                bptimerEnableDesc: 'Envía datos de HP de jefes a la comunidad BPTimer automáticamente',
+                bptimerApiKey: 'API Key',
+                bptimerApiKeyDesc: 'Obtén tu clave en bptimer.com/api-key',
+                bptimerStatus: 'Estado de Conexión',
+                bptimerTestConnection: 'Probar Conexión',
+                bptimerNotConfigured: 'No configurado',
+                bptimerConnected: 'Conectado ✓',
+                bptimerDisconnected: 'Desconectado ✗',
+                bptimerTesting: 'Probando...',
+                bptimerError: 'Error de conexión'
             }
         };
 
@@ -526,27 +602,51 @@
             const fastReset = settings.fastReset || false;
             const fastResetToggle = document.getElementById('fast-reset-toggle');
             if (fastReset) fastResetToggle.classList.add('active');
+            
+            // Aplicar configurações do BPTimer
+            const bptimerEnabled = settings.bptimerEnabled !== false; // Default: true
+            const bptimerToggle = document.getElementById('bptimer-toggle');
+            if (bptimerEnabled) {
+                bptimerToggle.classList.add('active');
+            } else {
+                bptimerToggle.classList.remove('active');
+            }
+            
+            // Aplicar API Key (não salva no localStorage por segurança)
+            const bptimerApiKey = settings.bptimerApiKey || '';
+            document.getElementById('bptimer-api-key').value = bptimerApiKey;
+            
+            // Atualizar status
+            updateBPTimerStatus(settings);
         }
 
         // Salvar configurações
         async function saveSettings() {
             const maxPlayers = parseInt(document.getElementById('max-players-input').value);
             const fastReset = document.getElementById('fast-reset-toggle').classList.contains('active');
+            const bptimerEnabled = document.getElementById('bptimer-toggle').classList.contains('active');
+            const bptimerApiKey = document.getElementById('bptimer-api-key').value.trim();
             
             const settings = {
                 maxPlayers: maxPlayers,
-                fastReset: fastReset
+                fastReset: fastReset,
+                bptimerEnabled: bptimerEnabled,
+                bptimerApiKey: bptimerApiKey
             };
             
             // Salvar no localStorage
             localStorage.setItem('dpsMeterSettings', JSON.stringify(settings));
             
-            // Salvar fastReset no backend (globalSettings)
+            // Salvar no backend (globalSettings + BPTimer)
             try {
                 await fetch('/api/settings', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ fastServerChangeDetection: fastReset })
+                    body: JSON.stringify({ 
+                        fastServerChangeDetection: fastReset,
+                        bptimerEnabled: bptimerEnabled,
+                        bptimerApiKey: bptimerApiKey
+                    })
                 });
             } catch (error) {
                 console.error('Erro ao salvar configurações no backend:', error);
@@ -555,6 +655,63 @@
             // Notificar janela principal sobre mudanças
             if (window.electronAPI) {
                 window.electronAPI.settingsChanged(settings);
+            }
+        }
+        
+        // Atualizar status do BPTimer
+        function updateBPTimerStatus(settings) {
+            const statusText = document.getElementById('bptimer-status-text');
+            const enabled = settings.bptimerEnabled !== false;
+            const hasApiKey = settings.bptimerApiKey && settings.bptimerApiKey.trim().length > 0;
+            
+            if (!enabled) {
+                statusText.textContent = t('bptimerDisconnected');
+                statusText.style.color = 'var(--accent-red)';
+            } else if (!hasApiKey) {
+                statusText.textContent = t('bptimerNotConfigured');
+                statusText.style.color = 'var(--text-secondary)';
+            } else {
+                statusText.textContent = t('bptimerConnected');
+                statusText.style.color = 'var(--accent-green)';
+            }
+        }
+        
+        // Testar conexão com BPTimer
+        async function testBPTimerConnection() {
+            const statusText = document.getElementById('bptimer-status-text');
+            const apiKey = document.getElementById('bptimer-api-key').value.trim();
+            
+            if (!apiKey) {
+                alert('Por favor, insira uma API Key primeiro.');
+                return;
+            }
+            
+            statusText.textContent = t('bptimerTesting');
+            statusText.style.color = 'var(--accent-yellow)';
+            
+            try {
+                const response = await fetch('/api/bptimer/test', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ apiKey: apiKey })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    statusText.textContent = t('bptimerConnected');
+                    statusText.style.color = 'var(--accent-green)';
+                    alert('Conexão bem-sucedida! ✓');
+                } else {
+                    statusText.textContent = t('bptimerError');
+                    statusText.style.color = 'var(--accent-red)';
+                    alert('Erro: ' + (result.message || 'Falha na conexão'));
+                }
+            } catch (error) {
+                console.error('Erro ao testar conexão:', error);
+                statusText.textContent = t('bptimerError');
+                statusText.style.color = 'var(--accent-red)';
+                alert('Erro ao testar conexão: ' + error.message);
             }
         }
 
@@ -625,8 +782,23 @@
                 toggle.addEventListener('click', () => {
                     toggle.classList.toggle('active');
                     saveSettings();
+                    
+                    // Atualizar status após mudança de toggle
+                    const settings = JSON.parse(localStorage.getItem('dpsMeterSettings') || '{}');
+                    updateBPTimerStatus(settings);
                 });
             });
+            
+            // Input da API Key
+            const bptimerApiKeyInput = document.getElementById('bptimer-api-key');
+            bptimerApiKeyInput.addEventListener('input', () => {
+                saveSettings();
+                const settings = JSON.parse(localStorage.getItem('dpsMeterSettings') || '{}');
+                updateBPTimerStatus(settings);
+            });
+            
+            // Botão de testar conexão
+            document.getElementById('test-bptimer-connection').addEventListener('click', testBPTimerConnection);
 
             // Limpar histórico
             document.getElementById('clear-history-button').addEventListener('click', async () => {
