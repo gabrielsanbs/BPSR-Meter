@@ -86,6 +86,9 @@ class Sniffer {
         this.serverDetectionTimestamp = 0;
         this.serverHistory = new Map();
         this.consecutiveServerChanges = 0;
+        this.lastTcpCleanup = 0;
+        this.MAX_TCP_CACHE_SIZE = 4096; // evita explosão de uso de memória
+        this.TCP_CACHE_TTL = 15000; // descarta segmentos órfãos após 15s
     }
 
     detectHandshakeType(buf) {
@@ -200,6 +203,30 @@ class Sniffer {
         this.tcp_next_seq = -1;
         this.tcp_last_time = 0;
         this.tcp_cache.clear();
+        this.lastTcpCleanup = Date.now();
+    }
+
+    cleanupTcpCache(now = Date.now()) {
+        if (!this.tcp_cache.size) return;
+        if (now - this.lastTcpCleanup < 1000) return; // limitar custo de iteração
+        this.lastTcpCleanup = now;
+
+        for (const [seq, entry] of this.tcp_cache) {
+            if (!entry || !entry.buffer) {
+                this.tcp_cache.delete(seq);
+                continue;
+            }
+            if (now - entry.timestamp > this.TCP_CACHE_TTL) {
+                this.tcp_cache.delete(seq);
+            }
+        }
+
+        while (this.tcp_cache.size > this.MAX_TCP_CACHE_SIZE) {
+            const oldestKey = this.tcp_cache.keys().next().value;
+            if (oldestKey === undefined) break;
+            this.logger.warn(`TCP cache ultrapassou ${this.MAX_TCP_CACHE_SIZE} entradas, descartando seq ${oldestKey}`);
+            this.tcp_cache.delete(oldestKey);
+        }
     }
 
     normalizeConnectionKey(serverStr) {
@@ -389,16 +416,23 @@ class Sniffer {
             }
 
             if ((this.tcp_next_seq - tcpPacket.info.seqno) << 0 <= 0 || this.tcp_next_seq === -1) {
-                this.tcp_cache.set(tcpPacket.info.seqno, buf);
+                this.tcp_cache.set(tcpPacket.info.seqno, { buffer: buf, timestamp: now });
             }
             while (this.tcp_cache.has(this.tcp_next_seq)) {
                 const seq = this.tcp_next_seq;
-                const cachedTcpData = this.tcp_cache.get(seq);
+                const cachedEntry = this.tcp_cache.get(seq);
+                const cachedTcpData = cachedEntry ? cachedEntry.buffer : null;
+                if (!cachedTcpData) {
+                    this.tcp_cache.delete(seq);
+                    break;
+                }
                 this._data = this._data.length === 0 ? cachedTcpData : Buffer.concat([this._data, cachedTcpData]);
                 this.tcp_next_seq = (seq + cachedTcpData.length) >>> 0;
                 this.tcp_cache.delete(seq);
                 this.tcp_last_time = Date.now();
             }
+
+            this.cleanupTcpCache(now);
 
             while (this._data.length > 4) {
                 let packetSize = this._data.readUInt32BE();
