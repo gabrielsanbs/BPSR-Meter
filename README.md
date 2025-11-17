@@ -98,34 +98,6 @@ Nota importante para usuários de VPN: se você usa VPNs (ExitLag, NoPing, etc.)
 
 ---
 
-## 📥 Installation
-
-### Step 1: Install Npcap (Required)
-1. Download [Npcap](https://npcap.com/#download) or get it from [Releases](../../releases)
-2. Run `npcap-1.83.exe`
-3. ⚠️ **Important:** Check **"WinPcap API-compatible Mode"**
-
-### Step 2: Install BPSR Meter
-1. Download installer from [Releases](../../releases)
-2. Run `BPSR Meter (by gabrielsanbs) Setup 3.1.1.exe`
-3. Follow installer instructions
-4. You'll see a thank you message when finished
-
-### Step 3: First Run
-1. **Run as Administrator** (right-click → Run as administrator)
-2. Start Blue Protocol
-3. Statistics will appear automatically on screen
-
----
-
-## 🎮 How to Use
-
-### 🎛️ Main Controls
-
-| ![Advanced](Advanced_v31.png) | ![DPS](DPS_v31.png) | ![Healer](Lite_v31.png) |
-
----
-
 ## 📥 Instalação
 
 ### Passo 1: Instalar Npcap (Obrigatório)
@@ -133,11 +105,11 @@ Nota importante para usuários de VPN: se você usa VPNs (ExitLag, NoPing, etc.)
 2. Execute `npcap-1.83.exe`
 3. ⚠️ **Importante:** Marque a opção **"WinPcap API-compatible Mode"**
 
-### Step 2: Install BPSR Meter
-1. Download the installer in the [Releases](../../releases) section
-2. Run `BPSR Meter (by gabrielsanbs) Setup 3.1.1.exe`
-3. Follow the installer instructions
-4. When finished, you will see a thank you message
+### Passo 2: Instalar o BPSR Meter
+1. Baixe o instalador na seção [Releases](../../releases)
+2. Execute `BPSR Meter (by gabrielsanbs) Setup 3.1.1.exe`
+3. Siga as instruções do instalador
+4. Ao finalizar, você verá uma mensagem de agradecimento
 
 ### Passo 3: Primeira Execução
 1. **Execute como Administrador** (botão direito → Executar como administrador)
@@ -298,7 +270,7 @@ AGPL-3.0 - Veja [LICENSE](LICENSE) para detalhes.
 
 ---
 
-## Redes Sociales
+## Social Links
 
 [![Twitch](https://img.shields.io/badge/Twitch-9146FF?style=for-the-badge&logo=twitch&logoColor=white)](https://www.twitch.tv/doctorgbsofc)
 [![Kick](https://img.shields.io/badge/Kick-50FF78?style=for-the-badge&logo=kick&logoColor=white)](https://kick.com/doctorgbs)
@@ -500,24 +472,6 @@ Yes! **Automatic support** for all popular gaming VPNs (ExitLag, NoPing, WTFast,
 
 **🌏 Works on Chinese server?**  
 Yes, works perfectly.
-
----
-
-## 🔧 Troubleshooting
-
-**Won't start:**
-- Install Npcap
-- Run as administrator
-- Check antivirus
-
-**No data showing:**
-- Start game BEFORE meter
-- Run as administrator
-- Check correct network interface (VPN/Wi-Fi)
-
-**Questions or bugs:**
-- Check logs in `%APPDATA%/bpsr-meter`
-- Open a [GitHub Issue](../../issues)
 
 ---
 
