@@ -10,8 +10,10 @@ dist/logs/
 /dist
 /dist_electron
 
+# Environment variables
+.env
+
 # Misc
 .npmrc
-/Prerequisites/npcap-1.83.exe
 pnpm-lock.yaml
 server - copia - copia.js

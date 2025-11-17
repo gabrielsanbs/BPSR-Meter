@@ -477,12 +477,14 @@ class UserDataManager {
             const { BPTimerClient } = require('@woheedev/bptimer-api-client');
             
             const enabled = this.globalSettings.bptimerEnabled !== false; // Default: true
-            // Usar API key pública para contribuições da comunidade
-            const publicApiKey = 'community-contributor';
+            
+            // Priorizar API key do .env (para devs/super users), senão usar pública
+            const apiKey = process.env.BPTIMER_API_KEY || 'community-contributor';
+            const isCustomKey = !!process.env.BPTIMER_API_KEY;
             
             this.bpTimerClient = new BPTimerClient({
                 api_url: 'https://db.bptimer.com',
-                api_key: publicApiKey,
+                api_key: apiKey,
                 enabled: enabled,
                 logger: {
                     info: (message) => this.logger.info(`[BPTimer] ${message}`),
@@ -492,7 +494,8 @@ class UserDataManager {
             });
             
             if (enabled) {
-                this.logger.info('BPTimer client inicializado e habilitado');
+                const keyType = isCustomKey ? 'custom API key' : 'public API key';
+                this.logger.info(`BPTimer client inicializado e habilitado (usando ${keyType})`);
             } else {
                 this.logger.info('BPTimer client inicializado mas desabilitado');
             }

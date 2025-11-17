@@ -1,3 +1,6 @@
+// Carregar variáveis de ambiente do .env (se existir)
+require('dotenv').config();
+
 // Capturar erros não tratados antes de importar módulos
 process.on('uncaughtException', (error) => {
     console.error('ERRO NÃO TRATADO:', error.message);
