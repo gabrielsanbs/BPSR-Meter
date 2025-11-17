@@ -1,13 +1,13 @@
 <div align="center">
   <img src="portada_v31.png" alt="BPSR Meter" width="800"/>
   
-  # BPSR Meter v3.1.0 (by gabrielsanbs)
+  # BPSR Meter v3.1.1 (by gabrielsanbs)
   
   ### Medidor de DPS em Tempo Real para Blue Protocol
   
   [![Download](https://img.shields.io/badge/Download-Latest-brightgreen?style=for-the-badge)](../../releases)
   
-  [[English](#english)] | [[Español](#español)]
+  [[Português](#)] | [[English](#english)] | [[Español](#español)]
   
   <img src="BPSR_Meter_Main_v31.png" alt="Interface Principal" width="700"/>
 </div>
@@ -16,7 +16,7 @@
 
 ## 🎯 Sobre Esta Versão
 
-**BPSR Meter v3.1.0** é uma versão completamente reformulada e otimizada do medidor de DPS para Blue Protocol. Esta versão inclui novas funcionalidades, melhorias de performance, suporte completo a VPNs de jogos e uma interface mais polida.
+**BPSR Meter v3.1.1** é uma versão com correções importantes de estabilidade e otimização de memória, além de melhorias de performance e suporte total a VPNs de jogos.
 
 **Desenvolvido por:** [gabrielsanbs](https://github.com/gabrielsanbs)  
 **Fork de:** [BPSR-Meter](https://github.com/mrsnakke/BPSR-Meter) por MrSnakeVT  
@@ -26,7 +26,7 @@
 
 ---
 
-## ✨ Novidades da Versão 3.1.0
+## ✨ Novidades da Versão 3.1.1
 
 ### ⚙️ Tela de Configurações Completa
 <div align="center">
@@ -70,10 +70,19 @@
 - **Mudfish** ✅
 - **PingZapper, PingEnhancer, Haste, Outfox, BattlePing** ✅
 - Detecção automática de adaptadores TAP de VPNs
-- Sem necessidade de configuração manual
+  - Sem necessidade de configuração manual
 
-### ⚡ Otimizações de Performance
+Nota importante para usuários de VPN: se você usa VPNs (ExitLag, NoPing, etc.), **habilite o modo "Legacy NDIS" / "WinPcap API-compatible Mode" no cliente da VPN**. Alguns provedores reescrevem o roteamento de pacotes e evitam que o Npcap capture o tráfego do jogo; o modo Legacy NDIS restaura compatibilidade e evita perda de pacotes ou picos de memória ao trocar de mapa.
+
+ - ExitLag: Opções → Método de redireção de pacotes → **Legacy NDIS** (ou "Antiguo-NDIS")
+ - NoPing / outros: habilite compatibilidade com WinPcap / Legacy NDIS quando disponível
+
+### ⚡ Otimizações de Performance & Correções de Memória
 - **90% menos escritas em disco** com sistema de cache inteligente
+- Correção de vazamento de memória ao trocar de mapa: o processador de pacotes agora processa pacotes sequencialmente (evita acumular Promises com buffers), possui limpeza de cache TCP automática (TTL 15s) e limite de entradas para prevenir explosões de memória com tráfego intenso.
+
+ - **Raptor mini (Preview)**: Ativado para todos os clientes — versão leve do medidor para clientes com menos recursos (experimental).
+- Melhor rastreamento de mudança de servidor/mapa: agora o sistema limpa corretamente caches e lógicas quando o jogo troca de servidor/mapa.
 - **Uso reduzido de CPU** através de debounce de 3 segundos
 - **Interface mais fluida** com update de 50ms
 - Cache otimizado (salva apenas dados essenciais)
@@ -99,7 +108,7 @@
 
 ### Step 2: Install BPSR Meter
 1. Download installer from [Releases](../../releases)
-2. Run `BPSR Meter (by gabrielsanbs) Setup 3.1.0.exe`
+2. Run `BPSR Meter (by gabrielsanbs) Setup 3.1.1.exe`
 3. Follow installer instructions
 4. You'll see a thank you message when finished
 
@@ -127,7 +136,7 @@
 
 ### Step 2: Install BPSR Meter
 1. Download the installer in the [Releases](../../releases) section
-2. Run `BPSR Meter (by gabrielsanbs) Setup 3.1.0.exe`
+2. Run `BPSR Meter (by gabrielsanbs) Setup 3.1.1.exe`
 3. Follow the installer instructions
 4. When finished, you will see a thank you message
 
@@ -183,7 +192,7 @@
 Não modifica arquivos do jogo, não injeta código. Ferramentas que apenas leem dados têm baixíssimo risco. **Use por sua conta e risco.**
 
 **⚡ Afeta meu FPS?**  
-Não. Versão 3.1.0 é otimizada: 90% menos escritas em disco, cache inteligente, baixo uso de CPU.
+Não. Versão 3.1.1 é otimizada: 90% menos escritas em disco, cache inteligente, baixo uso de CPU.
 
 **🛡️ Por que precisa de administrador?**  
 Para o Npcap acessar adaptadores de rede e monitorar pacotes do jogo.
@@ -265,7 +274,7 @@ AGPL-3.0 - Veja [LICENSE](LICENSE) para detalhes.
 <div align="center">
   <img src="portada_v31.png" alt="BPSR Meter" width="800"/>
   
-  # BPSR Meter v3.1.0 (by gabrielsanbs)
+  # BPSR Meter v3.1.1 (by gabrielsanbs)
   
   ### Real-Time DPS Meter for Blue Protocol
   
@@ -280,7 +289,7 @@ AGPL-3.0 - Veja [LICENSE](LICENSE) para detalhes.
 
 ## 🎯 About This Version
 
-**BPSR Meter v3.1.0** is a completely redesigned and optimized version of the DPS meter for Blue Protocol. This version includes new features, performance improvements, full gaming VPN support, and a more polished interface.
+**BPSR Meter v3.1.1** is a bugfix & maintenance release that includes memory & stability improvements for map/server changes, and better VPN handling.
 
 **Developed by:** [gabrielsanbs](https://github.com/gabrielsanbs)  
 **Forked from:** [BPSR-Meter](https://github.com/mrsnakke/BPSR-Meter) by MrSnakeVT  
@@ -299,7 +308,7 @@ AGPL-3.0 - Veja [LICENSE](LICENSE) para detalhes.
 ---
 ---
 
-## ✨ What's New in v3.1.0
+## ✨ What's New in v3.1.1
 
 ### ⚙️ Complete Settings Screen
 <div align="center">
@@ -327,6 +336,10 @@ AGPL-3.0 - Veja [LICENSE](LICENSE) para detalhes.
 - **Auto-save** when changing map/server
 - Data persists between sessions
 
+- Fix memory growth on map changes: improved TCP cache management (TTL and max size), and sequential awaited packet processing to avoid buffered Promises holding packet buffers.
+
+ - **Raptor mini (Preview)**: Enabled for all clients — a lightweight preview mode for low-resource machines.
+
 ### 🔔 Map Change Notice
 <div align="center">
   <img src="BPSR_Meter_Window_v31.png" alt="Full Interface" width="650"/>
@@ -344,6 +357,13 @@ AGPL-3.0 - Veja [LICENSE](LICENSE) para detalhes.
 - **PingZapper, PingEnhancer, Haste, Outfox, BattlePing** ✅
 - Automatic detection of VPN TAP adapters
 - No manual configuration needed
+
+Important note for VPN users: if you use third-party gaming VPNs (ExitLag, NoPing, WTFast, etc.), enable the "Legacy NDIS" / "WinPcap API-compatible Mode" inside the VPN client. Some VPN adapters use advanced redirection that prevents packet capture; Legacy NDIS ensures Npcap receives game packets correctly.
+
+ - ExitLag: Options → Packet Redirection Method → **Legacy NDIS** (or "Antiguo-NDIS")
+ - NoPing & others: enable WinPcap compatibility or Legacy NDIS when available
+
+If this is not enabled, you may see missing packets, wrong statistics, or RAM spikes after map changes.
 
 ### ⚡ Performance Optimizations
 - **90% less disk writes** with intelligent cache system
@@ -372,7 +392,7 @@ AGPL-3.0 - Veja [LICENSE](LICENSE) para detalhes.
 
 ### Step 2: Install BPSR Meter
 1. Download installer from [Releases](../../releases)
-2. Run `BPSR Meter (by gabrielsanbs) Setup 3.1.0.exe`
+2. Run `BPSR Meter (by gabrielsanbs) Setup 3.1.1.exe`
 3. Follow installer instructions
 4. You'll see a thank you message when finished
 
@@ -411,6 +431,11 @@ AGPL-3.0 - Veja [LICENSE](LICENSE) para detalhes.
 - Detects and allows TAP adapters from gaming VPNs
 - **ExitLag Config:** Options → "Packet Redirection Method" → **"Legacy-NDIS"**
 - No additional configuration required for other VPNs
+ 
+Important note for VPN users: if you use third-party gaming VPNs (ExitLag, NoPing, WTFast, etc.) enable the "Legacy NDIS" / "WinPcap API-compatible Mode" in the VPN client. Some VPNs use modern NDIS/TAP redirection that prevents packet capture; Legacy NDIS restores compatibility and avoids missing packets or memory spikes after map changes.
+
+ - ExitLag: Options → Packet Redirection Method → **Legacy NDIS**
+ - NoPing & others: enable WinPcap compatibility / Legacy NDIS where available
 
 #### ⚙️ Settings:
 - **Player limit:** 1-20 visible players
@@ -455,7 +480,7 @@ If the application isn't working correctly:
 Doesn't modify game files or inject code. Read-only tools have extremely low ban risk. **Use at your own risk.**
 
 **⚡ Does it affect FPS?**  
-No. v3.1.0 is optimized: 90% less disk writes, intelligent cache, low CPU usage.
+No. v3.1.1 is optimized: 90% less disk writes, intelligent cache, low CPU usage.
 
 **🛡️ Why run as administrator?**  
 Npcap needs low-level network adapter access to monitor game packets.
@@ -532,7 +557,7 @@ AGPL-3.0 - See [LICENSE](LICENSE) for details.
 <div align="center">
   <img src="portada_v31.png" alt="BPSR Meter" width="800"/>
   
-  # BPSR Meter v3.1.0 (by gabrielsanbs)
+  # BPSR Meter v3.1.1 (by gabrielsanbs)
   
   ### Medidor de DPS en Tiempo Real para Blue Protocol
   
@@ -547,7 +572,7 @@ AGPL-3.0 - See [LICENSE](LICENSE) for details.
 
 ## 🎯 Sobre Esta Versión
 
-**BPSR Meter v3.1.0** es una versión completamente rediseñada y optimizada del medidor de DPS para Blue Protocol. Esta versión incluye nuevas funcionalidades, mejoras de rendimiento, soporte completo para VPNs gaming y una interfaz más pulida.
+**BPSR Meter v3.1.1** es una versión con correcciones de estabilidad y memoria, mejoras de rendimiento y mejor manejo de VPNs.
 
 **Desarrollado por:** [gabrielsanbs](https://github.com/gabrielsanbs)  
 **Fork de:** [BPSR-Meter](https://github.com/mrsnakke/BPSR-Meter) por MrSnakeVT  
@@ -557,7 +582,7 @@ AGPL-3.0 - See [LICENSE](LICENSE) for details.
 
 ---
 
-## ✨ Novedades de v3.1.0
+## ✨ Novedades de v3.1.1
 
 ### ⚙️ Pantalla de Configuración Completa
 <div align="center">
@@ -585,6 +610,10 @@ AGPL-3.0 - See [LICENSE](LICENSE) for details.
 - **Auto-guardado** al cambiar de mapa/servidor
 - Datos persisten entre sesiones
 
+- Corrección de crecimiento de memoria al cambiar de mapa: mejoras en la gestión del caché TCP (TTL y tamaño máximo) y procesamiento secuencial de paquetes para evitar acumulación de Promises con buffers.
+
+ - **Raptor mini (Preview)**: Activado para todos los clientes — modo ligero (preview) del medidor para equipos con recursos limitados.
+
 ### 🔔 Aviso de Cambio de Mapa
 <div align="center">
   <img src="BPSR_Meter_Window_v31.png" alt="Interfaz Completa" width="650"/>
@@ -602,6 +631,11 @@ AGPL-3.0 - See [LICENSE](LICENSE) for details.
 - **PingZapper, PingEnhancer, Haste, Outfox, BattlePing** ✅
 - Detección automática de adaptadores TAP de VPNs
 - Sin necesidad de configuración manual
+
+Nota importante para usuarios de VPN: si usas VPNs gaming (ExitLag, NoPing, WTFast, etc.), activa **Antiguo-NDIS** / **Modo compatible con WinPcap** en las opciones de tu cliente VPN. Algunos proveedores reescriben el ruteo y evitan que Npcap reciba los paquetes del juego; Antiguo-NDIS restablece la compatibilidad y evita paquetes perdidos o picos de memoria al cambiar mapas.
+
+ - ExitLag: Opciones → Método de redirección de paquetes → **Antiguo-NDIS**
+ - NoPing y otros: habilita compatibilidad con WinPcap / Antiguo-NDIS cuando esté disponible
 
 ### ⚡ Optimizaciones de Rendimiento
 - **90% menos escrituras en disco** con sistema de caché inteligente
@@ -630,7 +664,7 @@ AGPL-3.0 - See [LICENSE](LICENSE) for details.
 
 ### Paso 2: Instalar BPSR Meter
 1. Descarga el instalador en [Releases](../../releases)
-2. Ejecuta `BPSR Meter (by gabrielsanbs) Setup 3.1.0.exe`
+2. Ejecuta `BPSR Meter (by gabrielsanbs) Setup 3.1.1.exe`
 3. Sigue las instrucciones del instalador
 4. Al terminar, verás un mensaje de agradecimiento
 
@@ -685,7 +719,7 @@ AGPL-3.0 - See [LICENSE](LICENSE) for details.
 No modifica archivos del juego ni inyecta código. Herramientas de solo lectura tienen riesgo de baneo extremadamente bajo. **Usa bajo tu propia responsabilidad.**
 
 **⚡ ¿Afecta los FPS?**  
-No. v3.1.0 está optimizada: 90% menos escrituras en disco, caché inteligente, bajo uso de CPU.
+No. v3.1.1 está optimizada: 90% menos escrituras en disco, caché inteligente, bajo uso de CPU.
 
 **🛡️ ¿Por qué ejecutar como administrador?**  
 Npcap necesita acceso de bajo nivel a adaptadores de red para monitorear paquetes del juego.
