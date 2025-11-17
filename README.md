@@ -81,7 +81,6 @@ Nota importante para usuários de VPN: se você usa VPNs (ExitLag, NoPing, etc.)
 - **90% menos escritas em disco** com sistema de cache inteligente
 - Correção de vazamento de memória ao trocar de mapa: o processador de pacotes agora processa pacotes sequencialmente (evita acumular Promises com buffers), possui limpeza de cache TCP automática (TTL 15s) e limite de entradas para prevenir explosões de memória com tráfego intenso.
 
- - **Raptor mini (Preview)**: Ativado para todos os clientes — versão leve do medidor para clientes com menos recursos (experimental).
 - Melhor rastreamento de mudança de servidor/mapa: agora o sistema limpa corretamente caches e lógicas quando o jogo troca de servidor/mapa.
 - **Uso reduzido de CPU** através de debounce de 3 segundos
 - **Interface mais fluida** com update de 50ms
@@ -338,7 +337,6 @@ AGPL-3.0 - Veja [LICENSE](LICENSE) para detalhes.
 
 - Fix memory growth on map changes: improved TCP cache management (TTL and max size), and sequential awaited packet processing to avoid buffered Promises holding packet buffers.
 
- - **Raptor mini (Preview)**: Enabled for all clients — a lightweight preview mode for low-resource machines.
 
 ### 🔔 Map Change Notice
 <div align="center">
@@ -612,7 +610,6 @@ AGPL-3.0 - See [LICENSE](LICENSE) for details.
 
 - Corrección de crecimiento de memoria al cambiar de mapa: mejoras en la gestión del caché TCP (TTL y tamaño máximo) y procesamiento secuencial de paquetes para evitar acumulación de Promises con buffers.
 
- - **Raptor mini (Preview)**: Activado para todos los clientes — modo ligero (preview) del medidor para equipos con recursos limitados.
 
 ### 🔔 Aviso de Cambio de Mapa
 <div align="center">
