@@ -62,7 +62,6 @@ let globalSettings = {
     autoResetOnFightEnd: false, // Reset automático ao fim de cada luta
     enableFightHistory: true, // Habilitar histórico de lutas
     bptimerEnabled: true, // BPTimer habilitado por padrão
-    bptimerApiKey: '', // API Key vazia - usuário deve configurar
 };
 
 let server_port;

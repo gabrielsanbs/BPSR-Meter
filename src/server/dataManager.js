@@ -477,12 +477,13 @@ class UserDataManager {
             const { BPTimerClient } = require('@woheedev/bptimer-api-client');
             
             const enabled = this.globalSettings.bptimerEnabled !== false; // Default: true
-            const apiKey = this.globalSettings.bptimerApiKey || '';
+            // Usar API key pública para contribuições da comunidade
+            const publicApiKey = 'community-contributor';
             
             this.bpTimerClient = new BPTimerClient({
                 api_url: 'https://db.bptimer.com',
-                api_key: apiKey,
-                enabled: enabled && apiKey.trim().length > 0,
+                api_key: publicApiKey,
+                enabled: enabled,
                 logger: {
                     info: (message) => this.logger.info(`[BPTimer] ${message}`),
                     debug: (message) => this.logger.debug(`[BPTimer] ${message}`)
@@ -490,7 +491,7 @@ class UserDataManager {
                 log_level: 'info'
             });
             
-            if (enabled && apiKey.trim().length > 0) {
+            if (enabled) {
                 this.logger.info('BPTimer client inicializado e habilitado');
             } else {
                 this.logger.info('BPTimer client inicializado mas desabilitado');
@@ -503,43 +504,16 @@ class UserDataManager {
     
     /** Atualizar configurações do BPTimer */
     updateBPTimerSettings() {
-        if (!this.bpTimerClient) return;
+        if (!this.bpTimerClient) {
+            this.initializeBPTimer();
+            return;
+        }
         
         try {
             const enabled = this.globalSettings.bptimerEnabled !== false;
-            const apiKey = this.globalSettings.bptimerApiKey || '';
-            
-            this.bpTimerClient.setEnabled(enabled && apiKey.trim().length > 0);
-            
-            // Recriar client se a API key mudou
-            if (apiKey && apiKey.trim().length > 0) {
-                this.initializeBPTimer();
-            }
+            this.bpTimerClient.setEnabled(enabled);
         } catch (error) {
             this.logger.error('Erro ao atualizar configurações BPTimer:', error);
-        }
-    }
-    
-    /** Testar conexão com BPTimer API */
-    async testBPTimerConnection(apiKey) {
-        try {
-            const { BPTimerClient } = require('@woheedev/bptimer-api-client');
-            
-            const testClient = new BPTimerClient({
-                api_url: 'https://db.bptimer.com',
-                api_key: apiKey,
-                enabled: true,
-                log_level: 'silent'
-            });
-            
-            const result = await testClient.testConnection();
-            return result;
-        } catch (error) {
-            this.logger.error('Erro ao testar conexão BPTimer:', error);
-            return {
-                success: false,
-                message: error.message || 'Erro desconhecido'
-            };
         }
     }
 
