@@ -1,5 +1,5 @@
 
-const { app, BrowserWindow, ipcMain, globalShortcut, screen } = require('electron');
+const { app, BrowserWindow, ipcMain, globalShortcut, screen, shell } = require('electron');
 const path = require('path');
 const { exec, fork } = require('child_process');
 const net = require('net'); // Necesario para checkPort
@@ -722,10 +722,28 @@ function promoteOverlayWindow(win, { focus = false } = {}) {
             mainWindow.webContents.send('settings-changed', settings);
         }
     });
+
+    // Abrir URL externa no navegador padrão
+    ipcMain.on('open-external', (event, url) => {
+        shell.openExternal(url);
+    });
 }
 
 app.whenReady().then(() => {
     createWindow();
+
+    // Registrar atalho global F10 para reset do DPS Meter
+    const ret = globalShortcut.register('F10', () => {
+        if (mainWindow && !mainWindow.isDestroyed()) {
+            mainWindow.webContents.send('global-shortcut-f10');
+        }
+    });
+
+    if (!ret) {
+        logToFile('AVISO: Falha ao registrar atalho global F10');
+    } else {
+        logToFile('Atalho global F10 registrado com sucesso');
+    }
 
     app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) {
@@ -738,4 +756,10 @@ app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
         app.quit();
     }
+});
+
+app.on('will-quit', () => {
+    // Desregistrar todos os atalhos globais
+    globalShortcut.unregisterAll();
+    logToFile('Atalhos globais desregistrados');
 });

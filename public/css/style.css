@@ -28,7 +28,7 @@
 }
 /* Barras Lite: 50% más altas, la mitad de largas, barra igual que Advanced */
 .lite-bar {
-    background: var(--bar-bg-color);
+    background: transparent;
     border-radius: 18px;
     height: 31px; /* 30% más baja (44px * 0.70 = 30.8px) */
     min-height: 31px;
@@ -42,7 +42,9 @@
     display: flex;
     align-items: center;
     box-shadow: 0 1px 4px rgba(0,0,0,0.10);
-    border: 1px solid rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.12);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
 }
 .lite-bar-fill {
     position: absolute;
@@ -218,14 +220,16 @@ input[type="text"] {
 }
 
 .player-bar {
-    background: var(--bar-bg);
-    border: var(--border-soft);
-    border-radius: 6px;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
     margin-bottom: 4px;
     height: 60px;
     width: 100%;
     position: relative;
     overflow: hidden;
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
 }
 
 .progress-fill {
@@ -619,7 +623,7 @@ input[type="text"] {
     margin-right: 5px;
 }
 #player-bars-container { display: flex; flex-direction: column; gap: 8px; }
-.player-bar { background-color: var(--bar-bg-color); border-radius: 8px; height: 55px; position: relative; overflow: hidden; }
+.player-bar { background-color: transparent; border-radius: 8px; height: 55px; position: relative; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.12); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
 .progress-fill { position: absolute; left: 0; top: 0; height: 100%; border-radius: 8px; transition: width 0.4s ease-out; z-index: 1; }
 .player-bar[data-rank="1"] .progress-fill { background-color: var(--rank-1-color); }
 .player-bar[data-rank="2"] .progress-fill { background-color: var(--rank-2-color); }
@@ -741,6 +745,7 @@ input[type="text"] {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
     z-index: 1000;
     overflow: hidden;
+    -webkit-backdrop-filter: blur(10px);
     backdrop-filter: blur(10px);
 }
 

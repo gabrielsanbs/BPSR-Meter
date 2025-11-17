@@ -95,6 +95,12 @@ const professionMap = {
                 document.body.classList.add('alt-pressed');
             }
         }
+        
+        // F10: Reset manual do DPS Meter
+        if (e.key === 'F10') {
+            e.preventDefault(); // Prevenir comportamento padrão do navegador
+            resetDpsMeter();
+        }
     });
     
     document.addEventListener('keyup', (e) => {
@@ -103,6 +109,14 @@ const professionMap = {
             document.body.classList.remove('alt-pressed');
         }
     });
+
+    // Listener para atalho global F10 (funciona mesmo fora da janela)
+    if (window.electronAPI && window.electronAPI.onGlobalShortcutF10) {
+        window.electronAPI.onGlobalShortcutF10(() => {
+            console.log('F10 pressionado globalmente - resetando DPS Meter');
+            resetDpsMeter();
+        });
+    }
 
     document.addEventListener('DOMContentLoaded', () => {
         const resetButton = document.getElementById('reset-button');
@@ -343,13 +357,20 @@ const professionMap = {
         }, 150); // 100ms de throttle para resposta mais rápida
     }
 
-    function resetDpsMeter() {
-        fetch('/api/clear');
-        dpsTimerDiv.style.display = 'none';
-        dpsTimerDiv.innerText = '';
-        lastTotalDamage = 0;
-        lastDamageChangeTime = Date.now();
-        stopSyncTimer(); // Detener el temporizador de sincronización al reiniciar
+    async function resetDpsMeter() {
+        try {
+            await fetch('/api/clear');
+            dpsTimerDiv.style.display = 'none';
+            dpsTimerDiv.innerText = '';
+            lastTotalDamage = 0;
+            lastDamageChangeTime = Date.now();
+            stopSyncTimer(); // Detener el temporizador de sincronización al reiniciar
+            
+            // Forçar atualização para limpar a interface
+            await fetchDataAndRender();
+        } catch (error) {
+            console.error('Erro ao resetar DPS Meter:', error);
+        }
     }
 
     // La función syncData ya no se llama por un clic, pero se mantiene por si se usa internamente

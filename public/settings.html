@@ -671,6 +671,20 @@
                 applyTranslations();
             });
 
+            // Interceptar links externos para abrir no navegador padrão
+            document.querySelectorAll('a[href^="http"]').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const url = link.getAttribute('href');
+                    if (window.electronAPI && window.electronAPI.openExternal) {
+                        window.electronAPI.openExternal(url);
+                    } else {
+                        // Fallback para ambiente web
+                        window.open(url, '_blank');
+                    }
+                });
+            });
+
             // Aplicar traduções iniciais
             applyTranslations();
         });

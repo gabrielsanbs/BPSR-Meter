@@ -18,6 +18,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     // Controle do polling de posição do mouse
     startMousePolling: () => ipcRenderer.send('start-mouse-polling'),
     stopMousePolling: () => ipcRenderer.send('stop-mouse-polling'),
+    // Listener para atalho global F10
+    onGlobalShortcutF10: (callback) => ipcRenderer.on('global-shortcut-f10', () => callback()),
+    // Abrir URL externa no navegador padrão
+    openExternal: (url) => ipcRenderer.send('open-external', url),
 });
 
 window.addEventListener('DOMContentLoaded', () => {
