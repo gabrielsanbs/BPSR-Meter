@@ -19,9 +19,9 @@ body {
     transition: none !important;
     isolation: isolate;
     will-change: transform;
-    transform: translateZ(0);
     contain: layout style paint;
     backface-visibility: hidden;
+    transform-origin: top left; /* Para zoom funcionar corretamente */
 }
 
 /* Botão Advanced/Lite: rectangular y alargado */
@@ -52,7 +52,7 @@ body {
     letter-spacing: 0.5px;
     text-shadow: 0 1px 4px rgba(0,0,0,0.18);
 }
-/* Barras Lite: 50% más altas, la mitad de largas, barra igual que Advanced */
+/* Barras Lite: 50% mais altas, a mitad de largas, barra igual que Advanced */
 .lite-bar {
     background: var(--window-surface-color);
     border-radius: 18px;
@@ -60,9 +60,9 @@ body {
     min-height: 31px;
     max-height: 31px;
     margin-bottom: 4px;
-    width: 60%; /* 10% más larga que antes */
+    width: 100%; /* Largura total para chegar até o botão X */
     min-width: 0;
-    max-width: 60%;
+    max-width: 100%;
     position: relative;
     overflow: hidden;
     display: flex;
@@ -527,7 +527,7 @@ input[type="text"] {
     padding-left: 8px;
     position: absolute;
     top: 0;
-    z-index: 10;
+    z-index: 100; /* Aumentado para ficar acima de tudo */
     gap: 10px;
 }
 #diccionario-form {
@@ -590,16 +590,21 @@ input[type="text"] {
     background-color: rgba(220, 53, 69, 0.5); /* Rojo */
     border: 1px solid rgba(220, 53, 69, 0.7);
     -webkit-app-region: no-drag; /* Asegurarse de que el botón de cerrar no arrastre la ventana */
+    position: relative;
+    z-index: 101; /* Sempre acima de tudo */
 }
 #close-button:hover {
     background-color: rgba(220, 53, 69, 0.7);
 }
-#close-button {
-    background-color: rgba(220, 53, 69, 0.5); /* Rojo */
-    border: 1px solid rgba(220, 53, 69, 0.7);
+
+#minimize-button {
+    position: relative;
+    z-index: 101; /* Sempre acima de tudo */
 }
-#close-button:hover {
-    background-color: rgba(220, 53, 69, 0.7);
+
+#lock-button {
+    position: relative;
+    z-index: 101; /* Sempre acima de tudo */
 }
 
 .sync-button {

@@ -321,9 +321,10 @@ const professionMap = {
     });
 
     function applyZoom() {
-        if (playerBarsContainer) {
-            playerBarsContainer.style.transform = `scale(${currentZoom})`;
-            playerBarsContainer.style.transformOrigin = 'top left';
+        const dpsMeter = document.querySelector('.dps-meter');
+        if (dpsMeter) {
+            dpsMeter.style.transform = `scale(${currentZoom})`;
+            dpsMeter.style.transformOrigin = 'top left';
             updateWindowSize(); // Redimensionar la ventana al aplicar zoom
         }
     }
@@ -678,13 +679,13 @@ const professionMap = {
                         barFillWidth = u.damagePercent;
                         barFillBackground = u.total_dps > 0 ? `linear-gradient(90deg, transparent, ${color})` : 'none';
                         iconHtml = "<span style='font-size:1.1em;margin-right:2px;'>🔥</span>";
-                        value1 = `${formatStat(u.total_damage.total || 0)}`;
+                        value1 = `${formatStat(u.total_dps || 0)}`; // DPS ao invés de dano total
                         value2 = `${Math.round(u.damagePercent)}%`;
                     } else { // liteModeType === 'healer'
                         barFillWidth = u.healingPercent;
                         barFillBackground = u.total_healing && u.total_healing.total > 0 ? `linear-gradient(90deg, transparent, #28a745)` : 'none'; // Verde para healer
                         iconHtml = "<span style='font-size:1.1em;margin-right:2px; color: #28a745; text-shadow: 0 0 2px white, 0 0 2px white, 0 0 2px white, 0 0 2px white;'>⛨</span>"; // Icono verde con contorno blanco
-                        value1 = `${formatStat((u.total_healing && u.total_healing.total) || 0)}`;
+                        value1 = `${formatStat(u.total_hps || 0)}`; // HPS ao invés de heal total
                         value2 = `${Math.round(u.healingPercent)}%`; // Porcentaje de contribución de heal
                     }
 
