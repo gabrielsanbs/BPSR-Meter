@@ -11,6 +11,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     openSettingsWindow: () => ipcRenderer.send('open-settings-window'),
     settingsChanged: (settings) => ipcRenderer.send('settings-changed', settings),
     onSettingsChanged: (callback) => ipcRenderer.on('settings-changed', (event, settings) => callback(settings)),
+    // Enviar mensagens genéricas
+    send: (channel, data) => ipcRenderer.send(channel, data),
+    // Receber cores personalizadas
+    onApplyCustomColors: (callback) => ipcRenderer.on('apply-custom-colors', (event, colorSettings) => callback(colorSettings)),
     // Função para drag manual (recebe deltaX e deltaY)
     windowDragMove: (deltaX, deltaY) => ipcRenderer.send('window-drag-move', deltaX, deltaY),
     // Função para controlar setIgnoreMouseEvents quando travado

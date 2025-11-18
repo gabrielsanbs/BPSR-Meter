@@ -43,7 +43,7 @@ function initializeApi(app, server, io, userDataManager, logger, globalSettings,
     });
 
     app.get('/api/clear', async (req, res) => {
-        await userDataManager.clearAll(globalSettings); // Pasar globalSettings
+        await userDataManager.clearAll('api');
         console.log('¡Estadísticas limpiadas!');
         res.json({
             code: 0,

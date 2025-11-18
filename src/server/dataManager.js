@@ -2,6 +2,9 @@ const fsPromises = require('fs').promises;
 const path = require('path');
 const skillConfig = require('../../tables/skill_names.json').skill_names; // Ajustar la ruta
 
+// BPTimer será carregado dinamicamente usando import() pois é um módulo ESM
+let BPTimerClient = null;
+
 class Lock {
     constructor() {
         this.queue = [];
@@ -438,12 +441,16 @@ class UserDataManager {
         
         // Usar diretório de dados customizado se fornecido, senão usar diretório do processo
         const baseDir = dataDir || process.cwd();
+        this.DEFAULT_PLAYER_MAP_PATH = path.join(process.cwd(), 'player_map.json');
         this.FIGHT_HISTORY_PATH = path.join(baseDir, 'fight_history.json'); // Caminho do arquivo
         this.USER_CACHE_PATH = path.join(baseDir, 'user_cache.json'); // Cache de usuários
+        this.PLAYER_MAP_PATH = path.join(baseDir, 'player_map.json');
 
         // Debounce para salvar cache (evita escrever no disco constantemente)
         this.cacheSaveTimer = null;
         this.CACHE_SAVE_DELAY = 3000; // Salvar apenas após 3 segundos sem mudanças
+        this.playerMapSaveTimer = null;
+        this.PLAYER_MAP_SAVE_DELAY = 3000;
 
         this.logLock = new Lock();
         this.logDirExist = new Set();
@@ -453,13 +460,24 @@ class UserDataManager {
             hp: new Map(),
             maxHp: new Map(),
             attrId: new Map(), // Monster ID para BPTimer
+            lastSeen: new Map(),
+            hp_pct: new Map(), // HP percentage calculado
+            pos: new Map(), // Posição do boss {x, y, z}
         };
 
         this.isClearing = false;
         
         // BPTimer integration
         this.bpTimerClient = null;
+        this.pendingBPTimerReports = new Set();
         this.currentServerLine = 1; // Canal atual
+        this.lineSetBySceneData = false; // Flag para indicar se Line veio do SceneData
+        this.linePriorityExpiration = 0;
+        this.SCENE_LINE_PRIORITY_MS = 10000;
+        console.log('[BPTimer] Line inicializada com valor padrão: 1');
+        this.currentSceneInfo = null;
+        this.currentSceneKey = '';
+        this.pendingFightSave = Promise.resolve();
     }
 
     async initialize() {
@@ -467,20 +485,42 @@ class UserDataManager {
         await this.loadFightHistory();
         // Carregar cache de usuários
         await this.loadUserCache();
+        // Carregar player map persistido
+        await this.loadPlayerMap();
+        this.hydratePlayerMapFromCache();
         // Inicializar BPTimer client
         await this.initializeBPTimer();
     }
     
     /** Inicializar cliente BPTimer */
     async initializeBPTimer() {
+        if (!this.pendingBPTimerReports) {
+            this.pendingBPTimerReports = new Set();
+        }
+        
         try {
-            const { BPTimerClient } = require('@woheedev/bptimer-api-client');
+            // Carregar módulo ESM dinamicamente usando import()
+            if (!BPTimerClient) {
+                try {
+                    const bptimerModule = await import('@woheedev/bptimer-api-client');
+                    BPTimerClient = bptimerModule.BPTimerClient;
+                    this.logger.info('Módulo BPTimer carregado com sucesso');
+                } catch (importError) {
+                    this.logger.info('BPTimer API client não disponível:', importError.message);
+                    this.bpTimerClient = null;
+                    return;
+                }
+            }
             
-            const enabled = this.globalSettings.bptimerEnabled !== false; // Default: true
+            const apiKey = process.env.BPTIMER_API_KEY;
             
-            // Priorizar API key do .env (para devs/super users), senão usar pública
-            const apiKey = process.env.BPTIMER_API_KEY || 'community-contributor';
-            const isCustomKey = !!process.env.BPTIMER_API_KEY;
+            // Apenas inicializar se tiver API key configurada
+            if (!apiKey || apiKey.trim() === '') {
+                this.bpTimerClient = null;
+                return;
+            }
+            
+            const enabled = this.globalSettings.bptimerEnabled === true;
             
             this.bpTimerClient = new BPTimerClient({
                 api_url: 'https://db.bptimer.com',
@@ -493,12 +533,7 @@ class UserDataManager {
                 log_level: 'info'
             });
             
-            if (enabled) {
-                const keyType = isCustomKey ? 'custom API key' : 'public API key';
-                this.logger.info(`BPTimer client inicializado e habilitado (usando ${keyType})`);
-            } else {
-                this.logger.info('BPTimer client inicializado mas desabilitado');
-            }
+            this.logger.info(`BPTimer client inicializado (${enabled ? 'habilitado' : 'desabilitado'})`);
         } catch (error) {
             this.logger.error('Erro ao inicializar BPTimer client:', error);
             this.bpTimerClient = null;
@@ -574,6 +609,81 @@ class UserDataManager {
             });
             this.cacheSaveTimer = null;
         }, this.CACHE_SAVE_DELAY);
+    }
+
+    /** Carregar mapeamento persistido de UID -> nome */
+    async loadPlayerMap() {
+        try {
+            await fsPromises.access(this.PLAYER_MAP_PATH);
+            const data = await fsPromises.readFile(this.PLAYER_MAP_PATH, 'utf8');
+            const parsed = JSON.parse(data);
+            this.playerMap = new Map(Object.entries(parsed));
+            this.logger.info(`Player map carregado com ${this.playerMap.size} entradas`);
+        } catch (error) {
+            if (error.code === 'ENOENT') {
+                let fallbackLoaded = false;
+                if (this.DEFAULT_PLAYER_MAP_PATH && this.DEFAULT_PLAYER_MAP_PATH !== this.PLAYER_MAP_PATH) {
+                    try {
+                        await fsPromises.access(this.DEFAULT_PLAYER_MAP_PATH);
+                        const fallbackData = await fsPromises.readFile(this.DEFAULT_PLAYER_MAP_PATH, 'utf8');
+                        const fallbackParsed = JSON.parse(fallbackData);
+                        this.playerMap = new Map(Object.entries(fallbackParsed));
+                        fallbackLoaded = true;
+                        this.logger.info(`Player map padrão carregado com ${this.playerMap.size} entradas`);
+                        await this.savePlayerMap(); // Persistir cópia no diretório do usuário
+                    } catch (fallbackErr) {
+                        this.logger.warn('Player map padrão não disponível:', fallbackErr.message);
+                    }
+                }
+
+                if (!fallbackLoaded) {
+                    this.playerMap = new Map();
+                    this.logger.info('Player map não encontrado, iniciando vazio');
+                }
+            } else {
+                this.playerMap = new Map();
+                this.logger.error('Erro ao carregar player map:', error);
+            }
+        }
+    }
+
+    async savePlayerMap() {
+        try {
+            const serialized = Object.fromEntries(this.playerMap.entries());
+            await fsPromises.writeFile(this.PLAYER_MAP_PATH, JSON.stringify(serialized, null, 2), 'utf8');
+            this.logger.info(`Player map salvo com ${this.playerMap.size} entradas`);
+        } catch (error) {
+            this.logger.error('Erro ao salvar player map:', error);
+        }
+    }
+
+    schedulePlayerMapSave() {
+        if (this.playerMapSaveTimer) {
+            clearTimeout(this.playerMapSaveTimer);
+        }
+
+        this.playerMapSaveTimer = setTimeout(() => {
+            this.savePlayerMap().catch(err => {
+                this.logger.error('Erro ao salvar player map agendado:', err);
+            });
+            this.playerMapSaveTimer = null;
+        }, this.PLAYER_MAP_SAVE_DELAY);
+    }
+
+    hydratePlayerMapFromCache() {
+        if (!this.userCache || this.userCache.size === 0) return;
+        let injected = 0;
+        for (const [uidStr, cached] of this.userCache.entries()) {
+            if (!cached || !cached.name) continue;
+            if (!this.playerMap.has(uidStr)) {
+                this.playerMap.set(uidStr, cached.name);
+                injected++;
+            }
+        }
+        if (injected > 0) {
+            this.logger.info(`Player map atualizado com ${injected} nomes vindos do cache de usuários`);
+            this.schedulePlayerMapSave();
+        }
     }
 
     /** Carregar histórico de lutas do arquivo JSON */
@@ -667,7 +777,6 @@ class UserDataManager {
     addDamage(uid, skillId, element, damage, isCrit, isLucky, isCauseLucky, hpLessenValue = 0, targetUid) {
         // isPaused y globalSettings.onlyRecordEliteDummy se manejarán en el sniffer o en el punto de entrada
         this.checkTimeoutClear();
-        
         // Marcar início da luta se não estiver ativa
         if (!this.fightActive) {
             this.startFight();
@@ -675,6 +784,7 @@ class UserDataManager {
         
         // Atualizar tempo do último dano
         this.lastDamageTime = Date.now();
+        this.lastLogTime = this.lastDamageTime;
         
         const user = this.getUser(uid);
         user.addDamage(skillId, element, damage, isCrit, isLucky, isCauseLucky, hpLessenValue);
@@ -693,9 +803,9 @@ class UserDataManager {
     addHealing(uid, skillId, element, healing, isCrit, isLucky, isCauseLucky, targetUid) {
         // isPaused se manejará en el sniffer o en el punto de entrada
         this.checkTimeoutClear();
-        
         // Atualizar tempo do último dano/healing
         this.lastDamageTime = Date.now();
+        this.lastLogTime = this.lastDamageTime;
         
         if (uid !== 0) {
             const user = this.getUser(uid);
@@ -712,6 +822,8 @@ class UserDataManager {
         // isPaused se manejará en el sniffer o en el punto de entrada
         this.checkTimeoutClear();
         const user = this.getUser(uid);
+        this.lastDamageTime = Date.now();
+        this.lastLogTime = this.lastDamageTime;
         user.addTakenDamage(damage, isDead);
     }
 
@@ -764,7 +876,6 @@ class UserDataManager {
         if (user.name !== name) {
             user.setName(name);
             this.logger.info(`Found player name ${name} for uid ${uid}`);
-            
             // Atualizar cache em memória
             const uidStr = String(uid);
             const cachedData = this.userCache.get(uidStr) || {};
@@ -773,6 +884,12 @@ class UserDataManager {
             
             // Agendar salvamento em arquivo com debounce (reduz I/O)
             this.scheduleCacheSave();
+
+            const existingName = this.playerMap.get(uidStr);
+            if (existingName !== name) {
+                this.playerMap.set(uidStr, name);
+                this.schedulePlayerMapSave();
+            }
         }
     }
 
@@ -809,19 +926,33 @@ class UserDataManager {
     
     /** Definir canal/linha do servidor atual */
     setServerLine(serverString) {
+        const now = Date.now();
+
+        // Se Line já foi definida por SceneData, honrar por alguns segundos
+        if (this.lineSetBySceneData) {
+            if (now < this.linePriorityExpiration) {
+                return;
+            }
+            this.lineSetBySceneData = false;
+        }
+        
         if (!serverString || typeof serverString !== 'string') return;
         
+        // Ignorar IPs locais (192.168.x.x, 10.x.x.x, 172.16-31.x.x)
+        if (serverString.match(/192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[0-1])\./)) {
+            return; // Não fazer nada para IPs locais
+        }
+        
         // Tentar extrair número da linha do nome do servidor
-        // Formato esperado pode ser algo como "10.0.2.12:17000 -> 54.199.123.45:17000"
-        // ou outros formatos que contenham número de linha
         const match = serverString.match(/line[_\s-]?(\d+)|l(\d+)|canal[_\s-]?(\d+)/i);
         if (match) {
             this.currentServerLine = parseInt(match[1] || match[2] || match[3]);
+            return;
         }
         
-        // Se não encontrar, usar hash simples baseado no IP do servidor
+        // Se não encontrar, usar hash simples baseado no IP do servidor REMOTO
         const ipMatch = serverString.match(/(\d+\.\d+\.\d+\.\d+):(\d+)/);
-        if (ipMatch && !match) {
+        if (ipMatch) {
             const [, ip, port] = ipMatch;
             // Usar último octeto do IP + porta como identificador de linha
             const lastOctet = parseInt(ip.split('.').pop());
@@ -829,37 +960,145 @@ class UserDataManager {
             this.currentServerLine = ((lastOctet + portNum) % 20) + 1; // Linhas de 1 a 20
         }
     }
+
+    _buildSceneKey(sceneInfo) {
+        if (!sceneInfo) return '';
+        // Chave focada apenas em mudança real de mapa/instância
+        return [
+            Number(sceneInfo.mapId) || 0,
+            Number(sceneInfo.levelMapId) || 0,
+            sceneInfo.dungeonGuid || '',
+            Number(sceneInfo.lineId) || 0,
+            Number(sceneInfo.channelId) || 0,
+        ].join(':');
+    }
+
+    handleSceneChange(sceneInfo = {}) {
+        if (!sceneInfo || typeof sceneInfo !== 'object') return;
+
+        const hasSceneIdentifiers = (sceneInfo.mapId && sceneInfo.mapId !== 0) ||
+            (sceneInfo.levelMapId && sceneInfo.levelMapId !== 0) ||
+            (sceneInfo.dungeonGuid && sceneInfo.dungeonGuid !== '');
+        if (!hasSceneIdentifiers) return;
+
+        const sceneKey = this._buildSceneKey(sceneInfo);
+        if (!sceneKey || sceneKey === this.currentSceneKey) {
+            return;
+        }
+
+        const timestamp = Date.now();
+        const previousScene = this.currentSceneInfo;
+        this.currentSceneInfo = { ...sceneInfo, timestamp };
+        this.currentSceneKey = sceneKey;
+
+        const descriptorParts = [];
+        if (sceneInfo.mapId) descriptorParts.push(`map=${sceneInfo.mapId}`);
+        if (sceneInfo.levelMapId) descriptorParts.push(`level=${sceneInfo.levelMapId}`);
+        if (sceneInfo.dungeonGuid) descriptorParts.push(`dungeon=${sceneInfo.dungeonGuid}`);
+        if (sceneInfo.lineId) descriptorParts.push(`line=${sceneInfo.lineId}`);
+        else if (sceneInfo.channelId) descriptorParts.push(`channel=${sceneInfo.channelId}`);
+        const descriptor = descriptorParts.length ? descriptorParts.join(', ') : 'dados indisponíveis';
+        this.logger.info(`[SCENE] Mudança detectada via SceneData (${descriptor})`);
+
+        const sceneLine = Number.isFinite(sceneInfo.lineId) && sceneInfo.lineId > 0
+            ? sceneInfo.lineId
+            : (Number.isFinite(sceneInfo.channelId) && sceneInfo.channelId > 0 ? sceneInfo.channelId : null);
+        if (sceneLine) {
+            this.currentServerLine = sceneLine;
+            this.lineSetBySceneData = true; // Marcar que Line veio de SceneData
+            this.linePriorityExpiration = Date.now() + this.SCENE_LINE_PRIORITY_MS;
+        }
+
+        this.refreshEnemyCache();
+
+        if (this.globalSettings.autoClearOnServerChange) {
+            // Mudança real de mapa/instância: salvar luta atual e resetar imediatamente
+            this.clearAll('scene-change').catch((error) => {
+                this.logger.error('Falha ao limpar dados após mudança de SceneData:', error);
+            });
+        }
+    }
+
+    _scheduleFightSave(usersSnapshot, startTimeSnapshot) {
+        if (!usersSnapshot || usersSnapshot.size === 0) return;
+
+        this.pendingFightSave = this.pendingFightSave
+            .then(() => this.saveFightToHistory(usersSnapshot, startTimeSnapshot))
+            .catch((error) => {
+                this.logger.error('Erro ao salvar luta em background:', error);
+            });
+    }
     
     /** Reportar HP de boss para BPTimer */
-    async reportBossHP(enemyUid, monsterId, hp, maxHp) {
-        if (!this.bpTimerClient || !this.bpTimerClient.isEnabled()) return;
+    async reportBossHP(enemyUuid, monsterId, hp, maxHp) {
+        if (!this.bpTimerClient || !this.bpTimerClient.isEnabled()) {
+            return;
+        }
         
-        // Verificar se é um boss rastreado
-        if (!monsterId || hp === undefined || maxHp === undefined || maxHp === 0) return;
+        if (!monsterId || hp === undefined || maxHp === undefined || maxHp === 0) {
+            return;
+        }
+
+        const STALE_ENEMY_WINDOW_MS = 2 * 60 * 1000; // 2 minutos
+        if (enemyUuid !== undefined && enemyUuid !== null) {
+            const lastSeen = this.enemyCache?.lastSeen?.get(enemyUuid);
+            if (lastSeen && Date.now() - lastSeen > STALE_ENEMY_WINDOW_MS) {
+                this.enemyCache.name.delete(enemyUuid);
+                this.enemyCache.hp.delete(enemyUuid);
+                this.enemyCache.maxHp.delete(enemyUuid);
+                this.enemyCache.attrId.delete(enemyUuid);
+                this.enemyCache.lastSeen.delete(enemyUuid);
+                if (this.lastBPTimerReport) {
+                    this.lastBPTimerReport.delete(`${monsterId}-${this.currentServerLine}`);
+                }
+                return;
+            }
+        }
+
+        if (!this.pendingBPTimerReports) {
+            this.pendingBPTimerReports = new Set();
+        }
         
         try {
-            const hpPct = Math.round((hp / maxHp) * 100);
-            
-            // Apenas reportar se HP mudou significativamente (mudança de 5% pelo menos)
-            const lastReportedKey = `${monsterId}-${this.currentServerLine}`;
-            const lastReported = this.lastBPTimerReport || new Map();
-            if (lastReported.has(lastReportedKey)) {
-                const lastHp = lastReported.get(lastReportedKey);
-                if (Math.abs(hpPct - lastHp) < 5) return; // Menos de 5% de mudança
+            const hpPctRaw = (hp / maxHp) * 100;
+            const hpPct = Math.max(0, Math.min(100, Math.floor(hpPctRaw)));
+            const reportKey = `${monsterId}-${this.currentServerLine}`;
+            if (!this.lastBPTimerReport) this.lastBPTimerReport = new Map();
+
+            // Obter posição do boss do cache (ATTR_POS)
+            const position = this.enemyCache.pos.get(enemyUuid);
+            const pos_x = position?.x ?? 0;
+            const pos_y = position?.y ?? 0;
+            const pos_z = position?.z ?? 0;
+
+            const sendReport = async () => {
+                this.pendingBPTimerReports.add(reportKey);
+                try {
+                    const result = await this.bpTimerClient.reportHP({
+                        monster_id: monsterId,
+                        hp_pct: hpPct,
+                        line: this.currentServerLine,
+                        pos_x: pos_x,
+                        pos_y: pos_y,
+                        pos_z: pos_z
+                    });
+
+                    // Salvar HP reportado
+                    this.lastBPTimerReport.set(reportKey, hpPct);
+                } finally {
+                    this.pendingBPTimerReports.delete(reportKey);
+                }
+            };
+
+            // Bloquear apenas se já há um report HTTP em andamento (race condition)
+            if (this.pendingBPTimerReports.has(reportKey)) {
+                return;
             }
-            
-            const result = await this.bpTimerClient.reportHP({
-                monster_id: monsterId,
-                hp_pct: hpPct,
-                line: this.currentServerLine
-            });
-            
-            if (result.success) {
-                if (!this.lastBPTimerReport) this.lastBPTimerReport = new Map();
-                this.lastBPTimerReport.set(lastReportedKey, hpPct);
-            }
+
+            // Reportar SEMPRE - BPTimer client faz arredondamento e filtragem de duplicatas
+            await sendReport();
         } catch (error) {
-            this.logger.error('Erro ao reportar HP para BPTimer:', error);
+            console.error('[BPTimer] Erro ao reportar HP:', error);
         }
     }
 
@@ -935,35 +1174,63 @@ class UserDataManager {
         this.enemyCache.hp.clear();
         this.enemyCache.maxHp.clear();
         this.enemyCache.attrId.clear();
+        this.enemyCache.lastSeen.clear();
+        this.enemyCache.hp_pct.clear();
+        
+        // Limpar cache de HP reportado do BPTimer para permitir novo report
+        if (this.lastBPTimerReport) {
+            this.lastBPTimerReport.clear();
+            this.logger.info('[BPTimer] Cache de HP reportado limpo');
+        }
+
+        if (this.pendingBPTimerReports) {
+            this.pendingBPTimerReports.clear();
+        }
     }
 
     /** Limpiar todos los datos de usuario */
-    async clearAll() {
+    async clearAll(reason = 'manual') {
         if (this.isClearing) {
             this.logger.debug('clearAll já está em andamento, ignorando chamada duplicada');
             return;
         }
         this.isClearing = true;
         try {
-        // SEMPRE salvar se houver jogadores com dados, independente de fightActive
-        // Isso garante que mudanças de mapa/servidor não percam o histórico
-        if (this.users.size > 0) {
-            // Verificar se há pelo menos um jogador com dano ou cura
-            const hasValidData = Array.from(this.users.values()).some(user => 
-                (user.damageStats && user.damageStats.stats.total > 0) || 
-                (user.healingStats && user.healingStats.stats.total > 0)
-            );
-            
-            if (hasValidData) {
-                this.logger.info('Salvando luta antes de limpar (mudança de servidor/mapa)');
-                await this.saveFightToHistory();
+            let snapshot = null;
+            let snapshotStartTime = this.startTime;
+
+            if (this.users.size > 0) {
+                const hasValidData = Array.from(this.users.values()).some((user) =>
+                    (user.damageStats && user.damageStats.stats.total > 0) ||
+                    (user.healingStats && user.healingStats.stats.total > 0),
+                );
+
+                if (hasValidData && !this.fightEnded) {
+                    this.logger.info('Salvando luta antes de limpar (mudança de servidor/mapa)');
+                    snapshot = new Map(this.users);
+                } else if (hasValidData && this.fightEnded) {
+                    this.logger.debug('Dados da luta já haviam sido salvos via endFight, pulando snapshot duplicado');
+                }
             }
-        }
-        
-        this.users = new Map();
-        this.startTime = Date.now();
-        this.lastDamageTime = Date.now();
-        this.fightActive = false;
+
+            this.users = new Map();
+            this.startTime = Date.now();
+            this.lastDamageTime = this.startTime;
+            this.lastLogTime = 0;
+            this.fightActive = false;
+            this.fightEnded = false;
+
+            if (this.io) {
+                this.io.emit('fight-cleared', {
+                    reason,
+                    timestamp: this.startTime,
+                    sceneInfo: this.currentSceneInfo,
+                });
+            }
+
+            if (snapshot && snapshot.size > 0) {
+                this._scheduleFightSave(snapshot, snapshotStartTime);
+            }
         } finally {
             this.isClearing = false;
         }
@@ -975,6 +1242,7 @@ class UserDataManager {
             this.fightActive = true;
             this.startTime = Date.now();
             this.lastDamageTime = Date.now();
+            this.fightEnded = false;
             this.logger.info('Nova luta iniciada!');
         }
     }
@@ -997,25 +1265,27 @@ class UserDataManager {
     }
 
     /** Salvar luta atual no histórico */
-    async saveFightToHistory() {
-        if (this.users.size === 0) {
+    async saveFightToHistory(usersSnapshot = null, startTimeSnapshot = null) {
+        const usersToPersist = usersSnapshot ?? this.users;
+        if (!usersToPersist || usersToPersist.size === 0) {
             return;
         }
 
+        const startTime = startTimeSnapshot ?? this.startTime;
         const endTime = Date.now();
-        const duration = endTime - this.startTime;
+        const duration = endTime - startTime;
         
         // Criar snapshot dos dados atuais
         const fightData = {
             id: Date.now(), // ID único baseado em timestamp
-            startTime: this.startTime,
+            startTime,
             endTime: endTime,
             duration: duration,
             players: []
         };
 
         // Salvar dados de cada jogador
-        for (const [uid, user] of this.users.entries()) {
+        for (const [uid, user] of usersToPersist.entries()) {
             const playerData = {
                 uid: uid,
                 name: user.name || `Player ${uid}`,
@@ -1183,7 +1453,7 @@ class UserDataManager {
         // Usar 10s se fastServerChangeDetection = true, senão 30s
         const timeoutDuration = this.globalSettings.fastServerChangeDetection ? 10000 : 30000;
         if (this.lastLogTime && currentTime - this.lastLogTime > timeoutDuration) {
-            this.clearAll();
+            this.clearAll('timeout');
             const timeoutSec = timeoutDuration / 1000;
             this.logger.info(`Timeout reached (${timeoutSec}s), statistics cleared!`);
         }

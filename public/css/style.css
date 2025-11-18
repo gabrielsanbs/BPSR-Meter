@@ -28,7 +28,7 @@
 }
 /* Barras Lite: 50% más altas, la mitad de largas, barra igual que Advanced */
 .lite-bar {
-    background: transparent;
+    background: var(--window-surface-color);
     border-radius: 18px;
     height: 31px; /* 30% más baja (44px * 0.70 = 30.8px) */
     min-height: 31px;
@@ -126,6 +126,7 @@
     --shadow-soft: 0 2px 4px rgba(0, 0, 0, 0.1);
     --border-soft: 1px solid rgba(255, 255, 255, 0.1);
     --text-shadow: 0 0 2px rgba(0, 0, 0, 0.7), 0 0 4px rgba(0, 0, 0, 0.5);
+    --active-bg-color: transparent;
 }
 
 body {
@@ -217,10 +218,13 @@ input[type="text"] {
     --rank-default: linear-gradient(90deg, rgba(86, 95, 137, 0.2), rgba(86, 95, 137, 0.8));
     --shadow-soft: 0 4px 6px rgba(0, 0, 0, 0.1);
     --glow-effect: 0 0 15px rgba(255, 255, 255, 0.1);
+    --window-bg-color: rgba(26, 29, 41, 0.92);
+    --window-surface-color: rgba(32, 36, 51, 0.85);
+    --window-border-color: rgba(255, 255, 255, 0.15);
 }
 
 .player-bar {
-    background: transparent;
+    background: var(--window-surface-color);
     border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 8px;
     margin-bottom: 4px;
@@ -472,7 +476,16 @@ input[type="text"] {
     transform: scale(1.2);
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
-.dps-meter { width: 650px; background-color: transparent; padding: 4px 8px; } /* Ancho fijo */
+.dps-meter {
+    width: 650px;
+    background-color: var(--window-bg-color);
+    padding: 12px 16px 16px;
+    border-radius: 18px;
+    border: 1px solid var(--window-border-color);
+    box-shadow: 0 20px 55px rgba(0, 0, 0, 0.45);
+    position: relative;
+    overflow: hidden;
+}
 .controls {
     display: flex;
     justify-content: flex-start;
@@ -647,14 +660,23 @@ input[type="text"] {
     padding: 20px;
     color: var(--text-secondary);
     font-size: 2.5rem; /* Tamaño del icono */
-    display: flex;
+    display: none;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
-    height: 100px; /* Altura para centrar el icono */
+    gap: 12px;
+    min-height: 120px; /* Altura para centrar o texto */
 }
 
 #loading-indicator .fa-spinner {
     animation: spin 1.5s linear infinite; /* Animación de giro */
+}
+
+#loading-indicator .loading-text {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    text-shadow: var(--text-shadow);
 }
 
 /* Trucos para acercar elementos a la izquierda */
@@ -739,7 +761,7 @@ input[type="text"] {
     right: 0;
     width: 400px;
     max-height: 500px;
-    background: rgba(30, 30, 40, 0.98);
+    background: var(--window-bg-color);
     border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
@@ -779,10 +801,11 @@ input[type="text"] {
     max-height: 450px;
     overflow-y: auto;
     padding: 8px;
+    background: rgba(20, 20, 30, 0.85);
 }
 
 .history-item {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(40, 45, 60, 0.75);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 6px;
     padding: 10px;

@@ -1,5 +1,8 @@
 // Conectar ao Socket.IO
 const socket = io();
+const UPDATE_INTERVAL_MS = 100; // Intervalo balanceado para UI responsiva sem sobrecarregar CPU
+
+let isFetchingData = false;
 
 // Escutar evento de conexão com o jogo
 socket.on('game-connected', (data) => {
@@ -16,6 +19,20 @@ socket.on('game-connected', (data) => {
             updateSyncButtonState();
         }
     }
+});
+
+socket.on('server-change', () => {
+    stopSyncTimer();
+});
+
+socket.on('fight-cleared', () => {
+    if (playerBarsContainer) {
+        playerBarsContainer.innerHTML = '';
+        playerBarsContainer.style.display = 'none';
+        updateWindowSize();
+    }
+    lastTotalDamage = 0;
+    lastDamageChangeTime = Date.now();
 });
 
 // Estado global para modo Lite
@@ -80,8 +97,13 @@ const professionMap = {
     const lockButton = document.getElementById('lock-button');
     const logsSection = document.getElementById('logs-section'); // Declarar logsSection aquí
     const loadingIndicator = document.getElementById('loading-indicator'); // Indicador de carga
+    const loadingIndicatorText = document.getElementById('loading-indicator-text');
     const mapChangeNotice = document.getElementById('map-change-notice'); // Aviso de mudar mapa
     let mapNoticeVisible = true; // Por padrão, mostrar aviso
+
+    if (loadingIndicator) {
+        loadingIndicator.style.display = 'flex';
+    }
 
     // Rastrear estados para controle de mouse
     let isMouseOverHeader = false;
@@ -545,36 +567,40 @@ const professionMap = {
     ];
 
     async function fetchDataAndRender() {
+        if (isFetchingData) return;
+        isFetchingData = true;
         const container = document.getElementById('player-bars-container');
         try {
-            const [dataRes, diccRes, settingsRes] = await Promise.all([
+            const [dataRes, diccRes] = await Promise.all([
                 fetch('/api/data'),
-                fetch('/api/diccionario'),
-                fetch('/api/settings')
+                fetch('/api/diccionario')
             ]);
             
             // Verificar status das respostas
-            if (!dataRes.ok || !diccRes.ok || !settingsRes.ok) {
-                throw new Error(`Fetch failed: data=${dataRes.status}, dicc=${diccRes.status}, settings=${settingsRes.status}`);
+            if (!dataRes.ok || !diccRes.ok) {
+                throw new Error(`Fetch failed: data=${dataRes.status}, dicc=${diccRes.status}`);
             }
             
             const userData = await dataRes.json();
             const diccionarioData = await diccRes.json();
-            const currentGlobalSettings = await settingsRes.json();
 
             let userArray = Object.values(userData.user);
             userArray = userArray.filter(u => u.total_damage && u.total_damage.total > 0);
 
             if (!userArray || userArray.length === 0) {
                 // NUNCA mostrar loading se há jogadores ativos (mesmo que array vazio agora)
-                loadingIndicator.style.display = 'none';
+                if (loadingIndicator) {
+                    loadingIndicator.style.display = 'none';
+                }
                 playerBarsContainer.style.display = 'none'; // Ocultar el contenedor de barras
                 updateSyncButtonState();
                 return;
             }
 
             // Se chegou aqui, tem dados - SEMPRE esconder loading
-            loadingIndicator.style.display = 'none'; // Ocultar el indicador de carga
+            if (loadingIndicator) {
+                loadingIndicator.style.display = 'none';
+            }
             playerBarsContainer.style.display = 'flex'; // Mostrar el contenedor de barras
 
             // Verificar se há players com nome temporário (Player XXXXX)
@@ -763,6 +789,7 @@ const professionMap = {
                 container.innerHTML = '<div id="message-display">Error de conexión...</div>';
             }
         } finally {
+            isFetchingData = false;
             updateSyncButtonState();
             updateWindowSize();
         }
@@ -793,7 +820,7 @@ const professionMap = {
                 fetchDataAndRender();
                 updateLogsUI();
             }
-        }, 70); // Atualização rápida para resposta imediata
+        }, UPDATE_INTERVAL_MS);
     }
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -868,19 +895,37 @@ const professionMap = {
         }
 
         // Carregar configurações salvas
-        loadAndApplySettings();
+        loadAndApplySettings().catch((err) => {
+            console.warn('Não foi possível carregar configurações iniciais:', err);
+        });
 
         // Escutar mudanças nas configurações
         if (window.electronAPI && window.electronAPI.onSettingsChanged) {
             window.electronAPI.onSettingsChanged((settings) => {
+                if (!settings) return;
+                localStorage.setItem('dpsMeterSettings', JSON.stringify(settings));
                 applySettings(settings);
+                applySavedMeterBackground();
             });
         }
     });
 
-    function loadAndApplySettings() {
-        const settings = JSON.parse(localStorage.getItem('dpsMeterSettings') || '{}');
+    async function loadAndApplySettings() {
+        let settings = JSON.parse(localStorage.getItem('dpsMeterSettings') || '{}');
+        try {
+            const response = await fetch('/api/settings');
+            if (response.ok) {
+                const payload = await response.json();
+                if (payload && payload.data) {
+                    settings = { ...settings, ...payload.data };
+                }
+            }
+        } catch (error) {
+            console.warn('Falha ao carregar configurações do servidor:', error);
+        }
+        localStorage.setItem('dpsMeterSettings', JSON.stringify(settings));
         applySettings(settings);
+        applySavedMeterBackground();
     }
 
     function applySettings(settings) {
@@ -950,3 +995,66 @@ const professionMap = {
         removeDebugText();
         setTimeout(removeDebugText, 500); // Reintentar después de 500ms
     });
+
+    function hexToRgba(hex, opacityPercent) {
+        if (!hex) return null;
+        let sanitized = hex.trim().replace('#', '');
+        if (sanitized.length === 3) {
+            sanitized = sanitized.split('').map(char => char + char).join('');
+        }
+        if (sanitized.length !== 6) return null;
+        const r = parseInt(sanitized.substring(0, 2), 16);
+        const g = parseInt(sanitized.substring(2, 4), 16);
+        const b = parseInt(sanitized.substring(4, 6), 16);
+        const alpha = Math.min(Math.max(typeof opacityPercent === 'number' ? opacityPercent : parseFloat(opacityPercent) || 0, 0), 100) / 100;
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+
+    function increaseRgbaAlpha(rgbaString, delta = 0.18) {
+        if (!rgbaString) return rgbaString;
+        const match = rgbaString.match(/rgba\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*([0-9.]+)\s*\)/i);
+        if (!match) return rgbaString;
+        const [, r, g, b, a] = match;
+        const boosted = Math.min(1, parseFloat(a) + delta);
+        return `rgba(${r}, ${g}, ${b}, ${boosted})`;
+    }
+
+    function setMeterBackground(value) {
+        const hasCustomColor = Boolean(value && value !== 'transparent');
+        if (hasCustomColor) {
+            document.documentElement.style.setProperty('--active-bg-color', value);
+            document.documentElement.style.setProperty('--window-bg-color', value);
+            document.documentElement.style.setProperty('--window-surface-color', increaseRgbaAlpha(value));
+        } else {
+            document.documentElement.style.removeProperty('--active-bg-color');
+            document.documentElement.style.removeProperty('--window-bg-color');
+            document.documentElement.style.removeProperty('--window-surface-color');
+        }
+    }
+
+    function applySavedMeterBackground() {
+        const settings = JSON.parse(localStorage.getItem('dpsMeterSettings') || '{}');
+        if (settings.customBgEnabled) {
+            const mainOpacity = typeof settings.mainOpacity === 'number' ? settings.mainOpacity : 20;
+            const rgba = hexToRgba(settings.meterColor || '#000000', mainOpacity);
+            setMeterBackground(rgba);
+        } else {
+            setMeterBackground('transparent');
+        }
+    }
+
+    // Listener para aplicar cores personalizadas
+    if (window.electronAPI && window.electronAPI.onApplyCustomColors) {
+        window.electronAPI.onApplyCustomColors((colorSettings = {}) => {
+            if (colorSettings.enabled) {
+                const mainOpacity = typeof colorSettings.mainOpacity === 'number' ? colorSettings.mainOpacity : 20;
+                const rgba = colorSettings.meterRgba || hexToRgba(colorSettings.meterColor, mainOpacity);
+                setMeterBackground(rgba);
+            } else {
+                setMeterBackground('transparent');
+            }
+        });
+        applySavedMeterBackground();
+    } else {
+        applySavedMeterBackground();
+    }

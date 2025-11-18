@@ -10,9 +10,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         :root {
-            --bg-primary: #1a1d29;
-            --bg-secondary: #252837;
-            --bg-tertiary: #2d3142;
+            --bg-primary: rgba(86, 144, 255, 0.2);
+            --bg-secondary: rgba(54, 79, 120, 0.45);
+            --bg-tertiary: rgba(35, 50, 88, 0.6);
             --text-primary: #e0e0e0;
             --text-secondary: #aaa;
             --accent-blue: #4fc3f7;
@@ -21,6 +21,12 @@
             --accent-yellow: #ffc107;
             --border-color: rgba(255, 255, 255, 0.1);
             --text-shadow: 0 0 2px rgba(0, 0, 0, 0.7), 0 0 4px rgba(0, 0, 0, 0.5);
+            --window-default-bg: rgba(86, 144, 255, 0.2);
+            --active-bg-color: transparent;
+            --window-shell-bg: var(--window-default-bg);
+            --window-panel-bg: rgba(54, 79, 120, 0.65);
+            --window-border-strong: rgba(255, 255, 255, 0.2);
+            --window-shadow: 0 18px 45px rgba(0, 0, 0, 0.45);
         }
 
         * {
@@ -37,19 +43,25 @@
             height: 100vh;
             display: flex;
             flex-direction: column;
+            padding: 12px;
         }
 
         .settings-container {
             display: flex;
             flex-direction: column;
-            height: 100vh;
-            background: linear-gradient(135deg, rgba(26, 29, 41, 0.95) 0%, rgba(37, 40, 55, 0.95) 100%);
+            height: 100%;
+            background: var(--window-shell-bg);
+            border-radius: 18px;
+            border: 1px solid var(--window-border-strong);
+            box-shadow: var(--window-shadow);
+            -webkit-backdrop-filter: blur(10px);
             backdrop-filter: blur(10px);
+            overflow: hidden;
         }
 
         /* Header igual à tela principal */
         header.controls {
-            background: rgba(26, 29, 41, 0.9);
+            background: transparent;
             padding: 8px 12px;
             display: flex;
             align-items: center;
@@ -105,7 +117,7 @@
         }
 
         .settings-section {
-            background: var(--bg-secondary);
+            background: var(--window-panel-bg, var(--bg-secondary));
             border: 1px solid var(--border-color);
             border-radius: 8px;
             padding: 20px;
@@ -157,6 +169,14 @@
             gap: 10px;
         }
 
+        .setting-item.conditional-setting {
+            display: none;
+        }
+
+        .setting-item.conditional-setting.visible {
+            display: flex;
+        }
+
         /* Toggle Switch */
         .toggle-switch {
             position: relative;
@@ -186,6 +206,74 @@
 
         .toggle-switch.active .toggle-switch-slider {
             transform: translateX(24px);
+        }
+
+        /* Color Picker */
+        input[type="color"] {
+            width: 60px;
+            height: 36px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            background: transparent;
+        }
+
+        input[type="color"]::-webkit-color-swatch-wrapper {
+            padding: 2px;
+        }
+
+        input[type="color"]::-webkit-color-swatch {
+            border: none;
+            border-radius: 6px;
+        }
+
+        /* Slider de transparência */
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            max-width: 250px;
+        }
+
+        .opacity-slider {
+            flex: 1;
+            height: 6px;
+            border-radius: 3px;
+            background: linear-gradient(to right, transparent 0%, var(--accent-blue) 100%);
+            outline: none;
+            cursor: pointer;
+            -webkit-appearance: none;
+        }
+
+        .opacity-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--accent-blue);
+            cursor: pointer;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .opacity-slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--accent-blue);
+            cursor: pointer;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .slider-value {
+            min-width: 45px;
+            text-align: right;
+            font-weight: 600;
+            color: var(--accent-blue);
+            font-size: 0.95rem;
         }
 
         /* Number Input */
@@ -361,6 +449,77 @@
                 </div>
             </div>
 
+            <!-- Seção de Aparência -->
+            <div class="settings-section">
+                <div class="settings-section-title">
+                    <i class="fa-solid fa-palette"></i>
+                    <span data-i18n="appearance">Aparência</span>
+                </div>
+                
+                <!-- Toggle de cor personalizada -->
+                <div class="setting-item">
+                    <div class="setting-label">
+                        <span class="setting-label-text" data-i18n="customBackground">Cor de Fundo Personalizada</span>
+                        <span class="setting-label-description" data-i18n="customBackgroundDesc">Ativar para escolher cores personalizadas para o medidor e janelas</span>
+                    </div>
+                    <div class="setting-control">
+                        <div class="toggle-switch" id="custom-bg-toggle">
+                            <div class="toggle-switch-slider"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Seletor de cor para o medidor -->
+                <div class="setting-item conditional-setting" id="meter-color-setting">
+                    <div class="setting-label">
+                        <span class="setting-label-text" data-i18n="meterColor">Cor do Medidor</span>
+                        <span class="setting-label-description" data-i18n="meterColorDesc">Escolha a cor de fundo do medidor (padrão: transparente)</span>
+                    </div>
+                    <div class="setting-control">
+                        <input type="color" id="meter-color-picker" value="#000000">
+                    </div>
+                </div>
+
+                <!-- Seletor de cor para janelas -->
+                <div class="setting-item conditional-setting" id="windows-color-setting">
+                    <div class="setting-label">
+                        <span class="setting-label-text" data-i18n="windowsColor">Cor das Janelas</span>
+                        <span class="setting-label-description" data-i18n="windowsColorDesc">Cor de fundo para Settings e Histórico (padrão: azul)</span>
+                    </div>
+                    <div class="setting-control">
+                        <input type="color" id="windows-color-picker" value="#4f8cff">
+                    </div>
+                </div>
+
+                <!-- Slider de transparência para tela principal -->
+                <div class="setting-item conditional-setting" id="main-opacity-setting">
+                    <div class="setting-label">
+                        <span class="setting-label-text" data-i18n="mainOpacity">Transparência - Medidor</span>
+                        <span class="setting-label-description" data-i18n="mainOpacityDesc">Ajustar transparência da tela principal (0% = transparente, 100% = opaco)</span>
+                    </div>
+                    <div class="setting-control">
+                        <div class="slider-container">
+                            <input type="range" id="main-opacity-slider" min="0" max="100" value="20" class="opacity-slider">
+                            <span id="main-opacity-value" class="slider-value">20%</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Slider de transparência para outras janelas -->
+                <div class="setting-item conditional-setting" id="windows-opacity-setting">
+                    <div class="setting-label">
+                        <span class="setting-label-text" data-i18n="windowsOpacity">Transparência - Settings/Histórico</span>
+                        <span class="setting-label-description" data-i18n="windowsOpacityDesc">Ajustar transparência das janelas de configuração e histórico</span>
+                    </div>
+                    <div class="setting-control">
+                        <div class="slider-container">
+                            <input type="range" id="windows-opacity-slider" min="0" max="100" value="20" class="opacity-slider">
+                            <span id="windows-opacity-value" class="slider-value">20%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Seção de Integração BPTimer -->
             <div class="settings-section">
                 <div class="settings-section-title">
@@ -370,11 +529,14 @@
                 <div class="setting-item">
                     <div class="setting-label">
                         <span class="setting-label-text" data-i18n="bptimerEnable">Contribuir com dados de Boss</span>
-                        <span class="setting-label-description" data-i18n="bptimerEnableDesc">Envia automaticamente HP de bosses para a comunidade BPTimer</span>
+                        <span class="setting-label-description" data-i18n="bptimerEnableDesc">Envia automaticamente HP de bosses para a comunidade BPTimer.</span>
+                        <div style="margin-top: 8px; padding: 8px 12px; background-color: #fff3cd; border-left: 3px solid #ffc107; font-size: 0.85em; color: #856404;">
+                            <strong>⚠️ AVISO:</strong> <span data-i18n="bptimerWarning">BPTimer pode não funcionar corretamente com ExitLag ou VPNs similares. Para melhor desempenho, desative a VPN temporariamente.</span>
+                        </div>
                     </div>
                     <div class="setting-control">
-                        <div class="toggle-switch active" id="bptimer-toggle">
-                            <div class="toggle-slider"></div>
+                        <div class="toggle-switch" id="bptimer-toggle">
+                            <div class="toggle-switch-slider"></div>
                         </div>
                     </div>
                 </div>
@@ -465,9 +627,21 @@
                 devSupportDesc: 'Este projeto é desenvolvido com ❤️ e é open-source',
                 devGithub: 'Visite no GitHub',
                 devStar: 'Dar uma ⭐ ajuda muito!',
+                appearance: 'Aparência',
+                customBackground: 'Cor de Fundo Personalizada',
+                customBackgroundDesc: 'Ativar para escolher cores personalizadas para o medidor e janelas',
+                meterColor: 'Cor do Medidor',
+                meterColorDesc: 'Escolha a cor de fundo do medidor (padrão: transparente)',
+                windowsColor: 'Cor das Janelas',
+                windowsColorDesc: 'Cor de fundo para Settings e Histórico (padrão: azul)',
+                mainOpacity: 'Transparência - Medidor',
+                mainOpacityDesc: 'Ajustar transparência da tela principal (0% = transparente, 100% = opaco)',
+                windowsOpacity: 'Transparência - Settings/Histórico',
+                windowsOpacityDesc: 'Ajustar transparência das janelas de configuração e histórico',
                 bptimerIntegration: 'Integração BPTimer',
                 bptimerEnable: 'Contribuir com dados de Boss',
-                bptimerEnableDesc: 'Envia automaticamente HP de bosses para a comunidade BPTimer'
+                bptimerEnableDesc: 'Envia automaticamente HP de bosses para a comunidade BPTimer.',
+                bptimerWarning: 'BPTimer pode não funcionar corretamente com ExitLag ou VPNs similares. Para melhor desempenho, desative a VPN temporariamente.'
             },
             'en': {
                 title: 'Settings',
@@ -494,9 +668,21 @@
                 devSupportDesc: 'This project is developed with ❤️ and is open-source',
                 devGithub: 'Visit on GitHub',
                 devStar: 'Giving a ⭐ helps a lot!',
+                appearance: 'Appearance',
+                customBackground: 'Custom Background Color',
+                customBackgroundDesc: 'Enable to choose custom colors for meter and windows',
+                meterColor: 'Meter Color',
+                meterColorDesc: 'Choose background color for the meter (default: transparent)',
+                windowsColor: 'Windows Color',
+                windowsColorDesc: 'Background color for Settings and History (default: blue)',
+                mainOpacity: 'Transparency - Meter',
+                mainOpacityDesc: 'Adjust main window transparency (0% = transparent, 100% = opaque)',
+                windowsOpacity: 'Transparency - Settings/History',
+                windowsOpacityDesc: 'Adjust settings and history windows transparency',
                 bptimerIntegration: 'BPTimer Integration',
                 bptimerEnable: 'Contribute Boss Data',
-                bptimerEnableDesc: 'Automatically sends boss HP data to BPTimer community'
+                bptimerEnableDesc: 'Automatically sends boss HP data to BPTimer community.',
+                bptimerWarning: 'BPTimer may not work properly with ExitLag or similar VPNs. For best performance, temporarily disable the VPN.'
             },
             'es': {
                 title: 'Configuración',
@@ -523,9 +709,21 @@
                 devSupportDesc: 'Este proyecto es desarrollado con ❤️ y es open-source',
                 devGithub: 'Visitar en GitHub',
                 devStar: '¡Dar una ⭐ ayuda mucho!',
+                appearance: 'Apariencia',
+                customBackground: 'Color de Fondo Personalizado',
+                customBackgroundDesc: 'Activar para elegir colores personalizados para el medidor y ventanas',
+                meterColor: 'Color del Medidor',
+                meterColorDesc: 'Elegir color de fondo para el medidor (predeterminado: transparente)',
+                windowsColor: 'Color de Ventanas',
+                windowsColorDesc: 'Color de fondo para Ajustes e Historial (predeterminado: azul)',
+                mainOpacity: 'Transparencia - Medidor',
+                mainOpacityDesc: 'Ajustar transparencia de la pantalla principal (0% = transparente, 100% = opaco)',
+                windowsOpacity: 'Transparencia - Ajustes/Historial',
+                windowsOpacityDesc: 'Ajustar transparencia de las ventanas de configuración e historial',
                 bptimerIntegration: 'Integración BPTimer',
                 bptimerEnable: 'Contribuir con datos de Boss',
-                bptimerEnableDesc: 'Envía automáticamente HP de jefes a la comunidad BPTimer'
+                bptimerEnableDesc: 'Envía automáticamente HP de jefes a la comunidad BPTimer.',
+                bptimerWarning: 'BPTimer puede no funcionar correctamente con ExitLag o VPNs similares. Para un mejor rendimiento, desactive temporalmente la VPN.'
             }
         };
 
@@ -542,26 +740,146 @@
             });
         }
 
-        // Carregar configurações salvas
-        function loadSettings() {
-            const settings = JSON.parse(localStorage.getItem('dpsMeterSettings') || '{}');
-            
-            // Aplicar tamanho da lista
-            const maxPlayers = settings.maxPlayers || 6;
-            document.getElementById('max-players-input').value = maxPlayers;
-            
-            // Aplicar reset rápido
-            const fastReset = settings.fastReset || false;
-            const fastResetToggle = document.getElementById('fast-reset-toggle');
-            if (fastReset) fastResetToggle.classList.add('active');
-            
-            // Aplicar configurações do BPTimer
-            const bptimerEnabled = settings.bptimerEnabled !== false; // Default: true
-            const bptimerToggle = document.getElementById('bptimer-toggle');
-            if (bptimerEnabled) {
-                bptimerToggle.classList.add('active');
+        function clamp(value, min, max) {
+            if (isNaN(value)) return min;
+            return Math.min(Math.max(value, min), max);
+        }
+
+        function hexToRgba(hex, opacityPercent) {
+            if (!hex) return null;
+            let sanitized = hex.trim().replace('#', '');
+            if (sanitized.length === 3) {
+                sanitized = sanitized.split('').map(char => char + char).join('');
+            }
+            if (sanitized.length !== 6) return null;
+            const r = parseInt(sanitized.substring(0, 2), 16);
+            const g = parseInt(sanitized.substring(2, 4), 16);
+            const b = parseInt(sanitized.substring(4, 6), 16);
+            const alpha = clamp(typeof opacityPercent === 'number' ? opacityPercent : parseFloat(opacityPercent), 0, 100) / 100;
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        }
+
+        function increaseRgbaAlpha(rgbaString, delta = 0.2) {
+            if (!rgbaString) return rgbaString;
+            const match = rgbaString.match(/rgba\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*([0-9.]+)\s*\)/i);
+            if (!match) return rgbaString;
+            const [, r, g, b, a] = match;
+            const boosted = Math.min(1, parseFloat(a) + delta);
+            return `rgba(${r}, ${g}, ${b}, ${boosted})`;
+        }
+
+        function setSettingsBackground(value) {
+            const hasColor = Boolean(value && value !== 'transparent');
+            if (hasColor) {
+                document.documentElement.style.setProperty('--active-bg-color', value);
+                document.documentElement.style.setProperty('--window-shell-bg', value);
+                document.documentElement.style.setProperty('--window-panel-bg', increaseRgbaAlpha(value));
             } else {
-                bptimerToggle.classList.remove('active');
+                document.documentElement.style.removeProperty('--active-bg-color');
+                document.documentElement.style.removeProperty('--window-shell-bg');
+                document.documentElement.style.removeProperty('--window-panel-bg');
+            }
+        }
+
+        function applySettingsToUI(settings = {}) {
+            const maxPlayers = settings.maxPlayers ?? 6;
+            document.getElementById('max-players-input').value = maxPlayers;
+
+            const fastReset = settings.fastReset || settings.fastServerChangeDetection || false;
+            const fastResetToggle = document.getElementById('fast-reset-toggle');
+            fastResetToggle.classList.toggle('active', Boolean(fastReset));
+
+            const bptimerEnabled = settings.bptimerEnabled === true;
+            const bptimerToggle = document.getElementById('bptimer-toggle');
+            bptimerToggle.classList.toggle('active', bptimerEnabled);
+
+            const customBgEnabled = settings.customBgEnabled === true;
+            const customBgToggle = document.getElementById('custom-bg-toggle');
+            customBgToggle.classList.toggle('active', customBgEnabled);
+            if (customBgEnabled) {
+                showCustomColorSettings();
+            } else {
+                hideCustomColorSettings();
+            }
+
+            const meterColor = settings.meterColor || '#000000';
+            const windowsColor = settings.windowsColor || '#4f8cff';
+            const mainOpacity = settings.mainOpacity !== undefined ? settings.mainOpacity : 20;
+            const windowsOpacity = settings.windowsOpacity !== undefined ? settings.windowsOpacity : 20;
+
+            document.getElementById('meter-color-picker').value = meterColor;
+            document.getElementById('windows-color-picker').value = windowsColor;
+            document.getElementById('main-opacity-slider').value = mainOpacity;
+            document.getElementById('main-opacity-value').textContent = mainOpacity + '%';
+            document.getElementById('windows-opacity-slider').value = windowsOpacity;
+            document.getElementById('windows-opacity-value').textContent = windowsOpacity + '%';
+
+            applyCustomColors();
+        }
+
+        // Carregar configurações salvas
+        async function loadSettings() {
+            const fallback = JSON.parse(localStorage.getItem('dpsMeterSettings') || '{}');
+            let settings = { ...fallback };
+            try {
+                const response = await fetch('/api/settings');
+                if (response.ok) {
+                    const payload = await response.json();
+                    if (payload && payload.data) {
+                        settings = { ...settings, ...payload.data };
+                    }
+                }
+            } catch (error) {
+                console.warn('Falha ao buscar settings salvas:', error);
+            }
+            localStorage.setItem('dpsMeterSettings', JSON.stringify(settings));
+            applySettingsToUI(settings);
+        }
+        
+        // Mostrar/ocultar configurações de cor
+        function showCustomColorSettings() {
+            document.getElementById('meter-color-setting').classList.add('visible');
+            document.getElementById('windows-color-setting').classList.add('visible');
+            document.getElementById('main-opacity-setting').classList.add('visible');
+            document.getElementById('windows-opacity-setting').classList.add('visible');
+        }
+        
+        function hideCustomColorSettings() {
+            document.getElementById('meter-color-setting').classList.remove('visible');
+            document.getElementById('windows-color-setting').classList.remove('visible');
+            document.getElementById('main-opacity-setting').classList.remove('visible');
+            document.getElementById('windows-opacity-setting').classList.remove('visible');
+        }
+        
+        // Aplicar cores personalizadas
+        function applyCustomColors() {
+            const settings = JSON.parse(localStorage.getItem('dpsMeterSettings') || '{}');
+            const customBgEnabled = settings.customBgEnabled === true;
+            const mainOpacity = typeof settings.mainOpacity === 'number' ? settings.mainOpacity : 20;
+            const windowsOpacity = typeof settings.windowsOpacity === 'number' ? settings.windowsOpacity : 20;
+            const meterColorHex = settings.meterColor || '#000000';
+            const windowsColorHex = settings.windowsColor || '#4f8cff';
+            const meterRgba = hexToRgba(meterColorHex, mainOpacity);
+            const windowsRgba = hexToRgba(windowsColorHex, windowsOpacity);
+
+            if (customBgEnabled) {
+                setSettingsBackground(windowsRgba || windowsColorHex);
+            } else {
+                setSettingsBackground(null);
+            }
+
+            if (window.electronAPI && window.electronAPI.send) {
+                window.electronAPI.send('apply-custom-colors', customBgEnabled ? {
+                    meterColor: meterColorHex,
+                    windowsColor: windowsColorHex,
+                    mainOpacity,
+                    windowsOpacity,
+                    meterRgba,
+                    windowsRgba,
+                    enabled: true
+                } : {
+                    enabled: false
+                });
             }
         }
 
@@ -570,11 +888,22 @@
             const maxPlayers = parseInt(document.getElementById('max-players-input').value);
             const fastReset = document.getElementById('fast-reset-toggle').classList.contains('active');
             const bptimerEnabled = document.getElementById('bptimer-toggle').classList.contains('active');
+            const customBgEnabled = document.getElementById('custom-bg-toggle').classList.contains('active');
+            const meterColor = document.getElementById('meter-color-picker').value;
+            const windowsColor = document.getElementById('windows-color-picker').value;
+            const mainOpacity = parseInt(document.getElementById('main-opacity-slider').value);
+            const windowsOpacity = parseInt(document.getElementById('windows-opacity-slider').value);
             
             const settings = {
-                maxPlayers: maxPlayers,
-                fastReset: fastReset,
-                bptimerEnabled: bptimerEnabled
+                maxPlayers,
+                fastReset,
+                fastServerChangeDetection: fastReset,
+                bptimerEnabled,
+                customBgEnabled,
+                meterColor,
+                windowsColor,
+                mainOpacity,
+                windowsOpacity
             };
             
             // Salvar no localStorage
@@ -582,27 +911,33 @@
             
             // Salvar no backend (globalSettings + BPTimer)
             try {
-                await fetch('/api/settings', {
+                const response = await fetch('/api/settings', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        fastServerChangeDetection: fastReset,
-                        bptimerEnabled: bptimerEnabled
-                    })
+                    body: JSON.stringify(settings)
                 });
+                if (response.ok) {
+                    const payload = await response.json();
+                    if (payload && payload.data) {
+                        localStorage.setItem('dpsMeterSettings', JSON.stringify(payload.data));
+                    }
+                }
             } catch (error) {
                 console.error('Erro ao salvar configurações no backend:', error);
             }
             
+            // Aplicar cores
+            applyCustomColors();
+            
             // Notificar janela principal sobre mudanças
             if (window.electronAPI) {
-                window.electronAPI.settingsChanged(settings);
+                window.electronAPI.settingsChanged(JSON.parse(localStorage.getItem('dpsMeterSettings') || JSON.stringify(settings)));
             }
         }
 
         // Event Listeners
         document.addEventListener('DOMContentLoaded', () => {
-            loadSettings();
+            loadSettings().catch((error) => console.warn('Erro ao carregar configurações:', error));
 
             // Fechar janela
             const closeButton = document.getElementById('close-button');
@@ -666,9 +1001,39 @@
             document.querySelectorAll('.toggle-switch').forEach(toggle => {
                 toggle.addEventListener('click', () => {
                     toggle.classList.toggle('active');
+                    
+                    // Se for o toggle de cor personalizada, mostrar/ocultar configurações
+                    if (toggle.id === 'custom-bg-toggle') {
+                        if (toggle.classList.contains('active')) {
+                            showCustomColorSettings();
+                        } else {
+                            hideCustomColorSettings();
+                        }
+                    }
+                    
                     saveSettings();
                 });
             });
+            
+            // Seletores de cor
+            document.getElementById('meter-color-picker').addEventListener('change', saveSettings);
+            document.getElementById('windows-color-picker').addEventListener('change', saveSettings);
+            
+            // Sliders de transparência
+            const mainOpacitySlider = document.getElementById('main-opacity-slider');
+            const mainOpacityValue = document.getElementById('main-opacity-value');
+            const windowsOpacitySlider = document.getElementById('windows-opacity-slider');
+            const windowsOpacityValue = document.getElementById('windows-opacity-value');
+            
+            mainOpacitySlider.addEventListener('input', () => {
+                mainOpacityValue.textContent = mainOpacitySlider.value + '%';
+            });
+            mainOpacitySlider.addEventListener('change', saveSettings);
+            
+            windowsOpacitySlider.addEventListener('input', () => {
+                windowsOpacityValue.textContent = windowsOpacitySlider.value + '%';
+            });
+            windowsOpacitySlider.addEventListener('change', saveSettings);
 
             // Limpar histórico
             document.getElementById('clear-history-button').addEventListener('click', async () => {

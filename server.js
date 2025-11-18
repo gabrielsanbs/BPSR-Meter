@@ -1,5 +1,13 @@
 // Carregar variáveis de ambiente do .env (se existir)
-require('dotenv').config();
+const path = require('path');
+const isDevelopment = process.env.NODE_ENV !== 'production';
+
+// Em produção (app empacotado), o .env está na raiz do app.asar ou em resources/app/
+const envPath = isDevelopment 
+    ? path.join(__dirname, '.env')
+    : path.join(process.resourcesPath || __dirname, '.env');
+
+require('dotenv').config({ path: envPath });
 
 // Capturar erros não tratados antes de importar módulos
 process.on('uncaughtException', (error) => {
@@ -17,13 +25,12 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 // Importar dependências com verificação
-let winston, readline, path, fsPromises, express, http, Server, zlib;
+let winston, readline, fsPromises, express, http, Server, zlib;
 let UserDataManager, Sniffer, initializeApi, PacketProcessor;
 
 try {
     winston = require('winston');
     readline = require('readline');
-    path = require('path');
     fsPromises = require('fs').promises;
     express = require('express');
     http = require('http');
@@ -64,7 +71,14 @@ let globalSettings = {
     isPaused: false, // Añadir estado de pausa global
     autoResetOnFightEnd: false, // Reset automático ao fim de cada luta
     enableFightHistory: true, // Habilitar histórico de lutas
-    bptimerEnabled: true, // BPTimer habilitado por padrão
+    bptimerEnabled: false, // BPTimer desabilitado por padrão (requer .env)
+    fastServerChangeDetection: false,
+    maxPlayers: 6,
+    customBgEnabled: false,
+    meterColor: '#000000',
+    windowsColor: '#4f8cff',
+    mainOpacity: 20,
+    windowsOpacity: 20,
 };
 
 let server_port;
@@ -83,16 +97,28 @@ function ask(question) {
 }
 
 async function main() {
+    // Usar diretório userData do Electron (passado via env) ou cwd como fallback
+    const dataDir = process.env.BPSR_USER_DATA_DIR || process.cwd();
+    
     const logger = winston.createLogger({
-        level: 'info',
+        level: 'debug', // Alterado de 'info' para 'debug' para capturar mensagens debug
         format: winston.format.combine(
-            winston.format.colorize({ all: true }),
             winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
             winston.format.printf((info) => {
                 return `[${info.timestamp}] [${info.level}] ${info.message}`;
             }),
         ),
-        transports: [new winston.transports.Console()],
+        transports: [
+            // Console - electron-main.js captura stdout/stderr e salva em iniciar_log.txt
+            new winston.transports.Console({
+                format: winston.format.combine(
+                    winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+                    winston.format.printf((info) => {
+                        return `[${info.timestamp}] [${info.level}] ${info.message}`;
+                    }),
+                )
+            })
+        ],
     });
 
     console.clear();
@@ -107,7 +133,6 @@ async function main() {
     // Usar diretório userData do Electron (passado via env) ou cwd como fallback
     // IMPORTANTE: userData (%APPDATA%/bpsr-meter) persiste entre atualizações
     // process.cwd() seria deletado durante updates!
-    const dataDir = process.env.BPSR_USER_DATA_DIR || process.cwd();
     logger.info(`Diretório de dados: ${dataDir}`);
     
     // SETTINGS_PATH agora usa o mesmo diretório de dados do usuário
@@ -169,7 +194,7 @@ async function main() {
         if (!globalSettings.isPaused) {
             userDataManager.updateAllRealtimeDps();
         }
-    }, 100); // Otimizado: 100ms → 250ms (reduz uso de CPU em 60%)
+    }, 150); // Atualiza ~4x por segundo, reduzindo carga de CPU sem perder responsividade
 
     if (server_port === undefined || server_port === null) {
         server_port = 8989;

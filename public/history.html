@@ -11,7 +11,7 @@
     <script src="/socket.io/socket.io.js"></script>
     <style>
         :root {
-            --bg-primary: #1a1d29;
+            --bg-primary: rgba(86, 144, 255, 0.2);
             --bg-secondary: #252837;
             --text-primary: #e0e0e0;
             --text-secondary: #aaa;
@@ -19,6 +19,11 @@
             --accent-green: #28a745;
             --accent-red: #dc3545;
             --border-color: rgba(255, 255, 255, 0.1);
+            --active-bg-color: transparent;
+            --window-shell-bg: rgba(86, 144, 255, 0.18);
+            --window-panel-bg: rgba(38, 44, 69, 0.85);
+            --window-border-strong: rgba(255, 255, 255, 0.18);
+            --window-shadow: 0 18px 45px rgba(0, 0, 0, 0.45);
         }
 
         * {
@@ -29,17 +34,31 @@
 
         body {
             font-family: 'Inter', sans-serif;
-            background: var(--bg-primary);
+            background: transparent;
             color: var(--text-primary);
             overflow-x: hidden;
             height: 100vh;
             display: flex;
             flex-direction: column;
+            padding: 12px;
+        }
+
+        .history-window {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--window-shell-bg);
+            border-radius: 18px;
+            border: 1px solid var(--window-border-strong);
+            box-shadow: var(--window-shadow);
+            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px);
+            overflow: hidden;
         }
 
         /* Header com estilo da tela principal */
         header.controls {
-            background: rgba(26, 29, 41, 0.9);
+            background: transparent;
             padding: 8px 12px;
             display: flex;
             align-items: center;
@@ -127,7 +146,7 @@
         }
 
         .fight-item {
-            background: var(--bg-secondary);
+            background: var(--window-panel-bg, var(--bg-secondary));
             border: 1px solid var(--border-color);
             border-radius: 8px;
             padding: 15px;
@@ -176,7 +195,7 @@
         }
 
         .fight-details-header {
-            background: var(--bg-secondary);
+            background: var(--window-panel-bg, var(--bg-secondary));
             padding: 20px;
             border-radius: 8px;
             margin-bottom: 20px;
@@ -204,7 +223,7 @@
         }
         
         .player-bar { 
-            background-color: rgba(26, 29, 41, 0.6); 
+            background-color: var(--window-panel-bg, rgba(26, 29, 41, 0.6)); 
             border-radius: 8px; 
             height: 55px; 
             position: relative; 
@@ -341,6 +360,7 @@
     </style>
 </head>
 <body>
+    <div class="history-window">
     <!-- Header similar à tela principal -->
     <header class="controls" style="padding: 8px 12px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border-color); background: rgba(26, 29, 41, 0.9);">
         <div style="position: relative; width: 32px; height: 32px; margin-right: 10px;">
@@ -377,6 +397,7 @@
     <div class="content">
         <div id="fight-list-container"></div>
         <div id="fight-details-container" style="display: none;"></div>
+    </div>
     </div>
 
     <script>
@@ -491,6 +512,34 @@
                 el.textContent = t(key);
             });
             document.title = t('titleBar');
+        }
+
+        function clamp(value, min, max) {
+            if (isNaN(value)) return min;
+            return Math.min(Math.max(value, min), max);
+        }
+
+        function hexToRgba(hex, opacityPercent) {
+            if (!hex) return null;
+            let sanitized = hex.trim().replace('#', '');
+            if (sanitized.length === 3) {
+                sanitized = sanitized.split('').map(char => char + char).join('');
+            }
+            if (sanitized.length !== 6) return null;
+            const r = parseInt(sanitized.substring(0, 2), 16);
+            const g = parseInt(sanitized.substring(2, 4), 16);
+            const b = parseInt(sanitized.substring(4, 6), 16);
+            const alpha = clamp(typeof opacityPercent === 'number' ? opacityPercent : parseFloat(opacityPercent), 0, 100) / 100;
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        }
+
+        function increaseRgbaAlpha(rgbaString, delta = 0.18) {
+            if (!rgbaString) return rgbaString;
+            const match = rgbaString.match(/rgba\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*([0-9.]+)\s*\)/i);
+            if (!match) return rgbaString;
+            const [, r, g, b, a] = match;
+            const boosted = Math.min(1, parseFloat(a) + delta);
+            return `rgba(${r}, ${g}, ${b}, ${boosted})`;
         }
 
         function minimizeHistoryWindow() {
@@ -804,6 +853,46 @@
                     loadFightList();
                 }
             });
+        }
+
+        function setHistoryBackground(value) {
+            const hasColor = Boolean(value && value !== 'transparent');
+            if (hasColor) {
+                document.documentElement.style.setProperty('--active-bg-color', value);
+                document.documentElement.style.setProperty('--window-shell-bg', value);
+                document.documentElement.style.setProperty('--window-panel-bg', increaseRgbaAlpha(value));
+            } else {
+                document.documentElement.style.removeProperty('--active-bg-color');
+                document.documentElement.style.removeProperty('--window-shell-bg');
+                document.documentElement.style.removeProperty('--window-panel-bg');
+            }
+        }
+
+        function applySavedHistoryBackground() {
+            const settings = JSON.parse(localStorage.getItem('dpsMeterSettings') || '{}');
+            if (settings.customBgEnabled) {
+                const windowsOpacity = typeof settings.windowsOpacity === 'number' ? settings.windowsOpacity : 20;
+                const rgba = hexToRgba(settings.windowsColor || '#4f8cff', windowsOpacity);
+                setHistoryBackground(rgba || settings.windowsColor);
+            } else {
+                setHistoryBackground(null);
+            }
+        }
+
+        // Listener para aplicar cores personalizadas
+        if (window.electronAPI && window.electronAPI.onApplyCustomColors) {
+            window.electronAPI.onApplyCustomColors((colorSettings = {}) => {
+                if (colorSettings.enabled) {
+                    const windowsOpacity = typeof colorSettings.windowsOpacity === 'number' ? colorSettings.windowsOpacity : 20;
+                    const rgba = colorSettings.windowsRgba || hexToRgba(colorSettings.windowsColor, windowsOpacity);
+                    setHistoryBackground(rgba || colorSettings.windowsColor);
+                } else {
+                    setHistoryBackground(null);
+                }
+            });
+            applySavedHistoryBackground();
+        } else {
+            applySavedHistoryBackground();
         }
 
         // Inicializar quando o documento estiver pronto

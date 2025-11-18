@@ -27,7 +27,13 @@ let serverProcess;
 let server_port = 8989; // Porta inicial
 let serverUrl = ''; // URL do servidor
 let isLocked = false; // Estado inicial do cadeado: desbloqueado
+let lastColorSettings = null; // Últimas cores aplicadas
 logToFile('==== INÍCIO DO ELECTRON ====');
+
+function sendCustomColorsToWindow(win, colorSettings) {
+    if (!win || win.isDestroyed() || !colorSettings) return;
+    win.webContents.send('apply-custom-colors', colorSettings);
+}
 
 // Força a janela a se comportar como overlay mesmo sobre apps em tela cheia
 function promoteOverlayWindow(win, { focus = false } = {}) {
@@ -137,8 +143,18 @@ function promoteOverlayWindow(win, { focus = false } = {}) {
             promoteOverlayWindow(mainWindow, { focus: true });
         });
 
-        mainWindow.on('show', () => promoteOverlayWindow(mainWindow));
-        mainWindow.on('focus', () => promoteOverlayWindow(mainWindow));
+        mainWindow.on('show', () => {
+            promoteOverlayWindow(mainWindow);
+            if (lastColorSettings) {
+                sendCustomColorsToWindow(mainWindow, lastColorSettings);
+            }
+        });
+        mainWindow.on('focus', () => {
+            promoteOverlayWindow(mainWindow);
+            if (lastColorSettings) {
+                sendCustomColorsToWindow(mainWindow, lastColorSettings);
+            }
+        });
         mainWindow.on('restore', () => promoteOverlayWindow(mainWindow, { focus: true }));
 
         // Iniciar o servidor Node.js, passando a porta como argumento
@@ -544,9 +560,13 @@ function promoteOverlayWindow(win, { focus = false } = {}) {
             if (isLocked) {
                 // Quando TRAVADO: começar ignorando eventos (cliques passam pro jogo)
                 mainWindow.setIgnoreMouseEvents(true, { forward: true });
+                mainWindow.setFocusable(false); // evitar que o Windows aplique sombra/fundo ao perder foco
+                mainWindow.blur();
             } else {
                 // Quando DESTRAVADO: processar todos os eventos normalmente
                 mainWindow.setIgnoreMouseEvents(false);
+                mainWindow.setFocusable(true);
+                mainWindow.focus();
             }
             
             promoteOverlayWindow(mainWindow);
@@ -625,6 +645,9 @@ function promoteOverlayWindow(win, { focus = false } = {}) {
     // Enviar el estado inicial del candado al renderizador una vez que la ventana esté lista
     mainWindow.webContents.on('did-finish-load', () => {
         mainWindow.webContents.send('lock-state-changed', isLocked);
+        if (lastColorSettings) {
+            sendCustomColorsToWindow(mainWindow, lastColorSettings);
+        }
     });
 
     // Manejar el evento para abrir la ventana de histórico
@@ -637,20 +660,35 @@ function promoteOverlayWindow(win, { focus = false } = {}) {
         historyWindow = new BrowserWindow({
             width: 1000,
             height: 700,
-            transparent: false,
+            transparent: true,
             frame: false, // Remove menu bar e bordas
             alwaysOnTop: true,
             resizable: true,
+            backgroundColor: '#00000000',
+            hasShadow: false,
             webPreferences: {
                 preload: path.join(__dirname, 'preload.js'), // ADICIONAR preload para IPC funcionar
                 nodeIntegration: false,
                 contextIsolation: true,
+                backgroundThrottling: false,
             },
             icon: path.join(__dirname, 'icon.ico'),
             title: 'Histórico de Lutas - BPSR Meter'
         });
 
         historyWindow.loadURL(`${serverUrl}/history.html`);
+
+        historyWindow.webContents.on('did-finish-load', () => {
+            if (lastColorSettings) {
+                sendCustomColorsToWindow(historyWindow, lastColorSettings);
+            }
+        });
+
+        historyWindow.on('focus', () => {
+            if (lastColorSettings) {
+                sendCustomColorsToWindow(historyWindow, lastColorSettings);
+            }
+        });
 
         historyWindow.on('closed', () => {
             historyWindow = null;
@@ -711,6 +749,18 @@ function promoteOverlayWindow(win, { focus = false } = {}) {
 
         settingsWindow.loadURL(`${serverUrl}/settings.html`);
 
+        settingsWindow.webContents.on('did-finish-load', () => {
+            if (lastColorSettings) {
+                sendCustomColorsToWindow(settingsWindow, lastColorSettings);
+            }
+        });
+
+        settingsWindow.on('focus', () => {
+            if (lastColorSettings) {
+                sendCustomColorsToWindow(settingsWindow, lastColorSettings);
+            }
+        });
+
         settingsWindow.on('closed', () => {
             settingsWindow = null;
         });
@@ -721,6 +771,14 @@ function promoteOverlayWindow(win, { focus = false } = {}) {
         if (mainWindow && !mainWindow.isDestroyed()) {
             mainWindow.webContents.send('settings-changed', settings);
         }
+    });
+
+    // Aplicar cores personalizadas em todas as janelas
+    ipcMain.on('apply-custom-colors', (event, colorSettings) => {
+        lastColorSettings = colorSettings;
+        sendCustomColorsToWindow(mainWindow, colorSettings);
+        sendCustomColorsToWindow(historyWindow, colorSettings);
+        sendCustomColorsToWindow(settingsWindow, colorSettings);
     });
 
     // Abrir URL externa no navegador padrão

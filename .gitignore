@@ -13,6 +13,12 @@ dist/logs/
 # Environment variables
 .env
 
+# Key and cert files
+*.pem
+*.key
+*.p12
+*.jks
+
 # Misc
 .npmrc
 pnpm-lock.yaml

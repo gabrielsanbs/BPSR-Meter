@@ -101,6 +101,7 @@ const NotifyMethod = {
 const AttrType = {
     AttrName: 0x01,
     AttrId: 0x0a,
+    AttrPos: 0x1e,
     AttrProfessionId: 0xdc,
     AttrFightPoint: 0x272e,
     AttrLevel: 0x2710,
@@ -226,6 +227,26 @@ const getDamageSource = (damageSource) => {
     }
 };
 
+// IDs permitidos para enviar a BPTimer (whitelist baseada em MOB_MAPPING do bptimer-api-client)
+const ALLOWED_BPTIMER_MOB_IDS = new Set([
+    10007, 10009, 10010, 10018, 10029, 10032, 10056, 10059, 10069,
+    10077, 10081, 10084, 10085, 10086, 10900, 10901, 10902, 10903, 10904
+]);
+
+const toSafeNumber = (value) => {
+    if (value === null || value === undefined) return 0;
+    if (typeof value === 'number') return value;
+    if (typeof value === 'bigint') return Number(value);
+    if (Long.isLong && Long.isLong(value)) {
+        return value.toNumber();
+    }
+    if (typeof value === 'object' && typeof value.toNumber === 'function') {
+        return value.toNumber();
+    }
+    const numeric = Number(value);
+    return Number.isNaN(numeric) ? 0 : numeric;
+};
+
 const isUuidPlayer = (uuid) => {
     return (uuid.toBigInt() & 0xffffn) === 640n;
 };
@@ -258,6 +279,7 @@ class PacketProcessor {
     constructor({ logger, userDataManager }) {
         this.logger = logger;
         this.userDataManager = userDataManager;
+        this.currentSceneSignature = '';
     }
 
     _decompressPayload(buffer) {
@@ -278,10 +300,10 @@ class PacketProcessor {
         targetUuid = targetUuid.shiftRight(16);
 
         const attrCollection = aoiSyncDelta.Attrs;
-        if (attrCollection && attrCollection.Attrs) {
+        if (attrCollection && (attrCollection.Attrs || attrCollection.MapAttrs)) {
             if (isTargetPlayer) {
                 const playerUid = targetUuid.toNumber();
-                this._processPlayerAttrs(playerUid, attrCollection.Attrs);
+                this._processPlayerAttrs(playerUid, attrCollection);
                 
                 // Tentar obter nome do playerMap se não veio nos atributos
                 const uidStr = String(playerUid);
@@ -293,8 +315,8 @@ class PacketProcessor {
                         this.userDataManager.setName(playerUid, nameFromPlayerMap);
                     }
                 }
-            } else if (isTargetMonster) {
-                this._processEnemyAttrs(targetUuid.toNumber(), attrCollection.Attrs);
+            } else if (isTargetMonster && attrCollection.Attrs) {
+                this._processEnemyAttrs(targetUuid.toString(), targetUuid.toNumber(), attrCollection.Attrs);
             }
         }
 
@@ -354,22 +376,34 @@ class PacketProcessor {
                 }
             } else {
                 //非玩家目标
-                if (isHeal) {
-                    //非玩家被治疗
-                } else {
-                    //非玩家受到伤害
+                if (!isHeal) {
+                    const enemyUid = targetUuid.toNumber();
+                    const enemyUuidStr = targetUuid.toString();
+                    const maxHp = this.userDataManager.enemyCache.maxHp.get(enemyUuidStr);
+                    const monsterId = this.userDataManager.enemyCache.attrId.get(enemyUuidStr);
+                    
+                    // Detectar morte do boss
+                    if (isDead && monsterId && ALLOWED_BPTIMER_MOB_IDS.has(monsterId) && maxHp && maxHp > 0) {
+                        this.userDataManager.enemyCache.hp.set(enemyUuidStr, 0);
+                        this.userDataManager.enemyCache.hp_pct.set(enemyUuidStr, 0);
+                        this.userDataManager.reportBossHP(enemyUuidStr, monsterId, 0, maxHp);
+                    }
+
                     if (isAttackerPlayer) {
+                        const hpLossForStatsSource = hpLessenValue && !hpLessenValue.isZero() ? hpLessenValue : damage;
+                        const hpLossForStats = Math.abs(toSafeNumber(hpLossForStatsSource));
+
                         //只记录玩家造成的伤害
                         this.userDataManager.addDamage(
                             attackerUuid.toNumber(),
                             skillId,
                             damageElement,
-                            damage.toNumber(),
+                            toSafeNumber(damage),
                             isCrit,
                             isLucky,
                             isCauseLucky,
-                            hpLessenValue.toNumber(),
-                            targetUuid.toNumber(),
+                            hpLossForStats,
+                            enemyUid,
                         );
                     }
                 }
@@ -479,17 +513,19 @@ class PacketProcessor {
             const charBase = vData.CharBase;
 
             if (charBase.Name) {
-                this.logger.debug(`_processSyncContainerData: Setting player name for UID ${playerUid}: ${charBase.Name}`);
                 this.userDataManager.setName(playerUid, charBase.Name);
             }
 
             if (charBase.FightPoint) this.userDataManager.setFightPoint(playerUid, charBase.FightPoint);
 
+            if (vData.SceneData) {
+                this._handleSceneDataChange(vData.SceneData);
+            }
+
             if (!vData.ProfessionList) return;
             const professionList = vData.ProfessionList;
             if (professionList.CurProfessionId) {
                 const professionName = getProfessionNameFromId(professionList.CurProfessionId);
-                this.logger.debug(`_processSyncContainerData: Setting profession for UID ${playerUid}: ${professionName}`);
                 this.userDataManager.setProfession(playerUid, professionName);
             }
         } catch (err) {
@@ -499,12 +535,144 @@ class PacketProcessor {
         }
     }
 
+    _handleSceneDataChange(sceneData) {
+        const sceneInfo = this._normalizeSceneInfo(sceneData);
+        if (!sceneInfo) return;
+
+        const newSignature = this._buildSceneSignature(sceneInfo);
+        if (!newSignature || newSignature === this.currentSceneSignature) {
+            return;
+        }
+
+        this.currentSceneSignature = newSignature;
+        const lineLabel = sceneInfo.lineId || sceneInfo.channelId || 'n/a';
+        this.logger.info(`SceneData change detectado (map=${sceneInfo.mapId || 0}, level=${sceneInfo.levelMapId || 0}, line=${lineLabel})`);
+
+        if (this.userDataManager && typeof this.userDataManager.handleSceneChange === 'function') {
+            try {
+                this.userDataManager.handleSceneChange(sceneInfo);
+            } catch (error) {
+                this.logger.error('Falha ao propagar mudança de SceneData:', error);
+            }
+        }
+    }
+
+    _resolveSceneField(sceneData, fieldName) {
+        if (!sceneData) return undefined;
+
+        const direct = sceneData[fieldName];
+        if (direct !== undefined && direct !== null) {
+            return direct;
+        }
+
+        const camelCase = fieldName.charAt(0).toLowerCase() + fieldName.slice(1);
+        if (sceneData[camelCase] !== undefined && sceneData[camelCase] !== null) {
+            return sceneData[camelCase];
+        }
+
+        const lowerCase = fieldName.toLowerCase();
+        if (sceneData[lowerCase] !== undefined && sceneData[lowerCase] !== null) {
+            return sceneData[lowerCase];
+        }
+
+        const getterCandidates = [
+            `get${fieldName}`,
+            `get${camelCase}`,
+            `get${lowerCase}`,
+        ];
+
+        for (const getter of getterCandidates) {
+            if (typeof sceneData[getter] === 'function') {
+                try {
+                    const value = sceneData[getter]();
+                    if (value !== undefined && value !== null) {
+                        return value;
+                    }
+                } catch (error) {
+                    // Ignorar getter inválido
+                }
+            }
+        }
+
+        return undefined;
+    }
+
+    _normalizeSceneInfo(sceneData) {
+        if (!sceneData) return null;
+
+        const normalizeNumber = (fieldName) => {
+            const raw = this._resolveSceneField(sceneData, fieldName);
+            if (raw === undefined || raw === null) return 0;
+            if (typeof raw === 'number') return raw;
+            if (typeof raw === 'string') return Number(raw) || 0;
+            if (typeof raw === 'object') {
+                if (typeof raw.toNumber === 'function') {
+                    return raw.toNumber();
+                }
+                if (typeof raw.valueOf === 'function') {
+                    const value = raw.valueOf();
+                    if (typeof value === 'number') {
+                        return value;
+                    }
+                }
+            }
+            return Number(raw) || 0;
+        };
+
+        const normalizeString = (fieldName) => {
+            const raw = this._resolveSceneField(sceneData, fieldName);
+            if (raw === undefined || raw === null) return '';
+            if (typeof raw === 'string') return raw;
+            if (Buffer.isBuffer(raw) || raw instanceof Uint8Array) {
+                return Buffer.from(raw).toString('utf8').replace(/\0/g, '').trim();
+            }
+            if (typeof raw.toString === 'function') {
+                return raw.toString();
+            }
+            return '';
+        };
+
+        const mapId = normalizeNumber('MapId');
+        const levelMapId = normalizeNumber('LevelMapId');
+        const channelId = normalizeNumber('ChannelId');
+        const lineId = normalizeNumber('LineId');
+        const dungeonGuid = normalizeString('DungeonGuid');
+        const sceneGuid = normalizeString('SceneGuid');
+        const planeId = normalizeNumber('PlaneId');
+        const levelReviveId = normalizeNumber('LevelReviveId');
+
+        const hasMeaningfulData = mapId || levelMapId || channelId || lineId || dungeonGuid || sceneGuid;
+        if (!hasMeaningfulData) return null;
+
+        return {
+            mapId,
+            levelMapId,
+            channelId,
+            lineId,
+            dungeonGuid,
+            sceneGuid,
+            planeId,
+            levelReviveId,
+        };
+    }
+
+    _buildSceneSignature(sceneInfo) {
+        if (!sceneInfo) return '';
+        return [
+            sceneInfo.mapId || 0,
+            sceneInfo.levelMapId || 0,
+            sceneInfo.channelId || 0,
+            sceneInfo.lineId || 0,
+            sceneInfo.dungeonGuid || '',
+            sceneInfo.sceneGuid || '',
+        ].join(':');
+    }
+
     _processSyncContainerDirtyData(payloadBuffer) {
         if (currentUserUuid.isZero()) return;
 
         const syncContainerDirtyData = pb.SyncContainerDirtyData.decode(payloadBuffer);
         if (!syncContainerDirtyData.VData || !syncContainerDirtyData.VData.Buffer) return;
-        this.logger.debug(syncContainerDirtyData.VData.Buffer.toString('hex'));
         const messageReader = new BinaryReader(Buffer.from(syncContainerDirtyData.VData.Buffer));
 
         if (!doesStreamHaveIdentifier(messageReader)) return;
@@ -581,7 +749,14 @@ class PacketProcessor {
         // this.logger.debug(syncContainerDirtyData.VData.Buffer.toString('hex'));
     }
 
-    _processPlayerAttrs(playerUid, attrs) {
+    _processPlayerAttrs(playerUid, attrCollection) {
+        const attrs = Array.isArray(attrCollection?.Attrs)
+            ? attrCollection.Attrs
+            : Array.isArray(attrCollection)
+                ? attrCollection
+                : [];
+        const mapAttrs = Array.isArray(attrCollection?.MapAttrs) ? attrCollection.MapAttrs : [];
+
         let hasName = false;
         for (const attr of attrs) {
             if (!attr.Id || !attr.RawData) continue;
@@ -591,13 +766,11 @@ class PacketProcessor {
                 case AttrType.AttrName:
                     hasName = true;
                     const playerName = reader.string();
-                    this.logger.debug(`_processPlayerAttrs: Setting player name for UID ${playerUid}: ${playerName}`);
                     this.userDataManager.setName(playerUid, playerName);
                     break;
                 case AttrType.AttrProfessionId:
                     const professionId = reader.int32();
                     const professionName = getProfessionNameFromId(professionId);
-                    this.logger.debug(`_processPlayerAttrs: Setting profession for UID ${playerUid}: ${professionName}`);
                     this.userDataManager.setProfession(playerUid, professionName);
                     break;
                 case AttrType.AttrFightPoint:
@@ -646,62 +819,164 @@ class PacketProcessor {
             }
         }
         
+        if (!hasName) {
+            const nameFromMapAttr = this._extractPlayerNameFromMapAttrs(mapAttrs);
+            if (nameFromMapAttr) {
+                hasName = true;
+                this.userDataManager.setName(playerUid, nameFromMapAttr);
+            }
+        }
+        
         // Log se o jogador foi detectado mas não tem nome
         if (!hasName) {
             this.logger.warn(`Player ${playerUid} detected but AttrName not in packet. Waiting for name update...`);
         }
     }
 
-    _processEnemyAttrs(enemyUid, attrs) {
+    _extractPlayerNameFromMapAttrs(mapAttrs) {
+        if (!Array.isArray(mapAttrs) || mapAttrs.length === 0) return null;
+
+        for (const mapAttr of mapAttrs) {
+            if (!mapAttr || !Array.isArray(mapAttr.Attrs) || mapAttr.Attrs.length === 0) continue;
+
+            const isNameAttr = mapAttr.Id === AttrType.AttrName;
+
+            for (const entry of mapAttr.Attrs) {
+                if (!entry || entry.IsRemove) continue;
+
+                const keyText = this._decodeMapAttrBuffer(entry.Key);
+                const keyLooksLikeName = keyText ? keyText.toLowerCase().includes('name') : false;
+
+                if (!isNameAttr && !keyLooksLikeName) continue;
+
+                const valueText = this._decodeMapAttrBuffer(entry.Value);
+                if (this._isLikelyPlayerName(valueText)) {
+                    return valueText;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    _decodeMapAttrBuffer(raw) {
+        if (!raw || raw.length === 0) return '';
+
+        try {
+            let buffer;
+            if (Buffer.isBuffer(raw)) {
+                buffer = raw;
+            } else if (raw instanceof Uint8Array) {
+                buffer = Buffer.from(raw);
+            } else if (typeof raw === 'string') {
+                buffer = Buffer.from(raw, 'base64');
+            } else {
+                return '';
+            }
+
+            const decoded = buffer.toString('utf8').replace(/\0/g, '').trim();
+            return decoded;
+        } catch (error) {
+            return '';
+        }
+    }
+
+    _isLikelyPlayerName(candidate) {
+        if (!candidate) return false;
+
+        const trimmed = candidate.trim();
+        if (trimmed.length < 2 || trimmed.length > 32) return false;
+        if (/\r|\n/.test(trimmed)) return false;
+
+        const hasReadableChars = /[A-Za-z0-9\u00C0-\u024F\u3040-\u30FF\u4E00-\u9FFF]/.test(trimmed);
+        return hasReadableChars;
+    }
+
+    _processEnemyAttrs(enemyUuid, enemyUid, attrs) {
         let attrIdValue = null;
-        let currentHp = null;
-        let currentMaxHp = null;
         
         for (const attr of attrs) {
             if (!attr.Id || !attr.RawData) continue;
             const reader = pbjs.Reader.create(attr.RawData);
-            this.logger.debug(`Found attrId ${attr.Id} for E${enemyUid} ${attr.RawData.toString('base64')}`);
+            
             switch (attr.Id) {
                 case AttrType.AttrName:
                     const enemyName = reader.string();
-                    this.userDataManager.enemyCache.name.set(enemyUid, enemyName);
-                    this.logger.info(`Found monster name ${enemyName} for id ${enemyUid}`);
+                    this.userDataManager.enemyCache.name.set(enemyUuid, enemyName);
+                    this.logger.info(`Found monster name ${enemyName} for id ${enemyUid} uuid ${enemyUuid}`);
                     break;
                 case AttrType.AttrId:
                     const attrId = reader.int32();
                     attrIdValue = attrId;
-                    this.userDataManager.enemyCache.attrId.set(enemyUid, attrId);
+                    this.userDataManager.enemyCache.attrId.set(enemyUuid, attrId);
                     const name = monsterNames[attrId];
                     if (name) {
-                        this.logger.info(`Found moster name ${name} for id ${enemyUid}`);
-                        this.userDataManager.enemyCache.name.set(enemyUid, name);
+                        this.logger.info(`Found moster name ${name} for id ${enemyUid} uuid ${enemyUuid}`);
+                        this.userDataManager.enemyCache.name.set(enemyUuid, name);
                     }
                     break;
-                case AttrType.AttrHp:
+                case AttrType.AttrHp: {
                     const enemyHp = reader.int32();
-                    currentHp = enemyHp;
-                    this.userDataManager.enemyCache.hp.set(enemyUid, enemyHp);
+                    const maxH = this.userDataManager.enemyCache.maxHp.get(enemyUuid);
+                    const monsterId = attrIdValue || this.userDataManager.enemyCache.attrId.get(enemyUuid);
+                    
+                    if (maxH != null && maxH > 0) {
+                        // bpsr-logs: prev_hp = monster_entity.curr_hp.unwrap_or(curr_hp)
+                        const oldHp = this.userDataManager.enemyCache.hp.get(enemyUuid);
+                        const prevHp = oldHp !== undefined && oldHp !== null ? oldHp : enemyHp;
+                        const oldPct = Math.floor((prevHp * 100) / maxH);
+                        const newPct = Math.floor((enemyHp * 100) / maxH);
+                        
+                        // Atualizar cache
+                        this.userDataManager.enemyCache.hp.set(enemyUuid, enemyHp);
+                        this.userDataManager.enemyCache.hp_pct.set(enemyUuid, newPct);
+                        
+                        // bpsr-logs: if old_hp_pct != new_hp_pct && new_hp_pct % 5 == 0
+                        if (monsterId && ALLOWED_BPTIMER_MOB_IDS.has(monsterId)) {
+                            if (oldPct !== newPct && newPct % 5 === 0) {
+                                this.userDataManager.reportBossHP(enemyUuid, monsterId, enemyHp, maxH);
+                            }
+                        }
+                    }
                     break;
-                case AttrType.AttrMaxHp:
+                }
+                case AttrType.AttrMaxHp: {
                     const enemyMaxHp = reader.int32();
-                    currentMaxHp = enemyMaxHp;
-                    this.userDataManager.enemyCache.maxHp.set(enemyUid, enemyMaxHp);
+                    this.userDataManager.enemyCache.maxHp.set(enemyUuid, enemyMaxHp);
+                    const hp = this.userDataManager.enemyCache.hp.get(enemyUuid);
+                    if (hp != null && enemyMaxHp > 0) {
+                        const pct = Math.round((hp / enemyMaxHp) * 100);
+                        this.userDataManager.enemyCache.hp_pct.set(enemyUuid, pct);
+                        
+                        // Reportar SEMPRE - BPTimer client faz filtragem automática
+                        const monsterId = attrIdValue || this.userDataManager.enemyCache.attrId.get(enemyUuid);
+                        if (monsterId && ALLOWED_BPTIMER_MOB_IDS.has(monsterId)) {
+                            this.userDataManager.reportBossHP(enemyUuid, monsterId, hp, enemyMaxHp);
+                        }
+                    }
                     break;
+                }
+                case AttrType.AttrPos: {
+                    try {
+                        const vector3 = pb.Vector3.decode(attr.RawData);
+                        const pos_x = vector3.X || 0;
+                        const pos_y = vector3.Y || 0;
+                        const pos_z = vector3.Z || 0;
+                        this.userDataManager.enemyCache.pos.set(enemyUuid, { x: pos_x, y: pos_y, z: pos_z });
+                    } catch (error) {
+                        // Silently ignore position decode errors
+                    }
+                    break;
+                }
                 default:
                     // this.logger.debug(`Found unknown attrId ${attr.Id} for E${enemyUid} ${attr.RawData.toString('base64')}`);
                     break;
             }
         }
         
-        // Reportar HP para BPTimer se temos todos os dados necessários
-        if (currentHp !== null || currentMaxHp !== null) {
-            const monsterId = attrIdValue || this.userDataManager.enemyCache.attrId.get(enemyUid);
-            const hp = currentHp !== null ? currentHp : this.userDataManager.enemyCache.hp.get(enemyUid);
-            const maxHp = currentMaxHp !== null ? currentMaxHp : this.userDataManager.enemyCache.maxHp.get(enemyUid);
-            
-            if (monsterId && hp !== undefined && maxHp !== undefined) {
-                this.userDataManager.reportBossHP(enemyUid, monsterId, hp, maxHp);
-            }
+        // Atualizar timestamp de atividade do inimigo
+        if (this.userDataManager.enemyCache.lastSeen) {
+            this.userDataManager.enemyCache.lastSeen.set(enemyUuid, Date.now());
         }
     }
 
@@ -713,16 +988,26 @@ class PacketProcessor {
         for (const entity of syncNearEntities.Appear) {
             const entityUuid = entity.Uuid;
             if (!entityUuid) continue;
+            const entityUuidStr = entityUuid.shiftRight(16).toString();
             const entityUid = entityUuid.shiftRight(16).toNumber();
             const attrCollection = entity.Attrs;
 
-            if (attrCollection && attrCollection.Attrs) {
+            if (attrCollection && (attrCollection.Attrs || attrCollection.MapAttrs)) {
                 switch (entity.EntType) {
                     case pb.EEntityType.EntMonster:
-                        this._processEnemyAttrs(entityUid, attrCollection.Attrs);
+                        this._processEnemyAttrs(entityUuidStr, entityUid, attrCollection.Attrs);
+                        
+                        // Após processar os atributos, tentar enviar reporte se é boss (abordagem mrsnakke)
+                        const monsterId = this.userDataManager.enemyCache.attrId.get(entityUuidStr);
+                        const hp = this.userDataManager.enemyCache.hp.get(entityUuidStr);
+                        const maxHp = this.userDataManager.enemyCache.maxHp.get(entityUuidStr);
+                        
+                        if (monsterId && ALLOWED_BPTIMER_MOB_IDS.has(monsterId) && hp != null && maxHp != null && maxHp > 0) {
+                            this.userDataManager.reportBossHP(entityUuidStr, monsterId, hp, maxHp);
+                        }
                         break;
                     case pb.EEntityType.EntChar:
-                        this._processPlayerAttrs(entityUid, attrCollection.Attrs);
+                        this._processPlayerAttrs(entityUid, attrCollection);
                         
                         // Tentar obter nome do playerMap se não veio nos atributos
                         const uidStr = String(entityUid);
@@ -749,7 +1034,6 @@ class PacketProcessor {
         const methodId = reader.readUInt32();
 
         if (serviceUuid !== 0x0000000063335342n) {
-            this.logger.debug(`Skipping NotifyMsg with serviceId ${serviceUuid}`);
             return;
         }
 
@@ -775,14 +1059,13 @@ class PacketProcessor {
                 this._processSyncNearDeltaInfo(msgPayload);
                 break;
             default:
-                this.logger.debug(`Skipping NotifyMsg with methodId ${methodId}`);
                 break;
         }
         return;
     }
 
     _processReturnMsg(reader, isZstdCompressed) {
-        this.logger.debug(`Unimplemented processing return`);
+        // Unimplemented
     }
 
     processPacket(packets) {
@@ -792,7 +1075,6 @@ class PacketProcessor {
             do {
                 let packetSize = packetsReader.peekUInt32();
                 if (packetSize < 6) {
-                    this.logger.debug(`Received invalid packet`);
                     return;
                 }
 

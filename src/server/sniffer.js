@@ -1,12 +1,12 @@
 const cap = require('cap');
 const decoders = cap.decoders;
 const PROTOCOL = decoders.PROTOCOL;
-const findDefaultNetworkDevice = require('../../algo/netInterfaceUtil'); // Ajustar la ruta
-const { Lock } = require('./dataManager'); // Importar Lock desde dataManager
+const findDefaultNetworkDevice = require('../../algo/netInterfaceUtil');
+const { Lock } = require('./dataManager');
 
 const Cap = cap.Cap;
 
-const NPCAP_INSTALLER_PATH = require('path').join(__dirname, '..', '..', 'Dist', 'npcap-1.83.exe'); // Ajustar la ruta
+const NPCAP_INSTALLER_PATH = require('path').join(__dirname, '..', '..', 'Dist', 'npcap-1.83.exe');
 const fs = require('fs');
 const { spawn } = require('child_process');
 const LONG_HANDSHAKE_SIGNATURE = Buffer.from([0x00, 0x63, 0x33, 0x53, 0x42, 0x00]);
@@ -18,8 +18,8 @@ const SHORT_HANDSHAKE_SIGNATURE = Buffer.from([
     0x00, 0x00, 0x00, 0x00,
     0x0a, 0x4e, 0x08, 0x01, 0x22, 0x24
 ]);
-const MAX_HANDSHAKE_SCAN_BYTES = 8192; // evita leituras enormes em buffers corrompidos
-const MAX_HANDSHAKE_SEGMENT_BYTES = 65536; // limite adicional por segmento
+const MAX_HANDSHAKE_SCAN_BYTES = 8192;
+const MAX_HANDSHAKE_SEGMENT_BYTES = 65536;
 
 async function checkAndInstallNpcap(logger) {
     try {
@@ -58,7 +58,7 @@ class Sniffer {
     constructor(logger, userDataManager, globalSettings) {
         this.logger = logger;
         this.userDataManager = userDataManager;
-        this.globalSettings = globalSettings; // Pasar globalSettings al sniffer
+        this.globalSettings = globalSettings;
         this.current_server = '';
         this.currentServerKey = '';
         this._data = Buffer.alloc(0);
@@ -71,15 +71,15 @@ class Sniffer {
         this.eth_queue = [];
         this.capInstance = null;
         this.packetProcessor = null;
-        this.isPaused = false; // Estado de pausa para el sniffer
-        this.pauseStart = null; // Timestamp cuando se pausó
-        this.io = null; // Socket.io instance para emitir eventos
-        this.isConnected = false; // Status de conexão
+        this.isPaused = false;
+        this.pauseStart = null;
+        this.io = null;
+        this.isConnected = false;
         
-        // Sistema simples de detecção de servidor
-        this.lastValidServerPacket = 0; // Último pacote válido do servidor (para timeout)
-        this.serverChangeGracePeriod = this.globalSettings.fastServerChangeDetection ? 10000 : 30000;
-        this.pendingServerNotice = null; // evita spam de logs antes da assinatura
+        // Sistema de detecção de servidor
+        this.lastValidServerPacket = 0;
+        this.serverChangeGracePeriod = this.globalSettings.fastServerChangeDetection ? 3000 : 8000;
+        this.pendingServerNotice = null;
         this.lastServerChangeTime = 0;
         this.awaitingServerData = false;
         this.serverDataDeadline = 0;
@@ -87,14 +87,22 @@ class Sniffer {
         this.serverHistory = new Map();
         this.consecutiveServerChanges = 0;
         this.lastTcpCleanup = 0;
-        this.MAX_TCP_CACHE_SIZE = 4096; // evita explosão de uso de memória
-        this.TCP_CACHE_TTL = 15000; // descarta segmentos órfãos após 15s
+        this.MAX_TCP_CACHE_SIZE = 4096;
+        this.TCP_CACHE_TTL = 15000;
+        
+        // Sistema de cooldown para handshakes + filtro de tamanho
+        this.lastHandshakeTime = 0;
+        this.HANDSHAKE_COOLDOWN = 5000; // 5 segundos entre handshakes
+        this.lastHandshakeType = null;
+        this.MIN_LONG_HANDSHAKE_SIZE = 150; // Filtrar sync packets pequenos
+        this.serverNoticeCooldown = 1500; // evitar spams de eventos para o front
+        this.lastServerNotice = { key: '', timestamp: 0 };
     }
 
     detectHandshakeType(buf) {
         if (!buf || !Buffer.isBuffer(buf)) return null;
 
-        // Assinatura longa (0x63...)
+        // Assinatura longa (0x63...) - NOVO MAPA
         if (buf.length > 16 && buf[4] === 0) {
             let offset = 10;
             const scanLimit = Math.min(buf.length, offset + MAX_HANDSHAKE_SCAN_BYTES);
@@ -110,13 +118,19 @@ class Sniffer {
                 if (chunk.length >= 5 + LONG_HANDSHAKE_SIGNATURE.length) {
                     const signatureSlice = chunk.subarray(5, 5 + LONG_HANDSHAKE_SIGNATURE.length);
                     if (Buffer.compare(signatureSlice, LONG_HANDSHAKE_SIGNATURE) === 0) {
+                        // FILTRO: Ignorar LONG handshakes muito pequenos (provavelmente sync packets)
+                        if (buf.length < this.MIN_LONG_HANDSHAKE_SIZE) {
+                            return null;
+                        }
+                        
                         return 'long';
                     }
                 }
                 offset += expectedLength;
             }
         }
-        // Assinatura curta (0x62...)
+        
+        // Assinatura curta (0x62...) - MUDANÇA DE SALA/CANAL
         if (buf.length === 0x62) {
             if (
                 Buffer.compare(buf.subarray(0, 10), SHORT_HANDSHAKE_SIGNATURE.subarray(0, 10)) === 0 &&
@@ -129,50 +143,71 @@ class Sniffer {
     }
 
     async applyServerChange(handshakeType, src_server, buf, tcpPacket) {
+        const now = Date.now();
+        const timeSinceLastChange = now - this.lastServerChangeTime;
+        
+        const changeSummary = `type=${handshakeType || 'no-handshake'} from=${this.current_server || 'none'} to=${src_server} Δ=${timeSinceLastChange}ms`;
+        this.logger.info(`[SERVER-CHANGE] ${changeSummary}`);
+        
         if (handshakeType === 'long') {
-            console.log('[SERVER] Carregando novo mapa...');
+            this.logger.info('[SERVER] Carregando novo mapa...');
         } else if (handshakeType === 'short') {
-            console.log('[SERVER] Mudança de sala detectada.');
+            this.logger.info('[SERVER] Mudança de sala detectada.');
         } else {
-            console.log('[SERVER] Mudança de servidor detectada.');
+            this.logger.info('[SERVER] Mudança de servidor detectada.');
         }
+        
         this.updateServerTracking(src_server);
         this.clearTcpCache();
         this.tcp_next_seq = tcpPacket.info.seqno + buf.length;
         this.userDataManager.refreshEnemyCache();
-        if (this.globalSettings.autoClearOnServerChange && this.userDataManager.lastLogTime !== 0 && this.userDataManager.users.size !== 0) {
-            await this.userDataManager.clearAll(this.globalSettings);
-            console.log('[SERVER] Luta salva. Medindo nova luta...');
+        
+        if (this.io) {
+            try {
+                const eventKey = `${handshakeType || 'unknown'}|${this.currentServerKey}`;
+                const duplicateWithinCooldown = this.lastServerNotice.key === eventKey && (now - this.lastServerNotice.timestamp) < this.serverNoticeCooldown;
+                if (!duplicateWithinCooldown) {
+                    this.io.emit('server-change', {
+                        handshakeType: handshakeType || 'unknown',
+                        server: src_server,
+                        timestamp: now,
+                    });
+                    this.lastServerNotice = { key: eventKey, timestamp: now };
+                }
+            } catch (emitError) {
+                this.logger.error('Falha ao emitir evento server-change:', emitError);
+            }
         }
+        
+        // A limpeza e salvamento de luta agora são conduzidos
+        // principalmente pela SceneData (handleSceneChange) e pelo
+        // timeout de inatividade de dano. Aqui evitamos chamar
+        // clearAll() novamente para não gerar resets e históricos
+        // duplicados em mudanças de sala/servidor ruidosas.
+        
         if (!this.isConnected && this.io) {
             this.isConnected = true;
             this.io.emit('game-connected', { connected: true });
         }
-        // Após o handshake, esperamos que o jogo abra um novo socket real.
-        // Concedemos uma janela para aceitar a próxima chave sem limpar novamente.
+        
         this.awaitingServerData = true;
-        const extraBuffer = 5000; // 5s adicionais cobrem loads mais lentos
+        const extraBuffer = 2000;
         this.serverDataDeadline = Date.now() + this.serverChangeGracePeriod + extraBuffer;
     }
 
     updateGracePeriod() {
-        this.serverChangeGracePeriod = this.globalSettings.fastServerChangeDetection ? 10000 : 30000;
+        this.serverChangeGracePeriod = this.globalSettings.fastServerChangeDetection ? 3000 : 8000;
     }
 
     setPaused(paused) {
         try {
             if (paused) {
-                // Entrando en pausa: registrar tiempo y limpiar colas/buffers para evitar
-                // procesar datos atrasados al reanudar.
                 this.pauseStart = Date.now();
                 this.isPaused = true;
-                // Vaciar cola de paquetes y buffers acumulados
                 try { this.eth_queue.length = 0; } catch (e) {}
                 try { this.clearTcpCache(); } catch (e) {}
                 try { this.fragmentIpCache.clear(); } catch (e) {}
             } else {
-                // Saliendo de pausa: aplicar la duración de la pausa a los timeRanges
-                // para que el cálculo de DPS/HPS no incluya el tempo pausado.
                 const now = Date.now();
                 let pauseDuration = 0;
                 if (this.pauseStart) {
@@ -187,13 +222,11 @@ class Sniffer {
                 } catch (e) {
                     this.logger && this.logger.error && this.logger.error('Failed to apply pause duration:', e);
                 }
-                // Asegurar que no procesamos datos atrasados que se acumularan mientras estábamos pausados
                 try { this.eth_queue.length = 0; } catch (e) {}
                 try { this.clearTcpCache(); } catch (e) {}
             }
         } catch (e) {
             this.logger && this.logger.error && this.logger.error('Error changing pause state:', e);
-            // Fallback: establecer el flag básico
             this.isPaused = !!paused;
         }
     }
@@ -208,7 +241,7 @@ class Sniffer {
 
     cleanupTcpCache(now = Date.now()) {
         if (!this.tcp_cache.size) return;
-        if (now - this.lastTcpCleanup < 1000) return; // limitar custo de iteração
+        if (now - this.lastTcpCleanup < 1000) return;
         this.lastTcpCleanup = now;
 
         for (const [seq, entry] of this.tcp_cache) {
@@ -247,13 +280,11 @@ class Sniffer {
         this.updateGracePeriod();
         const newServerKey = this.normalizeConnectionKey(src_server);
         
-        // Se nunca detectamos um servidor, aceitar imediatamente
         if (!this.current_server || this.current_server === '') {
             this.currentServerKey = newServerKey;
             return true;
         }
         
-        // Se o servidor é o mesmo (considerando ambas direções), manter timestamp atualizado
         if (this.currentServerKey === newServerKey) {
             this.lastValidServerPacket = now;
             this.pendingServerNotice = null;
@@ -273,7 +304,6 @@ class Sniffer {
             this.awaitingServerData = false;
         }
         
-        // Verificar tempo desde o último pacote válido antes de aceitar novo servidor
         const timeSinceLastValid = now - this.lastValidServerPacket;
         if (timeSinceLastValid < this.serverChangeGracePeriod) {
             return false;
@@ -290,7 +320,6 @@ class Sniffer {
         this.pendingServerNotice = null;
         this.lastServerChangeTime = now;
         
-        // Atualizar linha do servidor no userDataManager para BPTimer
         if (this.userDataManager && typeof this.userDataManager.setServerLine === 'function') {
             this.userDataManager.setServerLine(src_server);
         }
@@ -359,7 +388,7 @@ class Sniffer {
     }
 
     async processEthPacket(frameBuffer) {
-        if (this.isPaused) return; // No procesar paquetes si está pausado
+        if (this.isPaused) return;
 
         var ethPacket = decoders.Ethernet(frameBuffer);
 
@@ -381,34 +410,44 @@ class Sniffer {
         const normalizedServerKey = this.normalizeConnectionKey(src_server);
         const handshakeType = this.detectHandshakeType(buf);
         const now = Date.now();
-        const timeSinceLastValid = this.lastValidServerPacket ? now - this.lastValidServerPacket : Infinity;
 
         await this.tcp_lock.acquire();
         try {
-            let isServerChange = false;
-            if (
-                handshakeType &&
-                normalizedServerKey !== this.currentServerKey &&
-                timeSinceLastValid >= this.serverChangeGracePeriod
-            ) {
-                isServerChange = true;
-            } else {
-                isServerChange = this.isRealServerChange(src_server);
-            }
-            
-            if (isServerChange) {
-                if (handshakeType) {
-                    await this.applyServerChange(handshakeType, src_server, buf, tcpPacket);
+            // PRIORIDADE: Detectar handshake com cooldown + verificação de mudança real
+            if (handshakeType && normalizedServerKey !== this.currentServerKey) {
+                const timeSinceLastHandshake = now - this.lastHandshakeTime;
+                
+                // Verificar mudança real de servidor (IP ou porta diferente)
+                const hasRealServerChange = this.currentServerKey !== normalizedServerKey;
+                if (!hasRealServerChange) {
+                    return;
                 }
+                
+                // Aplicar cooldown: ignorar handshakes muito próximos
+                if (timeSinceLastHandshake < this.HANDSHAKE_COOLDOWN) {
+                    return;
+                }
+                
+                // Atualizar timestamp do último handshake
+                this.lastHandshakeTime = now;
+                this.lastHandshakeType = handshakeType;
+                
+                await this.applyServerChange(handshakeType, src_server, buf, tcpPacket);
                 return;
             }
             
-            // Atualizar timestamp de último pacote válido (não é mudança de servidor)
+            // Verificar mudança real de servidor (sem handshake)
+            const isServerChange = this.isRealServerChange(src_server);
+            
+            if (isServerChange) {
+                await this.applyServerChange(null, src_server, buf, tcpPacket);
+                return;
+            }
+            
+            // Atualizar timestamp de último pacote válido
             if (!isServerChange && normalizedServerKey === this.currentServerKey) {
                 const now = Date.now();
                 this.lastValidServerPacket = now;
-                // IMPORTANTE: Atualizar também serverDetectionTimestamp para evitar
-                // detecção de mudança de servidor após períodos longos sem pacotes
                 this.serverDetectionTimestamp = now;
                 this.awaitingServerData = false;
             }
@@ -423,6 +462,7 @@ class Sniffer {
             if ((this.tcp_next_seq - tcpPacket.info.seqno) << 0 <= 0 || this.tcp_next_seq === -1) {
                 this.tcp_cache.set(tcpPacket.info.seqno, { buffer: buf, timestamp: now });
             }
+            
             while (this.tcp_cache.has(this.tcp_next_seq)) {
                 const seq = this.tcp_next_seq;
                 const cachedEntry = this.tcp_cache.get(seq);
@@ -448,7 +488,7 @@ class Sniffer {
                     const packet = this._data.subarray(0, packetSize);
                     this._data = this._data.subarray(packetSize);
                     if (this.packetProcessor) {
-                        this.packetProcessor.processPacket(packet, this.isPaused, this.globalSettings); // Pasar isPaused y globalSettings
+                        this.packetProcessor.processPacket(packet, this.isPaused, this.globalSettings);
                     }
                 } else if (packetSize > 0x0fffff) {
                     this.logger.error(`Invalid Length!! ${this._data.length},${packetSize},${this._data.toString('hex')},${this.tcp_next_seq}`);
@@ -502,7 +542,6 @@ class Sniffer {
         }
         this.capInstance.setMinBytes && this.capInstance.setMinBytes(0);
         this.capInstance.on('packet', async (nbytes, trunc) => {
-            // Limitar fila para evitar acúmulo de memória se processamento for lento
             if (this.eth_queue.length < 1000) {
                 this.eth_queue.push(Buffer.from(buffer.subarray(0, nbytes)));
             }
@@ -511,7 +550,7 @@ class Sniffer {
         (async () => {
             while (true) {
                 if (!this.eth_queue.length) {
-                    await new Promise((r) => setTimeout(r, 1));
+                    await new Promise((r) => setTimeout(r, 4));
                     continue;
                 }
 
@@ -545,7 +584,6 @@ class Sniffer {
                 this.logger.warn('Timeout TCP: jogo desconectado ou fechado?');
                 this.current_server = '';
                 this.clearTcpCache();
-                // Reset tracking para evitar falsos positivos após timeout
                 this.serverDetectionTimestamp = 0;
                 this.lastValidServerPacket = 0;
                 this.consecutiveServerChanges = 0;
@@ -554,6 +592,14 @@ class Sniffer {
                 }
             }
         }, 10000);
+    }
+
+    _debugLog(message) {
+        if (this.logger && typeof this.logger.debug === 'function') {
+            this.logger.debug(message);
+        } else {
+            console.log(message);
+        }
     }
 }
 

@@ -1,10 +1,141 @@
-# 🎯 BPSR Meter v3.1.1
+# 🎯 BPSR Meter v3.2.0
 
 [[Português](#português)] | [[English](#english)] | [[Español](#español)]
 
 ---
 
 ## Português
+
+**✨ NOVIDADES v3.2.0:**
+
+### 🎨 Personalização Visual Completa
+- **Cores personalizadas** para medidor e janelas
+- **Controles de transparência** independentes para cada área
+- **Seletor de cores** intuitivo com visualização em tempo real
+- **Tema padrão** azul ou escolha sua própria paleta
+
+### 🕐 Integração BPTimer
+- **Reportar HP de bosses** automaticamente para a comunidade
+- **Coordenadas precisas** (X, Y, Z) dos bosses
+- **Detecção de linhas/canais** via SceneData do jogo
+- **Configuração opcional** - ative/desative quando quiser
+
+**📥 Como instalar:**
+1. Baixe: `BPSR Meter (by gabrielsanbs) Setup 3.2.0.exe`
+2. Execute o instalador
+3. Configure cores em **⚙️ Configurações**
+4. (Opcional) Ative BPTimer para contribuir com a comunidade
+
+**📋 Requisitos:**
+- Windows 10+
+- Npcap 1.83+
+
+**❓ Dúvidas?**
+- Como personalizar cores? Acesse **⚙️ Configurações → Personalização**
+- O que é BPTimer? Sistema comunitário que rastreia HP de bosses em tempo real
+- DPS resetando sempre? Ative "Detecção rápida de servidor" nas configurações
+- Histórico duplicado? Corrigido na v3.2.0 - agora salva apenas uma vez por luta
+
+**🙏 Créditos:**
+- gabrielsanbs (desenvolvedor)
+- MrSnakeVT (fork original)
+- dmlgzs (projeto original)
+- Comunidade BPTimer
+
+**💬 Suporte:** [Issues](https://github.com/gabrielsanbs/BPSR-Meter/issues)
+
+---
+
+## English
+
+**✨ WHAT'S NEW v3.2.0:**
+
+### 🎨 Complete Visual Customization
+- **Custom colors** for meter and windows
+- **Independent transparency controls** for each area
+- **Intuitive color picker** with real-time preview
+- **Default blue theme** or choose your own palette
+
+### 🕐 BPTimer Integration
+- **Auto-report boss HP** to the community
+- **Precise coordinates** (X, Y, Z) of bosses
+- **Line/channel detection** via game's SceneData
+- **Optional configuration** - enable/disable anytime
+
+**📥 How to Install:**
+1. Download: `BPSR Meter (by gabrielsanbs) Setup 3.2.0.exe`
+2. Run the installer
+3. Configure colors in **⚙️ Settings**
+4. (Optional) Enable BPTimer to contribute to the community
+
+**📋 Requirements:**
+- Windows 10+
+- Npcap 1.83+
+
+**❓ FAQ:**
+- How to customize colors? Access **⚙️ Settings → Customization**
+- What is BPTimer? Community system that tracks boss HP in real-time
+- DPS constantly resetting? Enable "Fast server detection" in settings
+- Duplicate history? Fixed in v3.2.0 - now saves only once per fight
+
+**🙏 Credits:**
+- gabrielsanbs (developer)
+- MrSnakeVT (original fork)
+- dmlgzs (original project)
+- BPTimer Community
+
+**💬 Support:** [Issues](https://github.com/gabrielsanbs/BPSR-Meter/issues)
+
+---
+
+## Español
+
+**✨ NOVEDADES v3.2.0:**
+
+### 🎨 Personalización Visual Completa
+- **Colores personalizados** para medidor y ventanas
+- **Controles de transparencia independientes** para cada área
+- **Selector de colores intuitivo** con vista previa en tiempo real
+- **Tema azul predeterminado** o elige tu propia paleta
+
+### 🕐 Integración BPTimer
+- **Reportar HP de jefes** automáticamente a la comunidad
+- **Coordenadas precisas** (X, Y, Z) de los jefes
+- **Detección de líneas/canales** vía SceneData del juego
+- **Configuración opcional** - activa/desactiva cuando quieras
+
+**📥 Cómo instalar:**
+1. Descarga: `BPSR Meter (by gabrielsanbs) Setup 3.2.0.exe`
+2. Ejecuta el instalador
+3. Configura colores en **⚙️ Configuración**
+4. (Opcional) Activa BPTimer para contribuir con la comunidad
+
+**📋 Requisitos:**
+- Windows 10+
+- Npcap 1.83+
+
+**❓ Preguntas Frecuentes:**
+- ¿Cómo personalizar colores? Accede a **⚙️ Configuración → Personalización**
+- ¿Qué es BPTimer? Sistema comunitario que rastrea HP de jefes en tiempo real
+- ¿DPS se resetea siempre? Activa "Detección rápida de servidor" en configuración
+- ¿Historial duplicado? Corregido en v3.2.0 - ahora guarda solo una vez por combate
+
+**🙏 Créditos:**
+- gabrielsanbs (desarrollador)
+- MrSnakeVT (fork original)
+- dmlgzs (proyecto original)
+- Comunidad BPTimer
+
+**💬 Soporte:** [Issues](https://github.com/gabrielsanbs/BPSR-Meter/issues)
+
+---
+
+<details>
+<summary>📜 Versões Anteriores / Previous Versions / Versiones Anteriores</summary>
+
+## v3.1.1
+
+### Português
 
 **🔥 CORREÇÕES IMPORTANTES v3.1.1:**
 
