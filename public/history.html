@@ -26,6 +26,30 @@
             --window-shadow: 0 18px 45px rgba(0, 0, 0, 0.45);
         }
 
+        /* ============================================================================ */
+        /* CORREÇÃO ELECTRON - Evitar fundos/bordas indesejados no Windows */
+        /* ============================================================================ */
+        html, body {
+            background: transparent !important;
+            overflow: hidden;
+            transition: none !important;
+            animation: none !important;
+        }
+
+        body {
+            will-change: contents;
+            transform: translateZ(0);
+        }
+
+        .history-window {
+            transition: none !important;
+            isolation: isolate;
+            will-change: transform;
+            transform: translateZ(0);
+            contain: layout style paint;
+            backface-visibility: hidden;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -404,6 +428,7 @@
         let currentView = 'list';
         let currentFightId = null;
         let currentLanguage = localStorage.getItem('historyLanguage') || 'pt-BR';
+        let historySocket = null;
 
         // Sistema de traduções
         const translations = {
@@ -844,16 +869,51 @@
 
         // Configurar Socket.IO
         function setupSocketIO() {
-            const socket = io();
+            if (historySocket) {
+                return;
+            }
+
+            historySocket = io('/history');
 
             // Escutar evento de nova luta salva
-            socket.on('fight-saved', (data) => {
-                // Se estiver na lista, recarregar automaticamente
+            historySocket.on('fight-saved', () => {
                 if (currentView === 'list') {
                     loadFightList();
                 }
             });
         }
+
+        window.addEventListener('beforeunload', () => {
+            // Desconectar socket
+            if (historySocket) {
+                historySocket.disconnect();
+                historySocket = null;
+            }
+
+            // Remover todos os event listeners
+            const refreshBtn = document.getElementById('refresh-btn');
+            const backBtn = document.getElementById('back-btn');
+            const languageSelector = document.getElementById('language-selector');
+
+            if (refreshBtn) {
+                const newRefreshBtn = refreshBtn.cloneNode(true);
+                refreshBtn.parentNode.replaceChild(newRefreshBtn, refreshBtn);
+            }
+            if (backBtn) {
+                const newBackBtn = backBtn.cloneNode(true);
+                backBtn.parentNode.replaceChild(newBackBtn, backBtn);
+            }
+            if (languageSelector) {
+                const newLanguageSelector = languageSelector.cloneNode(true);
+                languageSelector.parentNode.replaceChild(newLanguageSelector, languageSelector);
+            }
+
+            // Limpar DOM para liberar memória
+            const container = document.getElementById('fight-list-container');
+            const detailsContainer = document.getElementById('fight-details-container');
+            if (container) container.innerHTML = '';
+            if (detailsContainer) detailsContainer.innerHTML = '';
+        });
 
         function setHistoryBackground(value) {
             const hasColor = Boolean(value && value !== 'transparent');

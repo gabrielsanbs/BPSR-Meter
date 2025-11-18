@@ -29,6 +29,30 @@
             --window-shadow: 0 18px 45px rgba(0, 0, 0, 0.45);
         }
 
+        /* ============================================================================ */
+        /* CORREÇÃO ELECTRON - Evitar fundos/bordas indesejados no Windows */
+        /* ============================================================================ */
+        html, body {
+            background: transparent !important;
+            overflow: hidden;
+            transition: none !important;
+            animation: none !important;
+        }
+
+        body {
+            will-change: contents;
+            transform: translateZ(0);
+        }
+
+        .settings-container {
+            transition: none !important;
+            isolation: isolate;
+            will-change: transform;
+            transform: translateZ(0);
+            contain: layout style paint;
+            backface-visibility: hidden;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -938,6 +962,49 @@
         // Event Listeners
         document.addEventListener('DOMContentLoaded', () => {
             loadSettings().catch((error) => console.warn('Erro ao carregar configurações:', error));
+
+            // Cleanup ao fechar janela
+            window.addEventListener('beforeunload', () => {
+                // Remover todos os event listeners clonando elementos
+                const elementsWithListeners = [
+                    'close-button',
+                    'minimize-button',
+                    'decrease-players',
+                    'increase-players',
+                    'max-players-input',
+                    'meter-color-picker',
+                    'windows-color-picker',
+                    'main-opacity-slider',
+                    'windows-opacity-slider',
+                    'clear-history-button',
+                    'clear-cache-button',
+                    'language-selector'
+                ];
+
+                elementsWithListeners.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el && el.parentNode) {
+                        const newEl = el.cloneNode(true);
+                        el.parentNode.replaceChild(newEl, el);
+                    }
+                });
+
+                // Limpar toggles de custom background
+                document.querySelectorAll('.custom-bg-toggle').forEach(toggle => {
+                    if (toggle.parentNode) {
+                        const newToggle = toggle.cloneNode(true);
+                        toggle.parentNode.replaceChild(newToggle, toggle);
+                    }
+                });
+
+                // Limpar links externos
+                document.querySelectorAll('a[target="_blank"]').forEach(link => {
+                    if (link.parentNode) {
+                        const newLink = link.cloneNode(true);
+                        link.parentNode.replaceChild(newLink, link);
+                    }
+                });
+            });
 
             // Fechar janela
             const closeButton = document.getElementById('close-button');

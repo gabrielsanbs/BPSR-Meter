@@ -1,4 +1,30 @@
-/* Botón Advanced/Lite: rectangular y alargado */
+/* ============================================================================ */
+/* CORREÇÃO ELECTRON - Evitar fundos/bordas indesejados no Windows */
+/* ============================================================================ */
+html, body {
+    background: transparent !important;
+    overflow: hidden;
+    transition: none !important;
+    animation: none !important;
+}
+
+body {
+    padding: 12px;
+    will-change: contents;
+    transform: translateZ(0);
+}
+
+/* Isolamento de camadas para evitar rendering de bordas */
+.dps-meter {
+    transition: none !important;
+    isolation: isolate;
+    will-change: transform;
+    transform: translateZ(0);
+    contain: layout style paint;
+    backface-visibility: hidden;
+}
+
+/* Botão Advanced/Lite: rectangular y alargado */
 .advanced-lite-btn {
     border-radius: 18px !important;
     width: 110px !important;
@@ -477,7 +503,7 @@ input[type="text"] {
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 .dps-meter {
-    width: 650px;
+    width: 620px; /* Ajustado para terminar no botão X */
     background-color: var(--window-bg-color);
     padding: 12px 16px 16px;
     border-radius: 18px;
@@ -485,6 +511,12 @@ input[type="text"] {
     box-shadow: 0 20px 55px rgba(0, 0, 0, 0.45);
     position: relative;
     overflow: hidden;
+    
+    /* CRÍTICO: Sem altura fixa para se ajustar ao conteúdo */
+    min-height: 0 !important;
+    height: auto !important;
+    display: flex;
+    flex-direction: column;
 }
 .controls {
     display: flex;
@@ -635,7 +667,33 @@ input[type="text"] {
 .timer-btn i {
     margin-right: 5px;
 }
-#player-bars-container { display: flex; flex-direction: column; gap: 8px; }
+
+/* CRÍTICO: Container sem fundo preto e sem altura fixa */
+#player-bars-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 40px;
+    
+    /* SEM background */
+    background: transparent !important;
+    background-color: transparent !important;
+    
+    /* SEM altura fixa */
+    min-height: 0 !important;
+    height: auto !important;
+    max-height: none !important;
+}
+
+/* Quando vazio, não ocupar espaço */
+#player-bars-container:empty {
+    display: none !important;
+    min-height: 0 !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
 .player-bar { background-color: transparent; border-radius: 8px; height: 55px; position: relative; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.12); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
 .progress-fill { position: absolute; left: 0; top: 0; height: 100%; border-radius: 8px; transition: width 0.4s ease-out; z-index: 1; }
 .player-bar[data-rank="1"] .progress-fill { background-color: var(--rank-1-color); }

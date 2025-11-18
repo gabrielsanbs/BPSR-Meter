@@ -241,6 +241,7 @@ async function main() {
     setInterval(() => {
         userDataManager.checkTimeoutClear();
         userDataManager.checkFightTimeout(); // Verificar timeout de luta
+        userDataManager.pruneEnemyCache(); // Remover inimigos inativos e liberar memória
     }, 10000);
 }
 

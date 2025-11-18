@@ -464,6 +464,7 @@ class UserDataManager {
             hp_pct: new Map(), // HP percentage calculado
             pos: new Map(), // Posição do boss {x, y, z}
         };
+        this.ENEMY_CACHE_TTL_MS = 2 * 60 * 1000; // Remover inimigos após 2 minutos sem atualização
 
         this.isClearing = false;
         
@@ -1188,6 +1189,30 @@ class UserDataManager {
         }
     }
 
+    pruneEnemyCache(staleMs = this.ENEMY_CACHE_TTL_MS) {
+        if (!staleMs || staleMs <= 0) return;
+        if (!this.enemyCache || this.enemyCache.lastSeen.size === 0) return;
+
+        const now = Date.now();
+        let removed = 0;
+        for (const [uuid, lastSeen] of this.enemyCache.lastSeen.entries()) {
+            if (!lastSeen || now - lastSeen > staleMs) {
+                this.enemyCache.lastSeen.delete(uuid);
+                this.enemyCache.name.delete(uuid);
+                this.enemyCache.hp.delete(uuid);
+                this.enemyCache.hp_pct.delete(uuid);
+                this.enemyCache.maxHp.delete(uuid);
+                this.enemyCache.attrId.delete(uuid);
+                this.enemyCache.pos.delete(uuid);
+                removed++;
+            }
+        }
+
+        if (removed > 0 && this.logger) {
+            this.logger.debug(`[CACHE] Removidos ${removed} inimigos inativos (${staleMs}ms)`);
+        }
+    }
+
     /** Limpiar todos los datos de usuario */
     async clearAll(reason = 'manual') {
         if (this.isClearing) {
@@ -1324,12 +1349,13 @@ class UserDataManager {
 
         // Notificar clientes conectados via Socket.IO
         if (this.io) {
-            this.io.emit('fight-saved', {
+            const historyNamespace = this.io.of('/history');
+            historyNamespace.emit('fight-saved', {
                 fightId: fightData.id,
                 playerCount: fightData.players.length,
                 duration: fightData.duration
             });
-            this.logger.debug('Evento fight-saved emitido via Socket.IO');
+            this.logger.debug('Evento fight-saved emitido para namespace /history');
         }
     }
 

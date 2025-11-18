@@ -414,6 +414,15 @@ function initializeApi(app, server, io, userDataManager, logger, globalSettings,
         });
     });
 
+    const historyNamespace = io.of('/history');
+    historyNamespace.on('connection', (socket) => {
+        console.log('History WebSocket conectado: ' + socket.id);
+
+        socket.on('disconnect', () => {
+            console.log('History WebSocket desconectado: ' + socket.id);
+        });
+    });
+
     setInterval(() => {
         if (!globalSettings.isPaused) {
             const userData = userDataManager.getAllUsersData();

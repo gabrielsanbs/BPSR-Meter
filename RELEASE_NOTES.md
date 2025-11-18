@@ -1,3 +1,103 @@
+# 🎯 BPSR Meter v3.2.1
+
+[[Português](#português)] | [[English](#english)] | [[Español](#español)]
+
+---
+
+## Português
+
+**✨ NOVIDADES v3.2.1:**
+
+### 🔧 Otimizações de Performance e Memória
+- **Correção de vazamento de memória** ao abrir/fechar janelas Settings e History
+- **Limpeza automática de recursos** com Garbage Collection manual após fechar janelas
+- **Remoção de event listeners** órfãos que causavam acúmulo de RAM
+- **Largura padrão ajustada** (620px) para melhor alinhamento visual
+
+### 💾 Persistência de Configurações
+- **Zoom salvo automaticamente** - suas preferências de tamanho são mantidas entre sessões
+- **Configuração de zoom persistente** no localStorage
+
+### 🐛 Correções de Bugs
+- **Fundo preto eliminado** em janelas transparentes do Electron
+- **Container dinâmico** que se ajusta ao número real de jogadores
+- **Prevenção de efeitos DWM** do Windows em janelas overlay
+- **Cache de inimigos com TTL** (2 minutos) para evitar crescimento ilimitado
+
+**📥 Como atualizar:**
+1. Baixe: `BPSR Meter (by gabrielsanbs) Setup 3.2.1.exe`
+2. Execute o instalador (sobrescreve v3.2.0)
+3. Suas configurações serão mantidas automaticamente
+
+**📋 Melhorias Técnicas:**
+- Hooks de mensagens do Windows (WM_ACTIVATE, WM_NCACTIVATE)
+- Socket.IO namespace `/history` para isolamento de eventos
+- CSS GPU rendering com `isolation: isolate` e `transform: translateZ(0)`
+- MutationObserver para ajuste dinâmico de altura
+
+**🔍 Changelog Detalhado:**
+- Adicionado `--expose_gc` para controle manual de memória
+- `cleanupChildWindowResources()` remove listeners, hooks e limpa cache/storage
+- `preventWindowBlur()` evita sombras pretas em janelas transparentes
+- Container ajusta altura baseado em número real de jogadores renderizados
+- Zoom persistente com `localStorage.getItem('dpsMeterZoom')`
+
+---
+
+## English
+
+**✨ NEW IN v3.2.1:**
+
+### 🔧 Performance and Memory Optimizations
+- **Memory leak fixed** when opening/closing Settings and History windows
+- **Automatic resource cleanup** with manual Garbage Collection after closing windows
+- **Orphaned event listeners removal** that caused RAM accumulation
+- **Default width adjusted** (620px) for better visual alignment
+
+### 💾 Settings Persistence
+- **Zoom saved automatically** - your size preferences are kept between sessions
+- **Persistent zoom configuration** in localStorage
+
+### 🐛 Bug Fixes
+- **Black background eliminated** in Electron transparent windows
+- **Dynamic container** that adjusts to actual number of players
+- **Windows DWM effects prevention** in overlay windows
+- **Enemy cache with TTL** (2 minutes) to prevent unlimited growth
+
+**📥 How to update:**
+1. Download: `BPSR Meter (by gabrielsanbs) Setup 3.2.1.exe`
+2. Run installer (overwrites v3.2.0)
+3. Your settings will be kept automatically
+
+---
+
+## Español
+
+**✨ NOVEDADES v3.2.1:**
+
+### 🔧 Optimizaciones de Rendimiento y Memoria
+- **Fuga de memoria corregida** al abrir/cerrar ventanas Settings e History
+- **Limpieza automática de recursos** con Garbage Collection manual después de cerrar ventanas
+- **Eliminación de event listeners** huérfanos que causaban acumulación de RAM
+- **Ancho predeterminado ajustado** (620px) para mejor alineación visual
+
+### 💾 Persistencia de Configuraciones
+- **Zoom guardado automáticamente** - tus preferencias de tamaño se mantienen entre sesiones
+- **Configuración de zoom persistente** en localStorage
+
+### 🐛 Correcciones de Errores
+- **Fondo negro eliminado** en ventanas transparentes de Electron
+- **Contenedor dinámico** que se ajusta al número real de jugadores
+- **Prevención de efectos DWM** de Windows en ventanas overlay
+- **Caché de enemigos con TTL** (2 minutos) para evitar crecimiento ilimitado
+
+**📥 Cómo actualizar:**
+1. Descarga: `BPSR Meter (by gabrielsanbs) Setup 3.2.1.exe`
+2. Ejecuta el instalador (sobrescribe v3.2.0)
+3. Tus configuraciones se mantendrán automáticamente
+
+---
+
 # 🎯 BPSR Meter v3.2.0
 
 [[Português](#português)] | [[English](#english)] | [[Español](#español)]

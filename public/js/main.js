@@ -76,7 +76,10 @@ const professionMap = {
 
     let lastTotalDamage = 0;
     let lastDamageChangeTime = Date.now();
-    let currentZoom = 1.0; // Factor de zoom inicial
+    
+    // Carregar zoom salvo do localStorage (padrão 1.0)
+    let currentZoom = parseFloat(localStorage.getItem('dpsMeterZoom')) || 1.0;
+    
     let syncTimerInterval;
     let syncCountdown = 0;
     const SYNC_RESET_TIME = 80; // Segundos para el reinicio automático
@@ -184,6 +187,7 @@ const professionMap = {
         if (zoomInButton) {
             zoomInButton.addEventListener('click', () => {
                 currentZoom = Math.min(2.0, currentZoom + 0.1); // Limitar zoom máximo a 2.0
+                localStorage.setItem('dpsMeterZoom', currentZoom.toString());
                 applyZoom();
             });
         }
@@ -191,6 +195,7 @@ const professionMap = {
         if (zoomOutButton) {
             zoomOutButton.addEventListener('click', () => {
                 currentZoom = Math.max(0.5, currentZoom - 0.1); // Limitar zoom mínimo a 0.5
+                localStorage.setItem('dpsMeterZoom', currentZoom.toString());
                 applyZoom();
             });
         }
@@ -328,7 +333,8 @@ const professionMap = {
         const container = document.getElementById('player-bars-container');
         if (!dpsMeter || !container || !window.electronAPI) return;
 
-        const numPlayers = container.querySelectorAll('.player-bar').length;
+        // CRÍTICO: Usar número REAL de jogadores renderizados (incluindo lite-bar)
+        const numPlayers = container.querySelectorAll('.player-bar, .lite-bar').length;
         
         // Só fazer resize se o número de players mudou (evita fundo preto em updates constantes)
         if (numPlayers === lastPlayerCount && resizeThrottleTimeout) {
@@ -343,14 +349,15 @@ const professionMap = {
         }
         
         resizeThrottleTimeout = setTimeout(() => {
-            const baseWidth = 650; // Ancho fijo como se solicitó
+            const baseWidth = 620; // Ajustado para terminar no botão X
             const headerHeight = document.querySelector('.controls')?.offsetHeight || 50; // Altura de la cabecera
             const marginTop = 40; // Margen superior del contenedor de barras
             const borderWidth = 2; // Borde superior e inferior del contenedor
             const barHeight = 55; // Altura de cada barra de jugador
             const barGap = 8;    // Espacio entre barras
 
-            const numPlayersCapped = Math.min(numPlayers, maxPlayersToShow); // Limitar conforme configuração
+            // Usar número de jogadores renderizados (já limitado por maxPlayersToShow em fetchDataAndRender)
+            const numPlayersCapped = numPlayers;
 
             let barsHeight = 0;
             if (numPlayersCapped > 0) {
@@ -592,8 +599,11 @@ const professionMap = {
                 if (loadingIndicator) {
                     loadingIndicator.style.display = 'none';
                 }
-                playerBarsContainer.style.display = 'none'; // Ocultar el contenedor de barras
+                // CRÍTICO: Esconder E limpar container para evitar fundo preto
+                playerBarsContainer.style.display = 'none';
+                playerBarsContainer.innerHTML = ''; // Limpar HTML
                 updateSyncButtonState();
+                updateWindowSize(); // Atualizar para altura mínima
                 return;
             }
 
@@ -950,6 +960,19 @@ const professionMap = {
 
     // Script para eliminar el texto de depuración de VSCode
     document.addEventListener('DOMContentLoaded', () => {
+        // CRÍTICO: Observer para detectar mudanças no container e ajustar altura
+        const playerBarsContainer = document.getElementById('player-bars-container');
+        if (playerBarsContainer) {
+            const observer = new MutationObserver(() => {
+                updateWindowSize();
+            });
+            
+            observer.observe(playerBarsContainer, {
+                childList: true,
+                subtree: false
+            });
+        }
+
         const debugTexts = [
             '# VSCode Visible Files',
             '# VSCode Open Tabs',

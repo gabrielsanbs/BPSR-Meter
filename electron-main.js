@@ -5,6 +5,9 @@ const { exec, fork } = require('child_process');
 const net = require('net'); // Necesario para checkPort
 const fs = require('fs');
 
+// Permitir GC manual para liberar memória após fechar janelas pesadas
+app.commandLine.appendSwitch('js-flags', '--expose_gc');
+
 // Função para registrar em arquivo seguro para ambiente empacotado
 function logToFile(msg) {
     try {
@@ -16,6 +19,50 @@ function logToFile(msg) {
     } catch (e) {
         // Se houver erro, mostrar no console
         console.error('Erro ao escrever log:', e);
+    }
+}
+
+function triggerManualGC(reason) {
+    if (typeof global.gc === 'function') {
+        try {
+            global.gc();
+            logToFile(`GC manual executado (${reason})`);
+        } catch (gcError) {
+            console.warn('Falha ao executar GC manual:', gcError);
+        }
+    } else {
+        logToFile(`GC manual indisponível (${reason})`);
+    }
+}
+
+function cleanupChildWindowResources(win, label) {
+    if (!win) return;
+
+    try {
+        win.removeAllListeners('blur');
+        win.removeAllListeners('focus');
+
+        if (process.platform === 'win32' && typeof win.unhookAllWindowMessages === 'function') {
+            try {
+                win.unhookAllWindowMessages();
+            } catch (hookError) {
+                console.warn(`Falha ao remover hooks da janela ${label}:`, hookError);
+            }
+        }
+
+        const contents = win.webContents;
+        if (contents && !contents.isDestroyed()) {
+            contents.removeAllListeners();
+            const session = contents.session;
+            if (session) {
+                session.clearCache().catch((err) => console.warn(`Falha ao limpar cache da janela ${label}:`, err));
+                session.clearStorageData().catch((err) => console.warn(`Falha ao limpar storage da janela ${label}:`, err));
+            }
+        }
+    } catch (error) {
+        console.error(`Erro ao limpar recursos da janela ${label}:`, error);
+    } finally {
+        triggerManualGC(`janela ${label}`);
     }
 }
 
@@ -51,6 +98,43 @@ function promoteOverlayWindow(win, { focus = false } = {}) {
     }
     if (focus) {
         win.focus();
+    }
+}
+
+// Prevenir efeitos de blur/focus que causam fundo preto
+function preventWindowBlur(win) {
+    if (!win) return;
+    
+    win.on('blur', () => {
+        if (!win.isDestroyed()) {
+            setTimeout(() => {
+                win.setAlwaysOnTop(true, 'screen-saver', 1);
+            }, 10);
+        }
+    });
+
+    win.on('focus', () => {
+        if (!win.isDestroyed()) {
+            promoteOverlayWindow(win);
+        }
+    });
+
+    // WINDOWS-SPECIFIC: Prevenir efeitos DWM
+    if (process.platform === 'win32') {
+        try {
+            // Hook WM_ACTIVATE para prevenir efeitos de ativação/desativação
+            win.hookWindowMessage(0x0006, () => {
+                win.setBackgroundColor('#00000000');
+                return 0;
+            });
+            
+            // Hook WM_NCACTIVATE para prevenir efeitos na área não-cliente
+            win.hookWindowMessage(0x0086, () => {
+                return 0;
+            });
+        } catch (e) {
+            console.warn('Não foi possível hook window messages:', e);
+        }
     }
 }
 
@@ -116,7 +200,7 @@ function promoteOverlayWindow(win, { focus = false } = {}) {
         logToFile('Porta disponível encontrada: ' + server_port);
 
         mainWindow = new BrowserWindow({
-            width: 650,
+            width: 620, // Ajustado para terminar no botão X
             height: 600,
             transparent: true,
             frame: false,
@@ -124,18 +208,30 @@ function promoteOverlayWindow(win, { focus = false } = {}) {
             resizable: false,
             backgroundColor: '#00000000', // Transparente RGBA para evitar fundo preto
             hasShadow: false, // Remover sombra que pode causar fundo preto
+            thickFrame: false, // Remove frame grosso do Windows
+            titleBarStyle: 'hidden', // Esconde barra de título
+            focusable: true, // SEMPRE true - nunca false
             webPreferences: {
                 preload: path.join(__dirname, 'preload.js'),
                 nodeIntegration: false,
                 contextIsolation: true,
                 backgroundThrottling: false, // Evitar throttling que causa re-rendering
+                transparent: true, // Forçar transparência
             },
             icon: path.join(__dirname, 'icon.ico'),
         });
 
+        // Remove menu bar para evitar bordas/fundos indesejados
+        mainWindow.setMenuBarVisibility(false);
+
         // Configurar estado inicial: cadeado ABERTO = permite eventos (pode arrastar)
         mainWindow.setIgnoreMouseEvents(false);
         // REMOVIDO: setMovable() - drag será manual via JavaScript
+
+        promoteOverlayWindow(mainWindow);
+
+        // Prevenir efeitos de blur/focus
+        preventWindowBlur(mainWindow);
 
         promoteOverlayWindow(mainWindow);
 
@@ -560,13 +656,11 @@ function promoteOverlayWindow(win, { focus = false } = {}) {
             if (isLocked) {
                 // Quando TRAVADO: começar ignorando eventos (cliques passam pro jogo)
                 mainWindow.setIgnoreMouseEvents(true, { forward: true });
-                mainWindow.setFocusable(false); // evitar que o Windows aplique sombra/fundo ao perder foco
-                mainWindow.blur();
+                // REMOVIDO: setFocusable(false) e blur() - causavam fundo preto
             } else {
                 // Quando DESTRAVADO: processar todos os eventos normalmente
                 mainWindow.setIgnoreMouseEvents(false);
-                mainWindow.setFocusable(true);
-                mainWindow.focus();
+                // REMOVIDO: setFocusable(true) e focus() - não são necessários
             }
             
             promoteOverlayWindow(mainWindow);
@@ -666,15 +760,22 @@ function promoteOverlayWindow(win, { focus = false } = {}) {
             resizable: true,
             backgroundColor: '#00000000',
             hasShadow: false,
+            thickFrame: false, // Remove frame grosso do Windows
+            titleBarStyle: 'hidden', // Esconde barra de título
+            focusable: true, // SEMPRE true
             webPreferences: {
                 preload: path.join(__dirname, 'preload.js'), // ADICIONAR preload para IPC funcionar
                 nodeIntegration: false,
                 contextIsolation: true,
                 backgroundThrottling: false,
+                transparent: true, // Forçar transparência
             },
             icon: path.join(__dirname, 'icon.ico'),
             title: 'Histórico de Lutas - BPSR Meter'
         });
+
+        // Remove menu bar para evitar bordas/fundos indesejados
+        historyWindow.setMenuBarVisibility(false);
 
         historyWindow.loadURL(`${serverUrl}/history.html`);
 
@@ -688,6 +789,13 @@ function promoteOverlayWindow(win, { focus = false } = {}) {
             if (lastColorSettings) {
                 sendCustomColorsToWindow(historyWindow, lastColorSettings);
             }
+        });
+
+        // Prevenir efeitos de blur/focus
+        preventWindowBlur(historyWindow);
+
+        historyWindow.on('close', () => {
+            cleanupChildWindowResources(historyWindow, 'history');
         });
 
         historyWindow.on('closed', () => {
@@ -738,14 +846,22 @@ function promoteOverlayWindow(win, { focus = false } = {}) {
             alwaysOnTop: true,
             resizable: false,
             backgroundColor: '#00000000',
+            hasShadow: false,
+            thickFrame: false, // Remove frame grosso do Windows
+            titleBarStyle: 'hidden', // Esconde barra de título
+            focusable: true, // SEMPRE true
             webPreferences: {
                 preload: path.join(__dirname, 'preload.js'),
                 nodeIntegration: false,
                 contextIsolation: true,
+                transparent: true, // Forçar transparência
             },
             icon: path.join(__dirname, 'icon.ico'),
             title: 'Configurações - BPSR Meter'
         });
+
+        // Remove menu bar para evitar bordas/fundos indesejados
+        settingsWindow.setMenuBarVisibility(false);
 
         settingsWindow.loadURL(`${serverUrl}/settings.html`);
 
@@ -759,6 +875,13 @@ function promoteOverlayWindow(win, { focus = false } = {}) {
             if (lastColorSettings) {
                 sendCustomColorsToWindow(settingsWindow, lastColorSettings);
             }
+        });
+
+        // Prevenir efeitos de blur/focus
+        preventWindowBlur(settingsWindow);
+
+        settingsWindow.on('close', () => {
+            cleanupChildWindowResources(settingsWindow, 'settings');
         });
 
         settingsWindow.on('closed', () => {
