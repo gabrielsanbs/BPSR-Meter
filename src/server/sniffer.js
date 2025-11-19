@@ -97,6 +97,9 @@ class Sniffer {
         this.MIN_LONG_HANDSHAKE_SIZE = 150; // Filtrar sync packets pequenos
         this.serverNoticeCooldown = 1500; // evitar spams de eventos para o front
         this.lastServerNotice = { key: '', timestamp: 0 };
+        
+        // Intervalo de limpeza de fragmentos
+        this.fragmentCleanupInterval = null;
     }
 
     detectHandshakeType(buf) {
@@ -567,7 +570,7 @@ class Sniffer {
             }
         })();
 
-        setInterval(async () => {
+        this.fragmentCleanupInterval = setInterval(async () => {
             const now = Date.now();
             let clearedFragments = 0;
             for (const [key, cacheEntry] of this.fragmentIpCache) {
@@ -600,6 +603,19 @@ class Sniffer {
         } else {
             console.log(message);
         }
+    }
+
+    /** Método de cleanup para limpar recursos antes de fechar */
+    cleanup() {
+        this.logger.info('Limpando recursos do Sniffer...');
+        
+        // Limpar intervalo de limpeza de fragmentos
+        if (this.fragmentCleanupInterval) {
+            clearInterval(this.fragmentCleanupInterval);
+            this.fragmentCleanupInterval = null;
+        }
+        
+        this.logger.info('Recursos do Sniffer limpos com sucesso');
     }
 }
 

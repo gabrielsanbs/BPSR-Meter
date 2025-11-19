@@ -423,7 +423,7 @@ function initializeApi(app, server, io, userDataManager, logger, globalSettings,
         });
     });
 
-    setInterval(() => {
+    const dataEmitInterval = setInterval(() => {
         if (!globalSettings.isPaused) {
             const userData = userDataManager.getAllUsersData();
             const data = {
@@ -433,6 +433,17 @@ function initializeApi(app, server, io, userDataManager, logger, globalSettings,
             io.emit('data', data);
         }
     }, 100);
+
+    // Retornar função de cleanup para limpar recursos
+    return {
+        cleanup: () => {
+            logger.info('Limpando recursos da API...');
+            if (dataEmitInterval) {
+                clearInterval(dataEmitInterval);
+            }
+            logger.info('Recursos da API limpos com sucesso');
+        }
+    };
 }
 
 module.exports = initializeApi;

@@ -1484,6 +1484,25 @@ class UserDataManager {
             this.logger.info(`Timeout reached (${timeoutSec}s), statistics cleared!`);
         }
     }
+
+    /** Método de cleanup para limpar timers antes de fechar */
+    cleanup() {
+        this.logger.info('Limpando recursos do DataManager...');
+        
+        // Limpar timer de salvamento de cache
+        if (this.cacheSaveTimer) {
+            clearTimeout(this.cacheSaveTimer);
+            this.cacheSaveTimer = null;
+        }
+        
+        // Limpar timer de salvamento de player map
+        if (this.playerMapSaveTimer) {
+            clearTimeout(this.playerMapSaveTimer);
+            this.playerMapSaveTimer = null;
+        }
+        
+        this.logger.info('Recursos do DataManager limpos com sucesso');
+    }
 }
 
 module.exports = { StatisticData, UserData, UserDataManager, Lock, getSubProfessionBySkillId };

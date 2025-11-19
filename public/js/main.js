@@ -1088,3 +1088,40 @@ const professionMap = {
     } else {
         applySavedMeterBackground();
     }
+
+    // Cleanup: Limpar todos os intervalos e timeouts quando a janela for fechada
+    window.addEventListener('beforeunload', () => {
+        console.log('[Cleanup] Limpando recursos antes de fechar...');
+        
+        // Limpar intervalo de atualização principal
+        if (updateInterval) {
+            clearInterval(updateInterval);
+            updateInterval = null;
+        }
+        
+        // Limpar timer de sincronização
+        if (syncTimerInterval) {
+            clearInterval(syncTimerInterval);
+            syncTimerInterval = null;
+        }
+        
+        // Limpar timeout de exibição do timer
+        if (syncTimerDisplayTimeout) {
+            clearTimeout(syncTimerDisplayTimeout);
+            syncTimerDisplayTimeout = null;
+        }
+        
+        // Limpar timeout de log preview
+        if (logPreviewTimeout) {
+            clearTimeout(logPreviewTimeout);
+            logPreviewTimeout = null;
+        }
+        
+        // Limpar timeout de resize throttle
+        if (resizeThrottleTimeout) {
+            clearTimeout(resizeThrottleTimeout);
+            resizeThrottleTimeout = null;
+        }
+        
+        console.log('[Cleanup] Recursos limpos com sucesso');
+    });

@@ -180,12 +180,24 @@ async function main() {
 
     process.on('SIGINT', async () => {
         console.log('\nCerrando aplicación...');
+        if (userDataManager && typeof userDataManager.cleanup === 'function') {
+            userDataManager.cleanup();
+        }
+        if (sniffer && typeof sniffer.cleanup === 'function') {
+            sniffer.cleanup();
+        }
         rl.close();
         process.exit(0);
     });
 
     process.on('SIGTERM', async () => {
         console.log('\nCerrando aplicación...');
+        if (userDataManager && typeof userDataManager.cleanup === 'function') {
+            userDataManager.cleanup();
+        }
+        if (sniffer && typeof sniffer.cleanup === 'function') {
+            sniffer.cleanup();
+        }
         rl.close();
         process.exit(0);
     });
@@ -213,7 +225,44 @@ async function main() {
     sniffer.io = io;
     userDataManager.io = io;
 
-    initializeApi(app, server, io, userDataManager, logger, globalSettings, sniffer, SETTINGS_PATH); // Passar SETTINGS_PATH para a API
+    const apiCleanup = initializeApi(app, server, io, userDataManager, logger, globalSettings, sniffer, SETTINGS_PATH); // Passar SETTINGS_PATH para a API
+
+    // Atualizar handlers de SIGTERM/SIGINT para incluir cleanup da API
+    const originalSigintHandler = process.listeners('SIGINT')[0];
+    const originalSigtermHandler = process.listeners('SIGTERM')[0];
+    
+    process.removeAllListeners('SIGINT');
+    process.removeAllListeners('SIGTERM');
+    
+    process.on('SIGINT', async () => {
+        console.log('\nCerrando aplicación...');
+        if (apiCleanup && typeof apiCleanup.cleanup === 'function') {
+            apiCleanup.cleanup();
+        }
+        if (userDataManager && typeof userDataManager.cleanup === 'function') {
+            userDataManager.cleanup();
+        }
+        if (sniffer && typeof sniffer.cleanup === 'function') {
+            sniffer.cleanup();
+        }
+        rl.close();
+        process.exit(0);
+    });
+
+    process.on('SIGTERM', async () => {
+        console.log('\nCerrando aplicación...');
+        if (apiCleanup && typeof apiCleanup.cleanup === 'function') {
+            apiCleanup.cleanup();
+        }
+        if (userDataManager && typeof userDataManager.cleanup === 'function') {
+            userDataManager.cleanup();
+        }
+        if (sniffer && typeof sniffer.cleanup === 'function') {
+            sniffer.cleanup();
+        }
+        rl.close();
+        process.exit(0);
+    });
 
     server.listen(server_port, '0.0.0.0', () => {
         const localUrl = `http://localhost:${server_port}`;

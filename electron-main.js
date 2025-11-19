@@ -75,6 +75,7 @@ let server_port = 8989; // Porta inicial
 let serverUrl = ''; // URL do servidor
 let isLocked = false; // Estado inicial do cadeado: desbloqueado
 let lastColorSettings = null; // Últimas cores aplicadas
+let f10CheckInterval = null; // Intervalo para verificar registro do F10
 logToFile('==== INÍCIO DO ELECTRON ====');
 
 function sendCustomColorsToWindow(win, colorSettings) {
@@ -157,6 +158,11 @@ function registerF10Shortcut() {
 
 // Verificar periodicamente se F10 ainda está registrado e re-registrar se necessário
 function ensureF10Registration() {
+    // Proteção: não tentar acessar mainWindow se ela foi destruída
+    if (!mainWindow || mainWindow.isDestroyed()) {
+        return;
+    }
+    
     if (!globalShortcut.isRegistered('F10')) {
         logToFile('F10 não está mais registrado, tentando re-registrar...');
         registerF10Shortcut();
@@ -602,6 +608,9 @@ function ensureF10Registration() {
         });
 
         mainWindow.on('closed', () => {
+            // Limpar intervalo de verificação de posição do mouse
+            stopMousePositionPolling();
+            
             mainWindow = null;
             if (serverProcess) {
                 // Enviar SIGTERM para un cierre limpio
@@ -948,7 +957,7 @@ app.whenReady().then(() => {
         registerF10Shortcut();
         
         // Verificar a cada 30 segundos se F10 ainda está registrado
-        setInterval(ensureF10Registration, 30000);
+        f10CheckInterval = setInterval(ensureF10Registration, 30000);
     }, 1000);
 
     app.on('activate', () => {
@@ -965,6 +974,15 @@ app.on('window-all-closed', () => {
 });
 
 app.on('will-quit', () => {
+    // Limpar intervalo de verificação do F10
+    if (f10CheckInterval) {
+        clearInterval(f10CheckInterval);
+        f10CheckInterval = null;
+    }
+    
+    // Limpar intervalo de polling do mouse
+    stopMousePositionPolling();
+    
     // Desregistrar todos os atalhos globais
     globalShortcut.unregisterAll();
     logToFile('Atalhos globais desregistrados');
