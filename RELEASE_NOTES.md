@@ -1,8 +1,116 @@
-# 🎯 BPSR Meter v3.2.1
+# 🎯 BPSR Meter v3.2.2
 
 [[Português](#português)] | [[English](#english)] | [[Español](#español)]
 
 ---
+
+## Português
+
+**✨ NOVIDADES v3.2.2:**
+
+### 🛡️ Correção Crítica de Estabilidade
+- **Crash "Object has been destroyed" CORRIGIDO** - aplicação não trava mais ao fechar
+- **Limpeza completa de timers** em todos os módulos (Electron, backend Node.js e frontend)
+- **7+ vazamentos de timer eliminados** que causavam tentativas de acesso a objetos destruídos
+- **Proteção contra janelas destruídas** em todos os callbacks de timer
+
+### 🔧 Melhorias no Atalho Global F10
+- **Re-registro automático do F10** a cada 30 segundos se perder o registro
+- **Proteção robusta** contra falhas quando o Blue Protocol tem foco
+- **Logs de erro detalhados** para diagnóstico de problemas com atalhos
+
+### 💾 Persistência de Zoom Aprimorada
+- **Zoom aplicado imediatamente** ao iniciar (não espera mais interação do usuário)
+- **Chamada de `applyZoom()` no DOMContentLoaded** para restauração instantânea
+
+### 🧹 Limpeza de Recursos Implementada
+- **`cleanup()` em dataManager.js** - limpa cacheSaveTimer e playerMapSaveTimer
+- **`cleanup()` em sniffer.js** - limpa fragmentCleanupInterval
+- **`cleanup()` em api.js** - limpa dataEmitInterval (100ms)
+- **`beforeunload` em main.js** - limpa 5+ timers do frontend
+- **Handlers SIGTERM/SIGINT otimizados** em server.js para shutdown gracioso
+
+**📥 Como atualizar:**
+1. Baixe: `BPSR Meter (by gabrielsanbs) Setup 3.2.2.exe`
+2. Execute o instalador (sobrescreve versões anteriores)
+3. Suas configurações serão mantidas automaticamente
+
+**🔍 Detalhes Técnicos:**
+- Todos os `setInterval/setTimeout` agora são rastreados e limpos
+- `f10CheckInterval` e `mouseCheckInterval` limpos no evento `will-quit`
+- Proteção contra `mainWindow.isDestroyed()` antes de qualquer acesso
+- 6 arquivos modificados: electron-main.js, server.js, api.js, dataManager.js, sniffer.js, main.js
+- 154 linhas adicionadas para gerenciamento robusto de lifecycle
+
+---
+
+## English
+
+**✨ NEW IN v3.2.2:**
+
+### 🛡️ Critical Stability Fix
+- **"Object has been destroyed" crash FIXED** - app no longer crashes on close
+- **Complete timer cleanup** across all modules (Electron, Node.js backend, and frontend)
+- **7+ timer leaks eliminated** that caused attempts to access destroyed objects
+- **Protection against destroyed windows** in all timer callbacks
+
+### 🔧 Global F10 Shortcut Improvements
+- **Automatic F10 re-registration** every 30 seconds if registration is lost
+- **Robust protection** against failures when Blue Protocol has focus
+- **Detailed error logging** for shortcut troubleshooting
+
+### 💾 Enhanced Zoom Persistence
+- **Zoom applied immediately** on startup (no longer waits for user interaction)
+- **`applyZoom()` called on DOMContentLoaded** for instant restoration
+
+### 🧹 Resource Cleanup Implemented
+- **`cleanup()` in dataManager.js** - clears cacheSaveTimer and playerMapSaveTimer
+- **`cleanup()` in sniffer.js** - clears fragmentCleanupInterval
+- **`cleanup()` in api.js** - clears dataEmitInterval (100ms)
+- **`beforeunload` in main.js** - clears 5+ frontend timers
+- **Optimized SIGTERM/SIGINT handlers** in server.js for graceful shutdown
+
+**📥 How to update:**
+1. Download: `BPSR Meter (by gabrielsanbs) Setup 3.2.2.exe`
+2. Run installer (overwrites previous versions)
+3. Your settings will be kept automatically
+
+---
+
+## Español
+
+**✨ NOVEDADES v3.2.2:**
+
+### 🛡️ Corrección Crítica de Estabilidad
+- **Crash "Object has been destroyed" CORREGIDO** - la app ya no se cuelga al cerrar
+- **Limpieza completa de timers** en todos los módulos (Electron, backend Node.js y frontend)
+- **7+ fugas de timer eliminadas** que causaban intentos de acceso a objetos destruidos
+- **Protección contra ventanas destruidas** en todos los callbacks de timer
+
+### 🔧 Mejoras en Atajo Global F10
+- **Re-registro automático de F10** cada 30 segundos si pierde el registro
+- **Protección robusta** contra fallos cuando Blue Protocol tiene foco
+- **Logs de error detallados** para diagnóstico de problemas con atajos
+
+### 💾 Persistencia de Zoom Mejorada
+- **Zoom aplicado inmediatamente** al iniciar (ya no espera interacción del usuario)
+- **Llamada de `applyZoom()` en DOMContentLoaded** para restauración instantánea
+
+### 🧹 Limpieza de Recursos Implementada
+- **`cleanup()` en dataManager.js** - limpia cacheSaveTimer y playerMapSaveTimer
+- **`cleanup()` en sniffer.js** - limpia fragmentCleanupInterval
+- **`cleanup()` en api.js** - limpia dataEmitInterval (100ms)
+- **`beforeunload` en main.js** - limpia 5+ timers del frontend
+- **Handlers SIGTERM/SIGINT optimizados** en server.js para apagado limpio
+
+**📥 Cómo actualizar:**
+1. Descarga: `BPSR Meter (by gabrielsanbs) Setup 3.2.2.exe`
+2. Ejecuta el instalador (sobrescribe versiones anteriores)
+3. Tus configuraciones se mantendrán automáticamente
+
+---
+
+# 🎯 BPSR Meter v3.2.1
 
 ## Português
 
