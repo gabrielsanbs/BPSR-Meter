@@ -138,6 +138,31 @@ function preventWindowBlur(win) {
     }
 }
 
+// Função para registrar o atalho global F10 com retry
+function registerF10Shortcut() {
+    const ret = globalShortcut.register('F10', () => {
+        if (mainWindow && !mainWindow.isDestroyed()) {
+            mainWindow.webContents.send('global-shortcut-f10');
+        }
+    });
+
+    if (!ret) {
+        logToFile('AVISO: Falha ao registrar atalho global F10 (pode estar bloqueado por outro app)');
+    } else {
+        logToFile('Atalho global F10 registrado com sucesso');
+    }
+    
+    return ret;
+}
+
+// Verificar periodicamente se F10 ainda está registrado e re-registrar se necessário
+function ensureF10Registration() {
+    if (!globalShortcut.isRegistered('F10')) {
+        logToFile('F10 não está mais registrado, tentando re-registrar...');
+        registerF10Shortcut();
+    }
+}
+
     // Função para verificar se uma porta está em uso
     const checkPort = (port) => {
         return new Promise((resolve) => {
@@ -244,12 +269,16 @@ function preventWindowBlur(win) {
             if (lastColorSettings) {
                 sendCustomColorsToWindow(mainWindow, lastColorSettings);
             }
+            // Tentar re-registrar F10 quando a janela for mostrada novamente
+            ensureF10Registration();
         });
         mainWindow.on('focus', () => {
             promoteOverlayWindow(mainWindow);
             if (lastColorSettings) {
                 sendCustomColorsToWindow(mainWindow, lastColorSettings);
             }
+            // Tentar re-registrar F10 quando a janela receber foco
+            ensureF10Registration();
         });
         mainWindow.on('restore', () => promoteOverlayWindow(mainWindow, { focus: true }));
 
@@ -914,17 +943,13 @@ app.whenReady().then(() => {
     createWindow();
 
     // Registrar atalho global F10 para reset do DPS Meter
-    const ret = globalShortcut.register('F10', () => {
-        if (mainWindow && !mainWindow.isDestroyed()) {
-            mainWindow.webContents.send('global-shortcut-f10');
-        }
-    });
-
-    if (!ret) {
-        logToFile('AVISO: Falha ao registrar atalho global F10');
-    } else {
-        logToFile('Atalho global F10 registrado com sucesso');
-    }
+    // Aguardar a janela estar completamente pronta para evitar conflitos
+    setTimeout(() => {
+        registerF10Shortcut();
+        
+        // Verificar a cada 30 segundos se F10 ainda está registrado
+        setInterval(ensureF10Registration, 30000);
+    }, 1000);
 
     app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) {

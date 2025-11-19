@@ -79,6 +79,7 @@ const professionMap = {
     
     // Carregar zoom salvo do localStorage (padrão 1.0)
     let currentZoom = parseFloat(localStorage.getItem('dpsMeterZoom')) || 1.0;
+
     
     let syncTimerInterval;
     let syncCountdown = 0;
@@ -151,6 +152,8 @@ const professionMap = {
             });
         }
 
+        // Aplicar zoom salvo ao carregar a página
+        applyZoom();
 
         // Botón Advanced/Lite
         const advLiteBtn = document.getElementById('advanced-lite-btn');
@@ -323,9 +326,12 @@ const professionMap = {
     function applyZoom() {
         const dpsMeter = document.querySelector('.dps-meter');
         if (dpsMeter) {
+
             dpsMeter.style.transform = `scale(${currentZoom})`;
             dpsMeter.style.transformOrigin = 'top left';
             updateWindowSize(); // Redimensionar la ventana al aplicar zoom
+        } else {
+            console.warn('[Zoom] Elemento .dps-meter não encontrado ao aplicar zoom');
         }
     }
 
