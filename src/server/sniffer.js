@@ -87,8 +87,8 @@ class Sniffer {
         this.serverHistory = new Map();
         this.consecutiveServerChanges = 0;
         this.lastTcpCleanup = 0;
-        this.MAX_TCP_CACHE_SIZE = 4096;
-        this.TCP_CACHE_TTL = 15000;
+        this.MAX_TCP_CACHE_SIZE = 1024; // Otimizado para tempo real (4096 causava delay em VPN)
+        this.TCP_CACHE_TTL = 5000; // Reduzido de 15s (pacotes antigos não são úteis)
         
         // Sistema de cooldown para handshakes + filtro de tamanho
         this.lastHandshakeTime = 0;
@@ -447,9 +447,31 @@ class Sniffer {
                 return;
             }
             
+            // [VPN MULTIPATH SYNC] Detectar troca silenciosa de rota (ExitLag/NoPing)
+            // Se NÃO é mudança real (grace period protege reset), mas a chave mudou (nova porta/IP)
+            if (!isServerChange && normalizedServerKey !== this.currentServerKey) {
+                this.logger.info(`[VPN/MULTIPATH] Rota alterada silenciosamente: ${this.currentServerKey} -> ${normalizedServerKey}`);
+                
+                // 1. Atualizar chave de conexão sem triggar reset de DPS
+                this.current_server = src_server;
+                this.currentServerKey = normalizedServerKey;
+                this.lastValidServerPacket = now;
+                this.serverDetectionTimestamp = now;
+                
+                // 2. CRÍTICO: Ressincronizar TCP sequence para o novo fluxo
+                // Sem isso, o sniffer fica esperando pacotes da rota antiga (causando delay)
+                const oldSeq = this.tcp_next_seq;
+                this.tcp_next_seq = tcpPacket.info.seqno;
+                
+                // 3. Limpar cache TCP da rota anterior (pacotes órfãos)
+                const cacheSize = this.tcp_cache.size;
+                this.tcp_cache.clear();
+                
+                this.logger.debug(`[VPN/MULTIPATH] TCP seq resync: ${oldSeq} -> ${this.tcp_next_seq} (cache cleared: ${cacheSize} entries)`);
+            }
+            
             // Atualizar timestamp de último pacote válido
             if (!isServerChange && normalizedServerKey === this.currentServerKey) {
-                const now = Date.now();
                 this.lastValidServerPacket = now;
                 this.serverDetectionTimestamp = now;
                 this.awaitingServerData = false;
