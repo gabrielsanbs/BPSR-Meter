@@ -607,6 +607,55 @@ function ensureF10Registration() {
             logToFile('server process exited with code ' + code);
         });
 
+    // Polling para verificar posição do cursor e controlar setIgnoreMouseEvents automaticamente
+    let mouseCheckInterval = null;
+    const HEADER_HEIGHT = 50; // Altura aproximada do header em pixels
+    
+    function startMousePositionPolling() {
+        if (mouseCheckInterval) return;
+        
+        mouseCheckInterval = setInterval(() => {
+            if (!mainWindow || !isLocked) return;
+            
+            try {
+                const cursorPos = screen.getCursorScreenPoint();
+                const windowBounds = mainWindow.getBounds();
+                
+                // Verificar se cursor está dentro dos bounds da janela
+                const isInsideWindow = cursorPos.x >= windowBounds.x && 
+                                      cursorPos.x <= windowBounds.x + windowBounds.width &&
+                                      cursorPos.y >= windowBounds.y && 
+                                      cursorPos.y <= windowBounds.y + windowBounds.height;
+                
+                if (isInsideWindow) {
+                    // Cursor está sobre a janela
+                    const relativeY = cursorPos.y - windowBounds.y;
+                    const isOverHeader = relativeY <= HEADER_HEIGHT;
+                    
+                    if (isOverHeader) {
+                        // Mouse sobre o header: permitir eventos
+                        mainWindow.setIgnoreMouseEvents(false);
+                    } else {
+                        // Mouse fora do header: ignorar eventos (passam pro jogo)
+                        mainWindow.setIgnoreMouseEvents(true, { forward: true });
+                    }
+                } else {
+                    // Cursor fora da janela: ignorar eventos
+                    mainWindow.setIgnoreMouseEvents(true, { forward: true });
+                }
+            } catch (error) {
+                console.error('Erro ao verificar posição do cursor:', error);
+            }
+        }, 50); // Verificar a cada 50ms para resposta rápida
+    }
+    
+    function stopMousePositionPolling() {
+        if (mouseCheckInterval) {
+            clearInterval(mouseCheckInterval);
+            mouseCheckInterval = null;
+        }
+    }
+
         mainWindow.on('closed', () => {
             // Limpar intervalo de verificação de posição do mouse
             stopMousePositionPolling();
@@ -714,55 +763,6 @@ function ensureF10Registration() {
         }
     });
 
-    // Polling para verificar posição do cursor e controlar setIgnoreMouseEvents automaticamente
-    let mouseCheckInterval = null;
-    const HEADER_HEIGHT = 50; // Altura aproximada do header em pixels
-    
-    function startMousePositionPolling() {
-        if (mouseCheckInterval) return;
-        
-        mouseCheckInterval = setInterval(() => {
-            if (!mainWindow || !isLocked) return;
-            
-            try {
-                const cursorPos = screen.getCursorScreenPoint();
-                const windowBounds = mainWindow.getBounds();
-                
-                // Verificar se cursor está dentro dos bounds da janela
-                const isInsideWindow = cursorPos.x >= windowBounds.x && 
-                                      cursorPos.x <= windowBounds.x + windowBounds.width &&
-                                      cursorPos.y >= windowBounds.y && 
-                                      cursorPos.y <= windowBounds.y + windowBounds.height;
-                
-                if (isInsideWindow) {
-                    // Cursor está sobre a janela
-                    const relativeY = cursorPos.y - windowBounds.y;
-                    const isOverHeader = relativeY <= HEADER_HEIGHT;
-                    
-                    if (isOverHeader) {
-                        // Mouse sobre o header: permitir eventos
-                        mainWindow.setIgnoreMouseEvents(false);
-                    } else {
-                        // Mouse fora do header: ignorar eventos (passam pro jogo)
-                        mainWindow.setIgnoreMouseEvents(true, { forward: true });
-                    }
-                } else {
-                    // Cursor fora da janela: ignorar eventos
-                    mainWindow.setIgnoreMouseEvents(true, { forward: true });
-                }
-            } catch (error) {
-                console.error('Erro ao verificar posição do cursor:', error);
-            }
-        }, 50); // Verificar a cada 50ms para resposta rápida
-    }
-    
-    function stopMousePositionPolling() {
-        if (mouseCheckInterval) {
-            clearInterval(mouseCheckInterval);
-            mouseCheckInterval = null;
-        }
-    }
-    
     // Listener para iniciar/parar polling quando lock state mudar
     ipcMain.on('start-mouse-polling', () => {
         if (isLocked) {
