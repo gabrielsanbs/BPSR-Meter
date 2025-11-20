@@ -78,7 +78,7 @@ class Sniffer {
         
         // Sistema de detecção de servidor
         this.lastValidServerPacket = 0;
-        this.serverChangeGracePeriod = this.globalSettings.fastServerChangeDetection ? 3000 : 8000;
+        this.serverChangeGracePeriod = this.globalSettings.fastServerChangeDetection ? 1500 : 4000;
         this.pendingServerNotice = null;
         this.lastServerChangeTime = 0;
         this.awaitingServerData = false;
@@ -87,8 +87,8 @@ class Sniffer {
         this.serverHistory = new Map();
         this.consecutiveServerChanges = 0;
         this.lastTcpCleanup = 0;
-        this.MAX_TCP_CACHE_SIZE = 1024; // Otimizado para tempo real (4096 causava delay em VPN)
-        this.TCP_CACHE_TTL = 5000; // Reduzido de 15s (pacotes antigos não são úteis)
+        this.MAX_TCP_CACHE_SIZE = 4096;
+        this.TCP_CACHE_TTL = 15000;
         
         // Sistema de cooldown para handshakes + filtro de tamanho
         this.lastHandshakeTime = 0;
@@ -194,12 +194,12 @@ class Sniffer {
         }
         
         this.awaitingServerData = true;
-        const extraBuffer = 2000;
-        this.serverDataDeadline = Date.now() + this.serverChangeGracePeriod + extraBuffer;
+        const extraBuffer = 500; // Reduzido de 2000ms - troca de mapa já foi validada pelo handshake
+        this.serverDataDeadline = Date.now() + (this.globalSettings.fastServerChangeDetection ? 1000 : 2000);
     }
 
     updateGracePeriod() {
-        this.serverChangeGracePeriod = this.globalSettings.fastServerChangeDetection ? 3000 : 8000;
+        this.serverChangeGracePeriod = this.globalSettings.fastServerChangeDetection ? 1500 : 4000;
     }
 
     setPaused(paused) {
@@ -447,29 +447,6 @@ class Sniffer {
                 return;
             }
             
-            // [VPN MULTIPATH SYNC] Detectar troca silenciosa de rota (ExitLag/NoPing)
-            // Se NÃO é mudança real (grace period protege reset), mas a chave mudou (nova porta/IP)
-            if (!isServerChange && normalizedServerKey !== this.currentServerKey) {
-                this.logger.info(`[VPN/MULTIPATH] Rota alterada silenciosamente: ${this.currentServerKey} -> ${normalizedServerKey}`);
-                
-                // 1. Atualizar chave de conexão sem triggar reset de DPS
-                this.current_server = src_server;
-                this.currentServerKey = normalizedServerKey;
-                this.lastValidServerPacket = now;
-                this.serverDetectionTimestamp = now;
-                
-                // 2. CRÍTICO: Ressincronizar TCP sequence para o novo fluxo
-                // Sem isso, o sniffer fica esperando pacotes da rota antiga (causando delay)
-                const oldSeq = this.tcp_next_seq;
-                this.tcp_next_seq = tcpPacket.info.seqno;
-                
-                // 3. Limpar cache TCP da rota anterior (pacotes órfãos)
-                const cacheSize = this.tcp_cache.size;
-                this.tcp_cache.clear();
-                
-                this.logger.debug(`[VPN/MULTIPATH] TCP seq resync: ${oldSeq} -> ${this.tcp_next_seq} (cache cleared: ${cacheSize} entries)`);
-            }
-            
             // Atualizar timestamp de último pacote válido
             if (!isServerChange && normalizedServerKey === this.currentServerKey) {
                 this.lastValidServerPacket = now;
@@ -485,6 +462,13 @@ class Sniffer {
             }
 
             if ((this.tcp_next_seq - tcpPacket.info.seqno) << 0 <= 0 || this.tcp_next_seq === -1) {
+                // Proteção: Se ainda não sincronizamos (-1) e o cache já está grande, limpe-o.
+                // Evita que o sniffer fique "empachado" com pacotes velhos antes de achar o primeiro válido.
+                if (this.tcp_next_seq === -1 && this.tcp_cache.size > 100) {
+                    this.tcp_cache.clear();
+                    this.logger.debug('[TCP INIT] Cache limpo durante sincronização inicial (>100 entradas)');
+                }
+                
                 this.tcp_cache.set(tcpPacket.info.seqno, { buffer: buf, timestamp: now });
             }
             

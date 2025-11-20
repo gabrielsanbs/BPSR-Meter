@@ -304,17 +304,6 @@ class PacketProcessor {
             if (isTargetPlayer) {
                 const playerUid = targetUuid.toNumber();
                 this._processPlayerAttrs(playerUid, attrCollection);
-                
-                // Tentar obter nome do playerMap se não veio nos atributos
-                const uidStr = String(playerUid);
-                if (this.userDataManager.playerMap.has(uidStr)) {
-                    const nameFromPlayerMap = this.userDataManager.playerMap.get(uidStr);
-                    const currentUser = this.userDataManager.users.get(playerUid);
-                    if (currentUser && currentUser.name && currentUser.name.startsWith('Player ')) {
-                        this.logger.info(`Using cached name from playerMap for UID ${playerUid}: ${nameFromPlayerMap}`);
-                        this.userDataManager.setName(playerUid, nameFromPlayerMap);
-                    }
-                }
             } else if (isTargetMonster && attrCollection.Attrs) {
                 this._processEnemyAttrs(targetUuid.toString(), targetUuid.toNumber(), attrCollection.Attrs);
             }
@@ -760,56 +749,70 @@ class PacketProcessor {
         let hasName = false;
         for (const attr of attrs) {
             if (!attr.Id || !attr.RawData) continue;
-            const reader = pbjs.Reader.create(attr.RawData);
+            
+            // Otimização: Criar reader apenas quando necessário
+            let reader;
 
             switch (attr.Id) {
                 case AttrType.AttrName:
                     hasName = true;
+                    reader = pbjs.Reader.create(attr.RawData);
                     const playerName = reader.string();
                     this.userDataManager.setName(playerUid, playerName);
                     break;
                 case AttrType.AttrProfessionId:
+                    reader = pbjs.Reader.create(attr.RawData);
                     const professionId = reader.int32();
                     const professionName = getProfessionNameFromId(professionId);
                     this.userDataManager.setProfession(playerUid, professionName);
                     break;
                 case AttrType.AttrFightPoint:
+                    reader = pbjs.Reader.create(attr.RawData);
                     const playerFightPoint = reader.int32();
                     this.userDataManager.setFightPoint(playerUid, playerFightPoint);
                     break;
                 case AttrType.AttrLevel:
+                    reader = pbjs.Reader.create(attr.RawData);
                     const playerLevel = reader.int32();
                     this.userDataManager.setAttrKV(playerUid, 'level', playerLevel);
                     break;
                 case AttrType.AttrRankLevel:
+                    reader = pbjs.Reader.create(attr.RawData);
                     const playerRankLevel = reader.int32();
                     this.userDataManager.setAttrKV(playerUid, 'rank_level', playerRankLevel);
                     break;
                 case AttrType.AttrCri:
+                    reader = pbjs.Reader.create(attr.RawData);
                     const playerCri = reader.int32();
                     this.userDataManager.setAttrKV(playerUid, 'cri', playerCri);
                     break;
                 case AttrType.AttrLucky:
+                    reader = pbjs.Reader.create(attr.RawData);
                     const playerLucky = reader.int32();
                     this.userDataManager.setAttrKV(playerUid, 'lucky', playerLucky);
                     break;
                 case AttrType.AttrHp:
+                    reader = pbjs.Reader.create(attr.RawData);
                     const playerHp = reader.int32();
                     this.userDataManager.setAttrKV(playerUid, 'hp', playerHp);
                     break;
                 case AttrType.AttrMaxHp:
+                    reader = pbjs.Reader.create(attr.RawData);
                     const playerMaxHp = reader.int32();
                     this.userDataManager.setAttrKV(playerUid, 'max_hp', playerMaxHp);
                     break;
                 case AttrType.AttrElementFlag:
+                    reader = pbjs.Reader.create(attr.RawData);
                     const playerElementFlag = reader.int32();
                     this.userDataManager.setAttrKV(playerUid, 'element_flag', playerElementFlag);
                     break;
                 case AttrType.AttrEnergyFlag:
+                    reader = pbjs.Reader.create(attr.RawData);
                     const playerEnergyFlag = reader.int32();
                     this.userDataManager.setAttrKV(playerUid, 'energy_flag', playerEnergyFlag);
                     break;
                 case AttrType.AttrReductionLevel:
+                    reader = pbjs.Reader.create(attr.RawData);
                     const playerReductionLevel = reader.int32();
                     this.userDataManager.setAttrKV(playerUid, 'reduction_level', playerReductionLevel);
                     break;
@@ -827,9 +830,28 @@ class PacketProcessor {
             }
         }
         
-        // Log se o jogador foi detectado mas não tem nome
+        // [OTIMIZAÇÃO EXITLAG/FAST SNIFF]
+        // Se ainda não tem nome (pacote fragmentado ou atrasado pela VPN),
+        // forçar busca no Cache Persistente (player_map.json) IMEDIATAMENTE.
+        // Isso resolve o problema de ver "Player 1234" por alguns segundos.
         if (!hasName) {
-            this.logger.warn(`Player ${playerUid} detected but AttrName not in packet. Waiting for name update...`);
+            const uidStr = String(playerUid);
+            if (this.userDataManager.playerMap.has(uidStr)) {
+                const cachedName = this.userDataManager.playerMap.get(uidStr);
+                // Verificar se o nome atual é genérico antes de substituir
+                const currentUser = this.userDataManager.users.get(playerUid);
+                const currentName = currentUser ? currentUser.name : '';
+                
+                if (!currentName || currentName.startsWith('Player ')) {
+                    this.userDataManager.setName(playerUid, cachedName);
+                    hasName = true;
+                }
+            }
+        }
+        
+        // Log apenas se realmente falhar tudo
+        if (!hasName) {
+            this.logger.debug(`Player ${playerUid} attributes processed but NO NAME found (attrs/mapAttrs/cache).`);
         }
     }
 
@@ -1008,17 +1030,6 @@ class PacketProcessor {
                         break;
                     case pb.EEntityType.EntChar:
                         this._processPlayerAttrs(entityUid, attrCollection);
-                        
-                        // Tentar obter nome do playerMap se não veio nos atributos
-                        const uidStr = String(entityUid);
-                        if (this.userDataManager.playerMap.has(uidStr)) {
-                            const nameFromPlayerMap = this.userDataManager.playerMap.get(uidStr);
-                            const currentUser = this.userDataManager.users.get(entityUid);
-                            if (currentUser && currentUser.name && currentUser.name.startsWith('Player ')) {
-                                this.logger.info(`Using cached name from playerMap for UID ${entityUid}: ${nameFromPlayerMap}`);
-                                this.userDataManager.setName(entityUid, nameFromPlayerMap);
-                            }
-                        }
                         break;
                     default:
                         // this.logger.debug('Get AttrCollection for Unknown EntType' + entity.EntType);

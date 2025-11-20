@@ -1,3 +1,109 @@
+# 🎯 BPSR Meter v3.2.4
+
+[[Português](#português)] | [[English](#english)] | [[Español](#español)]
+
+---
+
+## Português
+
+**✨ NOVIDADES v3.2.4:**
+
+### ⚡ Otimizações VPN/ExitLag
+- **Grace Period reduzido**: 3s/8s → 1.5s/4s (transições mais rápidas)
+- **Extra Buffer reduzido**: 2s → 0.5s (menos delay ao trocar mapa)
+- **Limpeza preventiva de cache TCP**: evita acúmulo de pacotes antes de sincronização
+- **Resultado**: Troca de mapa ~7 segundos mais rápida! 🚀
+
+### 👤 Nomes Aparecem Instantaneamente
+- **Cache agressivo centralizado** em `_processPlayerAttrs()`
+- **Tripla busca de nome**: Attrs padrão → MapAttrs → Histórico (player_map.json)
+- **Com ExitLag**: Mostra nome do histórico imediatamente se já conhece o jogador
+- **Sem mais "Player 1234"** esperando pacotes fragmentados
+
+### 💻 Performance
+- **Reader otimizado** - criado apenas quando necessário (lazy initialization)
+- **Código limpo** - removido código redundante de cache lookup em 2 métodos
+- **Menos alocações de memória** - processamento mais eficiente
+
+### 🐛 Correções
+- **Histórico**: cores dos 3 primeiros lugares agora usam getClassColor() correto
+- **Limite de 20 lutas**: histórico trunca automaticamente ao carregar
+- **Dados de classe corrigidos**: "未知" (Unknown) prioriza especialização
+
+**📥 Como atualizar:**
+1. Baixe: `BPSR Meter (by gabrielsanbs) Setup 3.2.4.exe`
+2. Execute o instalador (sobrescreve versões anteriores)
+3. Suas configurações serão mantidas automaticamente
+
+**ℹ️ Nota para usuários de VPN:**
+- Use **Legacy NDIS (NDIS 5)** no ExitLag/NoPing para melhor performance
+- Windows entregará pacotes já ordenados, eliminando delay
+
+---
+
+## English
+
+**✨ NEW IN v3.2.4:**
+
+### ⚡ VPN/ExitLag Optimizations
+- **Grace Period reduced**: 3s/8s → 1.5s/4s (faster transitions)
+- **Extra Buffer reduced**: 2s → 0.5s (less map change delay)
+- **Preventive TCP cache cleanup**: prevents packet accumulation before sync
+- **Result**: Map changes ~7 seconds faster! 🚀
+
+### 👤 Player Names Appear Instantly
+- **Centralized aggressive caching** in `_processPlayerAttrs()`
+- **Triple name lookup**: Standard Attrs → MapAttrs → History (player_map.json)
+- **With ExitLag**: Shows name from history immediately if already known
+- **No more "Player 1234"** waiting for fragmented packets
+
+### 💻 Performance
+- **Optimized reader** - created only when needed (lazy initialization)
+- **Clean code** - removed redundant cache lookup code in 2 methods
+- **Fewer memory allocations** - more efficient processing
+
+### 🐛 Fixes
+- **History**: top 3 places now use correct getClassColor()
+- **20 fight limit**: history auto-truncates on load
+- **Class data fixed**: "Unknown" (未知) prioritizes specialization
+
+**📥 How to update:**
+1. Download: `BPSR Meter (by gabrielsanbs) Setup 3.2.4.exe`
+2. Run installer (overwrites previous versions)
+3. Your settings will be preserved automatically
+
+**ℹ️ Note for VPN users:**
+- Use **Legacy NDIS (NDIS 5)** on ExitLag/NoPing for best performance
+- Windows will deliver packets already ordered, eliminating delay
+
+---
+
+## Español
+
+**✨ NOVEDADES v3.2.4:**
+
+### ⚡ Optimizaciones VPN/ExitLag
+- **Grace Period reducido**: 3s/8s → 1.5s/4s (transiciones más rápidas)
+- **Extra Buffer reducido**: 2s → 0.5s (menos delay al cambiar mapa)
+- **Limpieza preventiva de caché TCP**: evita acumulación de paquetes antes de sincronización
+- **Resultado**: ¡Cambios de mapa ~7 segundos más rápidos! 🚀
+
+### 👤 Nombres Aparecen Instantáneamente
+- **Caché agresivo centralizado** en `_processPlayerAttrs()`
+- **Búsqueda triple de nombre**: Attrs estándar → MapAttrs → Historial (player_map.json)
+- **Con ExitLag**: Muestra nombre del historial inmediatamente si ya lo conoce
+- **No más "Player 1234"** esperando paquetes fragmentados
+
+### 💻 Rendimiento
+- **Reader optimizado** - creado solo cuando es necesario (lazy initialization)
+- **Código limpio** - eliminado código redundante de búsqueda de caché en 2 métodos
+- **Menos asignaciones de memoria** - procesamiento más eficiente
+
+### 🐛 Correcciones
+- **Historial**: los 3 primeros lugares ahora usan getClassColor() correcto
+- **Límite de 20 luchas**: el historial se trunca automáticamente al cargar
+- **Datos de clase corregidos**: "Unknown" (未知) prioriza especialización
+
 # 🎯 BPSR Meter v3.2.3
 
 [[Português](#português)] | [[English](#english)] | [[Español](#español)]
