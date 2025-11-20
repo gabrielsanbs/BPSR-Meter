@@ -1,7 +1,7 @@
 <div align="center">
   <img src="portada_v31.png" alt="BPSR Meter splash" width="820" />
 
-  # BPSR Meter v3.2.2
+  # BPSR Meter v3.2.3
   ### Monitor de DPS/HPS em tempo real para Blue Protocol (PT • EN • ES)
 
   [![Download](https://img.shields.io/badge/Download-Latest-1abc9c?style=for-the-badge)](../../releases)
@@ -32,12 +32,13 @@
 - Overlay transparente com modos **Advanced, DPS e Lite/Healer** (toggle com um clique).
 - Histórico independente e tela de configurações em tempo real; tudo sincronizado via Electron + Socket.IO.
 - Compatível com VPNs gamers (ExitLag, NoPing, WTFast, Mudfish…) quando o adaptador estiver em **Legacy NDIS / WinPcap Mode**.
+- v3.2.3: cores fixas por classe, crash ao fechar corrigido, especialização detectada primeiro.
 - v3.2.2: correção crítica de crash "Object has been destroyed", limpeza completa de timers, F10 com re-registro automático e zoom persistente.
 - v3.2.1: correções de vazamento ao abrir/fechar janelas, zoom persistente e container inteligente por jogador.
 
 ### Instalação Express
 1. Instale o [Npcap](https://npcap.com/#download) marcando **WinPcap API-compatible Mode**.
-2. Baixe `BPSR Meter (by gabrielsanbs) Setup 3.2.1.exe` na aba [Releases](../../releases) e execute.
+2. Baixe `BPSR Meter (by gabrielsanbs) Setup 3.2.3.exe` na aba [Releases](../../releases) e execute.
 3. Inicie o programa **como Administrador** após abrir o Blue Protocol.
 
 ### Uso Rápido
@@ -58,12 +59,13 @@
 - Real-time **Advanced / DPS / Lite** overlay with persistent zoom and transparent drag-friendly UI.
 - Dedicated **Settings** and **History** windows share the same theme, include language selector (PT/EN/ES) and auto-save fights.
 - Full VPN compatibility (ExitLag, NoPing, WTFast, Mudfish). Enable *Legacy NDIS / WinPcap Mode* inside your VPN client.
+- v3.2.3: fixed colors by class, crash on close fixed, specialization detected first.
 - v3.2.2: critical "Object has been destroyed" crash fix, complete timer cleanup, F10 auto re-registration, and persistent zoom.
 - v3.2.1 fixes: child-window memory cleanup, auto GC, Socket.IO namespaces, container sized by live player count.
 
 ### Quick Install
-1. Install [Npcap](https://npcap.com/#download) with *WinPcap API-compatible Mode* checked.
-2. Download `BPSR Meter (by gabrielsanbs) Setup 3.2.1.exe` from [Releases](../../releases) and run it.
+1. Install [Npcap](https://npcap.com/#download) with **WinPcap API-compatible Mode** checked.
+2. Download `BPSR Meter (by gabrielsanbs) Setup 3.2.3.exe` from [Releases](../../releases) and run it.
 3. Launch as **Administrator**, then open Blue Protocol.
 
 ### Quick Use
@@ -84,12 +86,13 @@
 - Medidor transparente con modos **Advanced, DPS y Lite/Healer**, zoom persistente y controles flotantes.
 - Ventanas de **Configuración** e **Historial** en vivo con selector de idioma (PT/EN/ES) y guardado automático de peleas.
 - Compatible con VPNs gamers (ExitLag, NoPing, WTFast, Mudfish) cuando el adaptador usa *Legacy NDIS / WinPcap*.
+- v3.2.3: colores fijos por clase, crash al cerrar corregido, especialización detectada primero.
 - v3.2.2: corrección crítica de crash "Object has been destroyed", limpieza completa de timers, F10 con re-registro automático y zoom persistente.
 - v3.2.1 corrige consumo de RAM al cerrar ventanas, añade GC manual y ajuste dinámico del contenedor por jugador.
 
 ### Instalación Rápida
 1. Instala [Npcap](https://npcap.com/#download) activando **WinPcap API-compatible Mode**.
-2. Descarga `BPSR Meter (by gabrielsanbs) Setup 3.2.1.exe` desde [Releases](../../releases) y ejecútalo.
+2. Descarga `BPSR Meter (by gabrielsanbs) Setup 3.2.3.exe` desde [Releases](../../releases) y ejecútalo.
 3. Abre el medidor como **Administrador** después de iniciar Blue Protocol.
 
 ### Uso Rápido

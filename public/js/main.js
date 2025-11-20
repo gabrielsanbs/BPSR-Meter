@@ -573,23 +573,61 @@ const professionMap = {
 
     // Função para obter cor baseada na classe/especialização
     function getClassColor(profession) {
+        if (!profession) return '#ffffff';
+        
         const professionParts = profession.split('-');
         const mainClass = professionParts[0];
+        const subClass = professionParts[1];
         
-        // Mapa de cores por classe principal
+        // Mapa de cores por classe (usando nomes em chinês)
         const classColors = {
-            'HeavyGuardian': '#eca41c',
-            'Stormblade': '#8000bc',
-            'ShieldKnight': '#ece51c',
-            'WindKnight': '#00aeb8',
-            'FrostMage': '#1c91ec',
-            'marksmanship': '#ec1c29',
-            'VerdantOracle': '#00bc07',
-            'Beat': '#017d06',
-            'Performance': '#017d06'
+            // Heavy Guardian (涤罪恶火·战斧 e 巨刃守护者)
+            '涤罪恶火·战斧': '#eca41c',
+            '巨刃守护者': '#eca41c',
+            '防盾': '#eca41c',  // Recovery (especialização)
+            '光盾': '#eca41c',  // Shield (especialização)
+            '格挡': '#eca41c',  // Block (especialização)
+            '岩盾': '#eca41c',  // Earthfort (especialização)
+            
+            // Stormblade (雷影剑士)
+            '雷影剑士': '#8000bc',
+            '居合': '#8000bc',  // Iaido Slash (especialização)
+            '月刃': '#8000bc',  // MoonStrike (especialização)
+            
+            // Shield Knight (神盾骑士)
+            '神盾骑士': '#ece51c',
+            
+            // Wind Knight (青岚骑士)
+            '青岚骑士': '#00aeb8',
+            '空枪': '#00aeb8',  // Skyward (especialização)
+            '重装': '#00aeb8',  // Vanguard (especialização)
+            
+            // Frost Mage (冰魔导师)
+            '冰魔导师': '#1c91ec',
+            '冰矛': '#1c91ec',  // Icicle (especialização)
+            '射线': '#1c91ec',  // Frostbeam (especialização)
+            
+            // Marksmanship (神射手)
+            '神射手': '#ec1c29',
+            '狼弓': '#ec1c29',  // Wildpack (especialização)
+            '鹰弓': '#ec1c29',  // Falconry (especialização)
+            
+            // Verdant Oracle (森语者)
+            '森语者': '#00bc07',
+            '惩戒': '#00bc07',  // Smite (especialização)
+            '愈合': '#00bc07',  // Lifebind (especialização)
+            
+            // Beat Performer (灵魂乐手)
+            '灵魂乐手': '#017d06',
+            '协奏': '#017d06',  // Concerto (especialização)
+            '狂音': '#017d06'   // Dissonance (especialização)
         };
         
-        // Retornar cor da classe ou branco como padrão
+        // Priorizar especialização se existir, senão usar classe principal
+        if (subClass && classColors[subClass]) {
+            return classColors[subClass];
+        }
+        
         return classColors[mainClass] || '#ffffff';
     }
 

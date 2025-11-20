@@ -1,8 +1,94 @@
-# 🎯 BPSR Meter v3.2.2
+# 🎯 BPSR Meter v3.2.3
 
 [[Português](#português)] | [[English](#english)] | [[Español](#español)]
 
 ---
+
+## Português
+
+**✨ NOVIDADES v3.2.3:**
+
+### 🎨 Cores Fixas por Classe
+- **Cada classe tem cor própria** no medidor e histórico de lutas
+- **Heavy Guardian**: laranja (#eca41c)
+- **Stormblade**: roxo (#8000bc)
+- **Shield Knight**: amarelo (#ece51c)
+- **Wind Knight**: ciano (#00aeb8)
+- **Frost Mage**: azul (#1c91ec)
+- **Marksmanship**: vermelho (#ec1c29)
+- **Verdant Oracle**: verde (#00bc07)
+- **Beat Performer**: verde escuro (#017d06)
+- **Especialização detectada primeiro** - se jogador usa especialização, cor é baseada nela
+
+### 🐛 Correção de Escopo
+- **Crash ao fechar corrigido** - `stopMousePositionPolling` movido para escopo global
+- **Função acessível em `will-quit`** - não mais erro "is not defined"
+- **Variáveis de polling globalizadas** - `mouseCheckInterval` e `HEADER_HEIGHT` agora globais
+
+**📥 Como atualizar:**
+1. Baixe: `BPSR Meter (by gabrielsanbs) Setup 3.2.3.exe`
+2. Execute o instalador (sobrescreve versões anteriores)
+3. Suas configurações serão mantidas automaticamente
+
+---
+
+## English
+
+**✨ NEW IN v3.2.3:**
+
+### 🎨 Fixed Colors by Class
+- **Each class has its own color** in meter and fight history
+- **Heavy Guardian**: orange (#eca41c)
+- **Stormblade**: purple (#8000bc)
+- **Shield Knight**: yellow (#ece51c)
+- **Wind Knight**: cyan (#00aeb8)
+- **Frost Mage**: blue (#1c91ec)
+- **Marksmanship**: red (#ec1c29)
+- **Verdant Oracle**: green (#00bc07)
+- **Beat Performer**: dark green (#017d06)
+- **Specialization detected first** - if player uses specialization, color is based on it
+
+### 🐛 Scope Fix
+- **Crash on close fixed** - `stopMousePositionPolling` moved to global scope
+- **Function accessible in `will-quit`** - no more "is not defined" error
+- **Polling variables globalized** - `mouseCheckInterval` and `HEADER_HEIGHT` now global
+
+**📥 How to update:**
+1. Download: `BPSR Meter (by gabrielsanbs) Setup 3.2.3.exe`
+2. Run installer (overwrites previous versions)
+3. Your settings will be kept automatically
+
+---
+
+## Español
+
+**✨ NOVEDADES v3.2.3:**
+
+### 🎨 Colores Fijos por Clase
+- **Cada clase tiene su propio color** en el medidor e historial de combates
+- **Heavy Guardian**: naranja (#eca41c)
+- **Stormblade**: morado (#8000bc)
+- **Shield Knight**: amarillo (#ece51c)
+- **Wind Knight**: cian (#00aeb8)
+- **Frost Mage**: azul (#1c91ec)
+- **Marksmanship**: rojo (#ec1c29)
+- **Verdant Oracle**: verde (#00bc07)
+- **Beat Performer**: verde oscuro (#017d06)
+- **Especialización detectada primero** - si el jugador usa especialización, el color se basa en ella
+
+### 🐛 Corrección de Ámbito
+- **Crash al cerrar corregido** - `stopMousePositionPolling` movido al ámbito global
+- **Función accesible en `will-quit`** - no más error "is not defined"
+- **Variables de polling globalizadas** - `mouseCheckInterval` y `HEADER_HEIGHT` ahora globales
+
+**📥 Cómo actualizar:**
+1. Descarga: `BPSR Meter (by gabrielsanbs) Setup 3.2.3.exe`
+2. Ejecuta el instalador (sobrescribe versiones anteriores)
+3. Tus configuraciones se mantendrán automáticamente
+
+---
+
+# 🎯 BPSR Meter v3.2.2
 
 ## Português
 
