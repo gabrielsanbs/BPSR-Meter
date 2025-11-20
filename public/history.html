@@ -730,7 +730,12 @@
                 '狂音': '#017d06'   // Dissonance (especialização)
             };
             
-            // Priorizar especialização se existir, senão usar classe principal
+            // Se mainClass é "未知" (Unknown), SEMPRE usar especialização
+            if (mainClass === '未知' && subClass && classColors[subClass]) {
+                return classColors[subClass];
+            }
+            
+            // Caso contrário: priorizar especialização se existir, senão usar classe principal
             if (subClass && classColors[subClass]) {
                 return classColors[subClass];
             }

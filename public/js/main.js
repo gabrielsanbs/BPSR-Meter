@@ -623,6 +623,11 @@ const professionMap = {
             '狂音': '#017d06'   // Dissonance (especialização)
         };
         
+        // Se mainClass é "未知" (Unknown), SEMPRE usar especialização
+        if (mainClass === '未知' && subClass && classColors[subClass]) {
+            return classColors[subClass];
+        }
+        
         // Priorizar especialização se existir, senão usar classe principal
         if (subClass && classColors[subClass]) {
             return classColors[subClass];

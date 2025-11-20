@@ -693,6 +693,16 @@ class UserDataManager {
             await fsPromises.access(this.FIGHT_HISTORY_PATH);
             const data = await fsPromises.readFile(this.FIGHT_HISTORY_PATH, 'utf8');
             this.fightHistory = JSON.parse(data);
+            
+            // Limitar a MAX_FIGHT_HISTORY ao carregar (caso o arquivo tenha mais lutas)
+            if (this.fightHistory.length > this.MAX_FIGHT_HISTORY) {
+                const originalLength = this.fightHistory.length;
+                this.fightHistory = this.fightHistory.slice(0, this.MAX_FIGHT_HISTORY);
+                this.logger.info(`Histórico truncado de ${originalLength} para ${this.MAX_FIGHT_HISTORY} lutas`);
+                // Salvar o arquivo corrigido
+                await this.saveFightHistoryToFile();
+            }
+            
             this.logger.info(`Histórico de lutas carregado: ${this.fightHistory.length} lutas`);
         } catch (error) {
             if (error.code === 'ENOENT') {
