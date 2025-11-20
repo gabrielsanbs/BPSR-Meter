@@ -571,14 +571,27 @@ const professionMap = {
         return value.toFixed(0);
     }
 
-    const playerColors = [
-        'rgba(255, 99, 132, 0.7)', // Rojo
-        'rgba(54, 162, 235, 0.7)', // Azul
-        'rgba(255, 206, 86, 0.7)', // Amarillo
-        'rgba(75, 192, 192, 0.7)', // Verde
-        'rgba(153, 102, 255, 0.7)', // Morado
-        'rgba(255, 159, 64, 0.7)' // Naranja
-    ];
+    // Função para obter cor baseada na classe/especialização
+    function getClassColor(profession) {
+        const professionParts = profession.split('-');
+        const mainClass = professionParts[0];
+        
+        // Mapa de cores por classe principal
+        const classColors = {
+            'HeavyGuardian': '#eca41c',
+            'Stormblade': '#8000bc',
+            'ShieldKnight': '#ece51c',
+            'WindKnight': '#00aeb8',
+            'FrostMage': '#1c91ec',
+            'marksmanship': '#ec1c29',
+            'VerdantOracle': '#00bc07',
+            'Beat': '#017d06',
+            'Performance': '#017d06'
+        };
+        
+        // Retornar cor da classe ou branco como padrão
+        return classColors[mainClass] || '#ffffff';
+    }
 
     async function fetchDataAndRender() {
         if (isFetchingData) return;
@@ -678,7 +691,7 @@ const professionMap = {
                     const subProf = professionMap[subProfessionKey];
                     let prof = subProf || mainProf;
                     const nombre = u.name || '';
-                    const color = playerColors[index % playerColors.length];
+                    const color = getClassColor(u.profession);
                     let barFillWidth, barFillBackground, value1, value2, iconHtml;
 
                     if (liteModeType === 'dps') {
@@ -727,7 +740,7 @@ const professionMap = {
                     }
                     const dps = Number(u.total_dps) || 0;
                     const totalHealing = u.total_healing ? (Number(u.total_healing.total) || 0) : 0;
-                    const color = playerColors[index % playerColors.length];
+                    const color = getClassColor(u.profession);
                     const dpsColor = dps > 0 ? `linear-gradient(90deg, transparent, ${color})` : 'none';
                     const nombre = u.name || '';
                     const totalHits = u.total_count.total || 0;

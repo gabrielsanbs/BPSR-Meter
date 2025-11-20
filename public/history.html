@@ -715,8 +715,27 @@
                     else if (sortMode === 'healing') maxValue = players[0].totalHealing;
                 }
                 
-                // Cores do gradiente para os ranks
-                const playerColors = ['#4fc3f7', '#28a745', '#ffc107', '#dc3545', '#17a2b8', '#6f42c1', '#fd7e14', '#20c997'];
+                // Função para obter cor baseada na classe/especialização
+                function getClassColor(profession) {
+                    const professionParts = profession.split('-');
+                    const mainClass = professionParts[0];
+                    
+                    // Mapa de cores por classe principal
+                    const classColors = {
+                        'HeavyGuardian': '#eca41c',
+                        'Stormblade': '#8000bc',
+                        'ShieldKnight': '#ece51c',
+                        'WindKnight': '#00aeb8',
+                        'FrostMage': '#1c91ec',
+                        'marksmanship': '#ec1c29',
+                        'VerdantOracle': '#00bc07',
+                        'Beat': '#017d06',
+                        'Performance': '#017d06'
+                    };
+                    
+                    // Retornar cor da classe ou branco como padrão
+                    return classColors[mainClass] || '#ffffff';
+                }
                 
                 // Buscar o número sequencial da luta no histórico completo
                 const historyResponse = await fetch('/api/fight-history');
@@ -762,7 +781,7 @@
                     
                     const valuePercent = maxValue > 0 ? (currentValue / maxValue) * 100 : 0;
                     const visualBarWidth = (valuePercent * 0.35).toFixed(1);
-                    const color = playerColors[index % playerColors.length];
+                    const color = getClassColor(player.profession || '');
                     const dpsColor = `linear-gradient(90deg, transparent, ${color})`;
                     const rank = index + 1;
                     
