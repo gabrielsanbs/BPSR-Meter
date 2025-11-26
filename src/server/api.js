@@ -11,7 +11,7 @@ const LOGS_DPS_PATH = path.join('./logs_dps.json');
 function initializeApi(app, server, io, userDataManager, logger, globalSettings, sniffer, settingsPath) {
     // settingsPath agora é passado como parâmetro
     const SETTINGS_PATH = settingsPath;
-    
+
     app.use(cors());
     app.use(express.json());
     app.use(express.static(path.join(__dirname, '..', '..', 'public'))); // Ajustar la ruta
@@ -268,34 +268,20 @@ function initializeApi(app, server, io, userDataManager, logger, globalSettings,
         const newSettings = req.body;
         Object.assign(globalSettings, newSettings); // Actualizar globalSettings directamente
         await fsPromises.writeFile(SETTINGS_PATH, JSON.stringify(globalSettings, null, 2), 'utf8');
-        
+
         // Atualizar configurações do BPTimer se mudaram
         if ('bptimerEnabled' in newSettings) {
             userDataManager.updateBPTimerSettings();
         }
-        
+
         res.json({ code: 0, data: globalSettings });
     });
 
-    app.get('/api/diccionario', async (req, res) => {
-        const diccionarioPath = path.join(__dirname, '..', '..', 'diccionario.json'); // Ajustar la ruta
-        try {
-            const data = await fsPromises.readFile(diccionarioPath, 'utf8');
-            if (data.trim() === '') {
-                res.json({});
-            } else {
-                res.json(JSON.parse(data));
-            }
-        } catch (error) {
-            if (error.code === 'ENOENT') {
-                logger.warn('diccionario.json not found, returning empty object.');
-                res.json({});
-            } else {
-                logger.error('Failed to read or parse diccionario.json:', error);
-                res.status(500).json({ code: 1, msg: 'Failed to load diccionario', error: error.message });
-            }
-        }
+    app.get('/api/diccionario', (req, res) => {
+        res.json({});
     });
+
+
 
     function guardarLogDps(log) {
         if (!globalSettings.enableDpsLog) return;
@@ -335,14 +321,14 @@ function initializeApi(app, server, io, userDataManager, logger, globalSettings,
         const fightId = parseInt(req.params.id);
         const history = userDataManager.getFightHistory();
         const fight = history.find(f => f.id === fightId);
-        
+
         if (!fight) {
             return res.status(404).json({
                 code: 1,
                 msg: 'Fight not found'
             });
         }
-        
+
         res.json({
             code: 0,
             data: fight
@@ -397,12 +383,12 @@ function initializeApi(app, server, io, userDataManager, logger, globalSettings,
             fightActive: userDataManager.fightActive,
             fightEnded: userDataManager.fightEnded
         };
-        
+
         // Resetar flag após verificar
         if (userDataManager.fightEnded) {
             userDataManager.fightEnded = false;
         }
-        
+
         res.json(status);
     });
 

@@ -310,9 +310,14 @@ class PacketProcessor {
         }
 
         const skillEffect = aoiSyncDelta.SkillEffects;
-        if (!skillEffect) return;
+        if (!skillEffect) {
+            return;
+        }
 
-        if (!skillEffect.Damages) return;
+        if (!skillEffect.Damages) {
+            return;
+        }
+        
         for (const syncDamageInfo of skillEffect.Damages) {
             const skillId = syncDamageInfo.OwnerId;
             if (!skillId) continue;
@@ -446,7 +451,6 @@ class PacketProcessor {
                 `EXT: ${extra.join('|')}`,
             ];
             const dmgLog = dmgLogArr.join(' ');
-            this.logger.info(dmgLog);
             this.userDataManager.addLog(dmgLog);
         }
     }
@@ -470,7 +474,6 @@ class PacketProcessor {
         const uuid = aoiSyncToMeDelta.Uuid;
         if (uuid && !currentUserUuid.eq(uuid)) {
             currentUserUuid = uuid;
-            this.logger.info('Got player UUID! UUID: ' + currentUserUuid + ' UID: ' + currentUserUuid.shiftRight(16));
         }
 
         const aoiSyncDelta = aoiSyncToMeDelta.BaseDelta;
@@ -535,7 +538,6 @@ class PacketProcessor {
 
         this.currentSceneSignature = newSignature;
         const lineLabel = sceneInfo.lineId || sceneInfo.channelId || 'n/a';
-        this.logger.info(`SceneData change detectado (map=${sceneInfo.mapId || 0}, level=${sceneInfo.levelMapId || 0}, line=${lineLabel})`);
 
         if (this.userDataManager && typeof this.userDataManager.handleSceneChange === 'function') {
             try {
@@ -830,10 +832,7 @@ class PacketProcessor {
             }
         }
         
-        // [OTIMIZAÇÃO EXITLAG/FAST SNIFF]
-        // Se ainda não tem nome (pacote fragmentado ou atrasado pela VPN),
-        // forçar busca no Cache Persistente (player_map.json) IMEDIATAMENTE.
-        // Isso resolve o problema de ver "Player 1234" por alguns segundos.
+      
         if (!hasName) {
             const uidStr = String(playerUid);
             if (this.userDataManager.playerMap.has(uidStr)) {
@@ -847,11 +846,6 @@ class PacketProcessor {
                     hasName = true;
                 }
             }
-        }
-        
-        // Log apenas se realmente falhar tudo
-        if (!hasName) {
-            this.logger.debug(`Player ${playerUid} attributes processed but NO NAME found (attrs/mapAttrs/cache).`);
         }
     }
 
@@ -925,7 +919,6 @@ class PacketProcessor {
                 case AttrType.AttrName:
                     const enemyName = reader.string();
                     this.userDataManager.enemyCache.name.set(enemyUuid, enemyName);
-                    this.logger.info(`Found monster name ${enemyName} for id ${enemyUid} uuid ${enemyUuid}`);
                     break;
                 case AttrType.AttrId:
                     const attrId = reader.int32();
@@ -933,7 +926,6 @@ class PacketProcessor {
                     this.userDataManager.enemyCache.attrId.set(enemyUuid, attrId);
                     const name = monsterNames[attrId];
                     if (name) {
-                        this.logger.info(`Found moster name ${name} for id ${enemyUid} uuid ${enemyUuid}`);
                         this.userDataManager.enemyCache.name.set(enemyUuid, name);
                     }
                     break;
@@ -1052,7 +1044,6 @@ class PacketProcessor {
         if (isZstdCompressed) {
             msgPayload = this._decompressPayload(msgPayload);
         }
-
         switch (methodId) {
             case NotifyMethod.SyncNearEntities:
                 this._processSyncNearEntities(msgPayload);
@@ -1070,9 +1061,22 @@ class PacketProcessor {
                 this._processSyncNearDeltaInfo(msgPayload);
                 break;
             default:
+                this.logger.warn(`[NOTIFY] ⚠️ Método desconhecido: 0x${methodId.toString(16)}`);
                 break;
         }
         return;
+    }
+
+    _getMethodName(methodId) {
+        const names = {
+            0x00000006: 'SyncNearEntities',
+            0x00000015: 'SyncContainerData',
+            0x00000016: 'SyncContainerDirtyData',
+            0x0000002b: 'SyncServerTime',
+            0x0000002d: 'SyncNearDeltaInfo',
+            0x0000002e: 'SyncToMeDeltaInfo',
+        };
+        return names[methodId] || 'Unknown';
     }
 
     _processReturnMsg(reader, isZstdCompressed) {
@@ -1112,7 +1116,6 @@ class PacketProcessor {
                             nestedPacket = this._decompressPayload(nestedPacket);
                         }
 
-                        // this.logger.debug("Processing FrameDown packet.");
                         this.processPacket(nestedPacket);
                         break;
                     default:

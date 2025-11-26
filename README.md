@@ -1,11 +1,14 @@
 <div align="center">
   <img src="portada_v31.png" alt="BPSR Meter splash" width="820" />
 
-  # BPSR Meter v3.2.3
-  ### Monitor de DPS/HPS em tempo real para Blue Protocol (PT • EN • ES)
+  # BPSR Meter (by gabrielsanbs) v3.2.5
 
-  [![Download](https://img.shields.io/badge/Download-Latest-1abc9c?style=for-the-badge)](../../releases)
-  [![Report Issue](https://img.shields.io/badge/Issues-GitHub-5865f2?style=for-the-badge&logo=github)](../../issues)
+[![Release](https://img.shields.io/github/v/release/gabrielsanbs/BPSR-Meter?style=for-the-badge)](https://github.com/gabrielsanbs/BPSR-Meter/releases)
+[![Downloads](https://img.shields.io/github/downloads/gabrielsanbs/BPSR-Meter/total?style=for-the-badge)](https://github.com/gabrielsanbs/BPSR-Meter/releases)
+
+Overlay de DPS para Blue Protocol.
+
+[**Download da Última Versão (v3.2.5)**](https://github.com/gabrielsanbs/BPSR-Meter/releases/latest)
 </div>
 
 ---
@@ -38,8 +41,9 @@
 
 ### Instalação Express
 1. Instale o [Npcap](https://npcap.com/#download) marcando **WinPcap API-compatible Mode**.
-2. Baixe `BPSR Meter (by gabrielsanbs) Setup 3.2.3.exe` na aba [Releases](../../releases) e execute.
+2. Baixe `BPSR Meter (by gabrielsanbs) Setup 3.2.4.exe` na aba [Releases](../../releases) e execute.
 3. Inicie o programa **como Administrador** após abrir o Blue Protocol.
+4. **NOVO**: Durante a instalação, você pode marcar opções para corrigir fundo preto (GPU) ou limpar cache.
 
 ### Uso Rápido
 - Arraste pelas setas, faça zoom com `+ / -`, trave/destrave para deixar cliques passarem ao jogo.
@@ -65,8 +69,9 @@
 
 ### Quick Install
 1. Install [Npcap](https://npcap.com/#download) with **WinPcap API-compatible Mode** checked.
-2. Download `BPSR Meter (by gabrielsanbs) Setup 3.2.3.exe` from [Releases](../../releases) and run it.
+2. Download `BPSR Meter (by gabrielsanbs) Setup 3.2.4.exe` from [Releases](../../releases) and run it.
 3. Launch as **Administrator**, then open Blue Protocol.
+4. **NEW**: During installation, you can enable GPU fix for black background or clear cache options.
 
 ### Quick Use
 - Drag by the arrows, lock to let clicks pass through, zoom with the header buttons.
@@ -92,8 +97,9 @@
 
 ### Instalación Rápida
 1. Instala [Npcap](https://npcap.com/#download) activando **WinPcap API-compatible Mode**.
-2. Descarga `BPSR Meter (by gabrielsanbs) Setup 3.2.3.exe` desde [Releases](../../releases) y ejecútalo.
+2. Descarga `BPSR Meter (by gabrielsanbs) Setup 3.2.4.exe` desde [Releases](../../releases) y ejecútalo.
 3. Abre el medidor como **Administrador** después de iniciar Blue Protocol.
+4. **NUEVO**: Durante la instalación, puedes marcar opciones para corregir fondo negro (GPU) o limpiar caché.
 
 ### Uso Rápido
 - Arrastra con las flechas, bloquea para que los clics pasen al juego y usa `+ / -` para el zoom.

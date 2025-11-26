@@ -1,6 +1,6 @@
 {
   "name": "bpsr-meter",
-  "version": "3.2.4",
+  "version": "3.2.5",
   "description": "BPSR Meter",
   "main": "electron-main.js",
   "bin": {
@@ -103,8 +103,15 @@
       ]
     },
     "nsis": {
-      "include": "extra.nsh",
-      "deleteAppDataOnUninstall": false
+      "include": "installer.nsi",
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": false,
+      "createStartMenuShortcut": false,
+      "installerSidebar": "bannernsis.bmp",
+      "uninstallerSidebar": "bannernsis.bmp",
+      "deleteAppDataOnUninstall": false,
+      "warningsAsErrors": false
     },
     "directories": {
       "output": "dist_electron"

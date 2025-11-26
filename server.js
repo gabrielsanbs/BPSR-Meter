@@ -176,7 +176,8 @@ async function main() {
         process.exit(1);
     }
 
-    logger.level = 'error';
+    // MANTÉM logger.level = 'debug' para diagnóstico ExitLag
+    // logger.level = 'error';
 
     process.on('SIGINT', async () => {
         console.log('\nCerrando aplicación...');

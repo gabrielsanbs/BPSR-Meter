@@ -201,7 +201,7 @@ class Sniffer {
     updateGracePeriod() {
         this.serverChangeGracePeriod = this.globalSettings.fastServerChangeDetection ? 1500 : 4000;
     }
-
+ 
     setPaused(paused) {
         try {
             if (paused) {
@@ -287,6 +287,7 @@ class Sniffer {
             this.currentServerKey = newServerKey;
             return true;
         }
+        // faz Verificação de isRealServerChange e Validação de Grace Period
         
         if (this.currentServerKey === newServerKey) {
             this.lastValidServerPacket = now;
@@ -447,6 +448,17 @@ class Sniffer {
                 return;
             }
             
+            // CANCELA a espera e processa o dano imediatamente.
+            if (this.awaitingServerData && buf.length > 4) {
+                const possibleLen = buf.readUInt32BE();
+                // Verifica se o tamanho é realista (< 1MB) para evitar ler lixo
+                if (possibleLen < 0x0fffff) {
+                    this.awaitingServerData = false; // Destrava o sniffer
+                    this.serverDataDeadline = 0;     // Zera o timer
+                } else {
+                }
+            }
+            
             // Atualizar timestamp de último pacote válido
             if (!isServerChange && normalizedServerKey === this.currentServerKey) {
                 this.lastValidServerPacket = now;
@@ -455,31 +467,67 @@ class Sniffer {
             }
 
             if (this.tcp_next_seq === -1) {
-                this.logger.error('Unexpected TCP capture error! tcp_next_seq is -1');
-                if (buf.length > 4 && buf.readUInt32BE() < 0x0fffff) {
-                    this.tcp_next_seq = tcpPacket.info.seqno;
+                if (buf.length > 4) {
+                    const firstLen = buf.readUInt32BE();
+                    if (firstLen < 0x0fffff) {
+                        this.tcp_next_seq = tcpPacket.info.seqno;
+                    }
                 }
             }
 
+            // Isso elimina o spam de "bufLen=0" que vemos no log.
             if ((this.tcp_next_seq - tcpPacket.info.seqno) << 0 <= 0 || this.tcp_next_seq === -1) {
-                // Proteção: Se ainda não sincronizamos (-1) e o cache já está grande, limpe-o.
-                // Evita que o sniffer fique "empachado" com pacotes velhos antes de achar o primeiro válido.
-                if (this.tcp_next_seq === -1 && this.tcp_cache.size > 100) {
-                    this.tcp_cache.clear();
-                    this.logger.debug('[TCP INIT] Cache limpo durante sincronização inicial (>100 entradas)');
+                if (buf.length === 0) {
+                    // Apenas atualizamos o timestamp para manter a conexão viva
+                    this.tcp_last_time = now;
+                } else {
+                    // Proteção extra de inicialização
+                    if (this.tcp_next_seq === -1 && this.tcp_cache.size > 100) {
+                        this.tcp_cache.clear();
+                    }
+                    this.tcp_cache.set(tcpPacket.info.seqno, { buffer: buf, timestamp: now });
                 }
-                
-                this.tcp_cache.set(tcpPacket.info.seqno, { buffer: buf, timestamp: now });
             }
+            
             
             while (this.tcp_cache.has(this.tcp_next_seq)) {
                 const seq = this.tcp_next_seq;
                 const cachedEntry = this.tcp_cache.get(seq);
                 const cachedTcpData = cachedEntry ? cachedEntry.buffer : null;
+                
                 if (!cachedTcpData) {
                     this.tcp_cache.delete(seq);
                     break;
                 }
+
+                if (this._data.length === 0) {
+                    const len = cachedTcpData.length;
+
+
+                    // POR ISSO, DEVEMOS DESCARTAR PELO TAMANHO ANTES DE LER O HEADER.
+                    if (len <= 4 || len === 41 || len === 53) {
+                        this.tcp_next_seq = (seq + len) >>> 0;
+                        this.tcp_cache.delete(seq);
+                        this.tcp_last_time = Date.now();
+                        continue; // <--- Pula instantaneamente
+                    }
+
+                    // 2. Validação de Header (para outros tamanhos desconhecidos)
+                    // Só lemos o header se o pacote NÃO for um dos lixos conhecidos.
+                    const possibleHeader = cachedTcpData.readUInt32BE();
+                    
+                    // Se o header diz que o pacote tem mais de 1MB (0x0fffff), é LIXO CONFIRMADO.
+                    if (possibleHeader > 0x0fffff) {
+                        this.tcp_next_seq = (seq + len) >>> 0;
+                        this.tcp_cache.delete(seq);
+                        this.tcp_last_time = Date.now();
+                        continue; 
+                    }
+                    
+                    // Se chegou aqui, o cabeçalho é VÁLIDO (menor que 1MB).
+                    // O pacote é do jogo e será processado normalmente.
+                }
+
                 this._data = this._data.length === 0 ? cachedTcpData : Buffer.concat([this._data, cachedTcpData]);
                 this.tcp_next_seq = (seq + cachedTcpData.length) >>> 0;
                 this.tcp_cache.delete(seq);
@@ -516,23 +564,41 @@ class Sniffer {
             throw new Error('Npcap no está listo. La aplicación debe salir.');
         }
 
-        const devices = Cap.deviceList();
+        let devices = null; // Variável para armazenar a lista atualizada
 
         let num = deviceNum;
         if (num === undefined || num === 'auto') {
             let deviceFound = false;
+            let attempts = 0;
+
             while (!deviceFound) {
-                const device_num = await findDefaultNetworkDevice(devices);
-                if (device_num !== undefined) {
-                    num = device_num;
-                    deviceFound = true;
+                // Isso resolve o problema da instalação limpa onde o driver/rede demora a aparecer.
+                try {
+                    devices = Cap.deviceList();
+                } catch (e) {
+                    this.logger.warn(`Erro ao listar dispositivos: ${e.message}. Tentando novamente...`);
+                }
+
+                if (devices && devices.length > 0) {
+                    const device_num = await findDefaultNetworkDevice(devices);
+                    if (device_num !== undefined) {
+                        num = device_num;
+                        deviceFound = true;
+                    } else {
+                        this.logger.warn(`Nenhuma interface com tráfego detectada (Tentativa ${++attempts})...`);
+                        await new Promise(resolve => setTimeout(resolve, 3000)); // Espera 3s antes de tentar de novo
+                    }
                 } else {
-                    await new Promise(resolve => setTimeout(resolve, 5000));
+                    this.logger.warn('Nenhum dispositivo de rede encontrado. Verifique Npcap. Tentando novamente em 3s...');
+                    await new Promise(resolve => setTimeout(resolve, 3000));
                 }
             }
+        } else {
+            // Modo manual para seleção de dispositivo
+            devices = Cap.deviceList();
         }
 
-        if (num === undefined || !devices[num]) {
+        if (num === undefined || !devices || !devices[num]) {
             this.logger.error('No se pudo detectar automáticamente una interfaz de red válida.');
             this.logger.error('Asegúrate de que el juego se esté ejecutando e inténtalo de nuevo.');
             throw new Error('No se pudo detectar una interfaz de red válida.');
@@ -590,7 +656,6 @@ class Sniffer {
             }
 
             if (this.tcp_last_time && Date.now() - this.tcp_last_time > this.FRAGMENT_TIMEOUT) {
-                this.logger.warn('Timeout TCP: jogo desconectado ou fechado?');
                 this.current_server = '';
                 this.clearTcpCache();
                 this.serverDetectionTimestamp = 0;
