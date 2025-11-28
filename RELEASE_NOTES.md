@@ -1,10 +1,31 @@
-# 🎯 BPSR Meter v3.2.5
+# 🎯 BPSR Meter v3.2.6
 
 [[Português](#português)] | [[English](#english)] | [[Español](#español)]
 
 ---
 
 ## Português
+
+**✨ NOVIDADES v3.2.6:**
+
+### 🛠️ Correções Críticas no Sniffer (ExitLag & VPNs)
+Esta atualização foca em resolver problemas de estabilidade de conexão e contagem de dano, especialmente para usuários de VPNs como ExitLag.
+
+- **Connection-Aware TCP Reassembly:** O sistema de captura de pacotes foi reescrito para separar o tráfego por conexão. Isso resolve o problema onde pacotes de outras aplicações (Discord, Browser) interferiam na leitura do jogo, causando travamentos no DPS.
+- **Correção para ExitLag:** Implementado filtro específico para pacotes "Keep-Alive" (41/53 bytes) injetados pelo ExitLag, que anteriormente corrompiam o buffer de dados e travavam o medidor após 1-3 hits.
+- **Validação de Protocolo:** Adicionada verificação rigorosa nos cabeçalhos dos pacotes do Blue Protocol para descartar dados corrompidos antes que afetem a contagem.
+- **Auto-Recuperação:** Novo sistema de timeout (5s) por conexão que detecta e recupera automaticamente travamentos causados por lag spikes ou perda de pacotes.
+- **Correção de Overflow:** Ajuste técnico no cálculo de sequência TCP para evitar erros matemáticos em sessões longas de jogo.
+
+---
+
+# 🎯 BPSR Meter v3.2.5
+
+[[Português](#português)] | [[English](#english)] | [[Español](#español)]
+
+---
+
+## Português (v3.2.5)
 
 **✨ NOVIDADES v3.2.5:**
 

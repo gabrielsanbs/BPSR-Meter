@@ -227,11 +227,32 @@ const getDamageSource = (damageSource) => {
     }
 };
 
-// IDs permitidos para enviar a BPTimer (whitelist baseada em MOB_MAPPING do bptimer-api-client)
+// IDs permitidos para enviar a BPTimer (whitelist baseada em MOB_MAPPING do bptimer-api-client v0.2.0)
+// Sincronizado com: https://github.com/woheedev/bptimer/blob/main/packages/bptimer-api-client/src/constants.ts
 const ALLOWED_BPTIMER_MOB_IDS = new Set([
-    10007, 10009, 10010, 10018, 10029, 10032, 10056, 10059, 10069,
-    10077, 10081, 10084, 10085, 10086, 10900, 10901, 10902, 10903, 10904
+    10007, // Storm Goblin King
+    10009, // Frost Ogre
+    10010, // Tempest Ogre
+    10018, // Inferno Ogre
+    10029, // Muku King
+    10032, // Golden Juggernaut
+    10056, // Brigand Leader
+    10059, // Muku Chief
+    10069, // Phantom Arachnocrab
+    10077, // Venobzzar Incubator
+    10081, // Iron Fang
+    10084, // Celestial Flier
+    10085, // Lizardman King
+    10086, // Goblin King
+    10900, // Golden Nappo (requires position)
+    10901, // Silver Nappo (requires position)
+    10902, // Lovely Boarlet
+    10903, // Breezy Boarlet
+    10904  // Loyal Boarlet (requires position)
 ]);
+
+// Mobs que requerem dados de posição para tracking de localização
+const LOCATION_TRACKED_MOBS = new Set([10900, 10901, 10904]);
 
 const toSafeNumber = (value) => {
     if (value === null || value === undefined) return 0;
@@ -317,7 +338,7 @@ class PacketProcessor {
         if (!skillEffect.Damages) {
             return;
         }
-        
+
         for (const syncDamageInfo of skillEffect.Damages) {
             const skillId = syncDamageInfo.OwnerId;
             if (!skillId) continue;
@@ -375,7 +396,7 @@ class PacketProcessor {
                     const enemyUuidStr = targetUuid.toString();
                     const maxHp = this.userDataManager.enemyCache.maxHp.get(enemyUuidStr);
                     const monsterId = this.userDataManager.enemyCache.attrId.get(enemyUuidStr);
-                    
+
                     // Detectar morte do boss
                     if (isDead && monsterId && ALLOWED_BPTIMER_MOB_IDS.has(monsterId) && maxHp && maxHp > 0) {
                         this.userDataManager.enemyCache.hp.set(enemyUuidStr, 0);
@@ -474,6 +495,11 @@ class PacketProcessor {
         const uuid = aoiSyncToMeDelta.Uuid;
         if (uuid && !currentUserUuid.eq(uuid)) {
             currentUserUuid = uuid;
+            // Atualizar o UID do jogador atual no userDataManager (para BPTimer account_id)
+            const playerUid = currentUserUuid.shiftRight(16).toNumber();
+            if (this.userDataManager && playerUid > 0) {
+                this.userDataManager.currentPlayerUid = playerUid;
+            }
         }
 
         const aoiSyncDelta = aoiSyncToMeDelta.BaseDelta;
@@ -751,7 +777,7 @@ class PacketProcessor {
         let hasName = false;
         for (const attr of attrs) {
             if (!attr.Id || !attr.RawData) continue;
-            
+
             // Otimização: Criar reader apenas quando necessário
             let reader;
 
@@ -823,7 +849,7 @@ class PacketProcessor {
                     break;
             }
         }
-        
+
         if (!hasName) {
             const nameFromMapAttr = this._extractPlayerNameFromMapAttrs(mapAttrs);
             if (nameFromMapAttr) {
@@ -831,8 +857,8 @@ class PacketProcessor {
                 this.userDataManager.setName(playerUid, nameFromMapAttr);
             }
         }
-        
-      
+
+
         if (!hasName) {
             const uidStr = String(playerUid);
             if (this.userDataManager.playerMap.has(uidStr)) {
@@ -840,7 +866,7 @@ class PacketProcessor {
                 // Verificar se o nome atual é genérico antes de substituir
                 const currentUser = this.userDataManager.users.get(playerUid);
                 const currentName = currentUser ? currentUser.name : '';
-                
+
                 if (!currentName || currentName.startsWith('Player ')) {
                     this.userDataManager.setName(playerUid, cachedName);
                     hasName = true;
@@ -910,11 +936,11 @@ class PacketProcessor {
 
     _processEnemyAttrs(enemyUuid, enemyUid, attrs) {
         let attrIdValue = null;
-        
+
         for (const attr of attrs) {
             if (!attr.Id || !attr.RawData) continue;
             const reader = pbjs.Reader.create(attr.RawData);
-            
+
             switch (attr.Id) {
                 case AttrType.AttrName:
                     const enemyName = reader.string();
@@ -933,23 +959,19 @@ class PacketProcessor {
                     const enemyHp = reader.int32();
                     const maxH = this.userDataManager.enemyCache.maxHp.get(enemyUuid);
                     const monsterId = attrIdValue || this.userDataManager.enemyCache.attrId.get(enemyUuid);
+
+                    // Sempre atualizar o cache de HP
+                    this.userDataManager.enemyCache.hp.set(enemyUuid, enemyHp);
                     
                     if (maxH != null && maxH > 0) {
-                        // bpsr-logs: prev_hp = monster_entity.curr_hp.unwrap_or(curr_hp)
-                        const oldHp = this.userDataManager.enemyCache.hp.get(enemyUuid);
-                        const prevHp = oldHp !== undefined && oldHp !== null ? oldHp : enemyHp;
-                        const oldPct = Math.floor((prevHp * 100) / maxH);
                         const newPct = Math.floor((enemyHp * 100) / maxH);
-                        
-                        // Atualizar cache
-                        this.userDataManager.enemyCache.hp.set(enemyUuid, enemyHp);
                         this.userDataManager.enemyCache.hp_pct.set(enemyUuid, newPct);
-                        
-                        // bpsr-logs: if old_hp_pct != new_hp_pct && new_hp_pct % 5 == 0
+
+                        // Reportar para BPTimer se é um boss rastreado
+                        // NOTA: O BPTimer client faz sua própria filtragem de cache e intervalos
+                        // Não precisamos fazer filtragem local complicada
                         if (monsterId && ALLOWED_BPTIMER_MOB_IDS.has(monsterId)) {
-                            if (oldPct !== newPct && newPct % 5 === 0) {
-                                this.userDataManager.reportBossHP(enemyUuid, monsterId, enemyHp, maxH);
-                            }
+                            this.userDataManager.reportBossHP(enemyUuid, monsterId, enemyHp, maxH);
                         }
                     }
                     break;
@@ -961,7 +983,7 @@ class PacketProcessor {
                     if (hp != null && enemyMaxHp > 0) {
                         const pct = Math.round((hp / enemyMaxHp) * 100);
                         this.userDataManager.enemyCache.hp_pct.set(enemyUuid, pct);
-                        
+
                         // Reportar SEMPRE - BPTimer client faz filtragem automática
                         const monsterId = attrIdValue || this.userDataManager.enemyCache.attrId.get(enemyUuid);
                         if (monsterId && ALLOWED_BPTIMER_MOB_IDS.has(monsterId)) {
@@ -987,7 +1009,7 @@ class PacketProcessor {
                     break;
             }
         }
-        
+
         // Atualizar timestamp de atividade do inimigo
         if (this.userDataManager.enemyCache.lastSeen) {
             this.userDataManager.enemyCache.lastSeen.set(enemyUuid, Date.now());
@@ -1010,12 +1032,12 @@ class PacketProcessor {
                 switch (entity.EntType) {
                     case pb.EEntityType.EntMonster:
                         this._processEnemyAttrs(entityUuidStr, entityUid, attrCollection.Attrs);
-                        
+
                         // Após processar os atributos, tentar enviar reporte se é boss (abordagem mrsnakke)
                         const monsterId = this.userDataManager.enemyCache.attrId.get(entityUuidStr);
                         const hp = this.userDataManager.enemyCache.hp.get(entityUuidStr);
                         const maxHp = this.userDataManager.enemyCache.maxHp.get(entityUuidStr);
-                        
+
                         if (monsterId && ALLOWED_BPTIMER_MOB_IDS.has(monsterId) && hp != null && maxHp != null && maxHp > 0) {
                             this.userDataManager.reportBossHP(entityUuidStr, monsterId, hp, maxHp);
                         }
@@ -1061,7 +1083,7 @@ class PacketProcessor {
                 this._processSyncNearDeltaInfo(msgPayload);
                 break;
             default:
-                this.logger.warn(`[NOTIFY] ⚠️ Método desconhecido: 0x${methodId.toString(16)}`);
+                // this.logger.warn(`[NOTIFY] ⚠️ Método desconhecido: 0x${methodId.toString(16)}`);
                 break;
         }
         return;

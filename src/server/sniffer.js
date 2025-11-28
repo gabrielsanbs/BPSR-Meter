@@ -61,9 +61,13 @@ class Sniffer {
         this.globalSettings = globalSettings;
         this.current_server = '';
         this.currentServerKey = '';
-        this._data = Buffer.alloc(0);
-        this.tcp_next_seq = -1;
-        this.tcp_cache = new Map();
+
+        // Connection-Aware TCP Reassembly
+        // Cache por conexão (key = "ip:port <-> ip:port")
+        this.tcp_connections = new Map();
+        // Conexão ativa (referência para a conexão atual do jogo)
+        this.activeConnection = null;
+
         this.tcp_last_time = 0;
         this.tcp_lock = new Lock();
         this.fragmentIpCache = new Map();
@@ -75,7 +79,7 @@ class Sniffer {
         this.pauseStart = null;
         this.io = null;
         this.isConnected = false;
-        
+
         // Sistema de detecção de servidor
         this.lastValidServerPacket = 0;
         this.serverChangeGracePeriod = this.globalSettings.fastServerChangeDetection ? 1500 : 4000;
@@ -89,7 +93,7 @@ class Sniffer {
         this.lastTcpCleanup = 0;
         this.MAX_TCP_CACHE_SIZE = 4096;
         this.TCP_CACHE_TTL = 15000;
-        
+
         // Sistema de cooldown para handshakes + filtro de tamanho
         this.lastHandshakeTime = 0;
         this.HANDSHAKE_COOLDOWN = 5000; // 5 segundos entre handshakes
@@ -97,9 +101,27 @@ class Sniffer {
         this.MIN_LONG_HANDSHAKE_SIZE = 150; // Filtrar sync packets pequenos
         this.serverNoticeCooldown = 1500; // evitar spams de eventos para o front
         this.lastServerNotice = { key: '', timestamp: 0 };
-        
+
         // Intervalo de limpeza de fragmentos
         this.fragmentCleanupInterval = null;
+    }
+
+    /**
+     * Obtém ou cria uma estrutura de cache para uma conexão TCP específica
+     * @param {string} serverKey - Chave normalizada da conexão (ex: "ip:port <-> ip:port")
+     * @returns {Object} Objeto contendo _data, tcp_next_seq, tcp_cache, etc.
+     */
+    getOrCreateConnection(serverKey) {
+        if (!this.tcp_connections.has(serverKey)) {
+            this.tcp_connections.set(serverKey, {
+                _data: Buffer.alloc(0),
+                tcp_next_seq: -1,
+                tcp_cache: new Map(),
+                tcp_last_time: 0,
+                last_packet_time: Date.now()
+            });
+        }
+        return this.tcp_connections.get(serverKey);
     }
 
     detectHandshakeType(buf) {
@@ -125,14 +147,14 @@ class Sniffer {
                         if (buf.length < this.MIN_LONG_HANDSHAKE_SIZE) {
                             return null;
                         }
-                        
+
                         return 'long';
                     }
                 }
                 offset += expectedLength;
             }
         }
-        
+
         // Assinatura curta (0x62...) - MUDANÇA DE SALA/CANAL
         if (buf.length === 0x62) {
             if (
@@ -148,10 +170,10 @@ class Sniffer {
     async applyServerChange(handshakeType, src_server, buf, tcpPacket) {
         const now = Date.now();
         const timeSinceLastChange = now - this.lastServerChangeTime;
-        
+
         const changeSummary = `type=${handshakeType || 'no-handshake'} from=${this.current_server || 'none'} to=${src_server} Δ=${timeSinceLastChange}ms`;
         this.logger.info(`[SERVER-CHANGE] ${changeSummary}`);
-        
+
         if (handshakeType === 'long') {
             this.logger.info('[SERVER] Carregando novo mapa...');
         } else if (handshakeType === 'short') {
@@ -159,12 +181,18 @@ class Sniffer {
         } else {
             this.logger.info('[SERVER] Mudança de servidor detectada.');
         }
-        
+
         this.updateServerTracking(src_server);
         this.clearTcpCache();
-        this.tcp_next_seq = tcpPacket.info.seqno + buf.length;
+
+        // Inicializar nova conexão após mudança
+        const normalizedServerKey = this.normalizeConnectionKey(src_server);
+        const newConn = this.getOrCreateConnection(normalizedServerKey);
+        newConn.tcp_next_seq = tcpPacket.info.seqno + buf.length;
+        this.activeConnection = newConn;
+
         this.userDataManager.refreshEnemyCache();
-        
+
         if (this.io) {
             try {
                 const eventKey = `${handshakeType || 'unknown'}|${this.currentServerKey}`;
@@ -181,18 +209,18 @@ class Sniffer {
                 this.logger.error('Falha ao emitir evento server-change:', emitError);
             }
         }
-        
+
         // A limpeza e salvamento de luta agora são conduzidos
         // principalmente pela SceneData (handleSceneChange) e pelo
         // timeout de inatividade de dano. Aqui evitamos chamar
         // clearAll() novamente para não gerar resets e históricos
         // duplicados em mudanças de sala/servidor ruidosas.
-        
+
         if (!this.isConnected && this.io) {
             this.isConnected = true;
             this.io.emit('game-connected', { connected: true });
         }
-        
+
         this.awaitingServerData = true;
         const extraBuffer = 500; // Reduzido de 2000ms - troca de mapa já foi validada pelo handshake
         this.serverDataDeadline = Date.now() + (this.globalSettings.fastServerChangeDetection ? 1000 : 2000);
@@ -201,15 +229,15 @@ class Sniffer {
     updateGracePeriod() {
         this.serverChangeGracePeriod = this.globalSettings.fastServerChangeDetection ? 1500 : 4000;
     }
- 
+
     setPaused(paused) {
         try {
             if (paused) {
                 this.pauseStart = Date.now();
                 this.isPaused = true;
-                try { this.eth_queue.length = 0; } catch (e) {}
-                try { this.clearTcpCache(); } catch (e) {}
-                try { this.fragmentIpCache.clear(); } catch (e) {}
+                try { this.eth_queue.length = 0; } catch (e) { }
+                try { this.clearTcpCache(); } catch (e) { }
+                try { this.fragmentIpCache.clear(); } catch (e) { }
             } else {
                 const now = Date.now();
                 let pauseDuration = 0;
@@ -225,8 +253,8 @@ class Sniffer {
                 } catch (e) {
                     this.logger && this.logger.error && this.logger.error('Failed to apply pause duration:', e);
                 }
-                try { this.eth_queue.length = 0; } catch (e) {}
-                try { this.clearTcpCache(); } catch (e) {}
+                try { this.eth_queue.length = 0; } catch (e) { }
+                try { this.clearTcpCache(); } catch (e) { }
             }
         } catch (e) {
             this.logger && this.logger.error && this.logger.error('Error changing pause state:', e);
@@ -235,33 +263,50 @@ class Sniffer {
     }
 
     clearTcpCache() {
-        this._data = Buffer.alloc(0);
-        this.tcp_next_seq = -1;
+        // Limpar TODAS as conexões
+        this.tcp_connections.clear();
+        this.activeConnection = null;
         this.tcp_last_time = 0;
-        this.tcp_cache.clear();
         this.lastTcpCleanup = Date.now();
     }
 
     cleanupTcpCache(now = Date.now()) {
-        if (!this.tcp_cache.size) return;
+        if (!this.tcp_connections.size) return;
         if (now - this.lastTcpCleanup < 1000) return;
         this.lastTcpCleanup = now;
 
-        for (const [seq, entry] of this.tcp_cache) {
-            if (!entry || !entry.buffer) {
-                this.tcp_cache.delete(seq);
-                continue;
-            }
-            if (now - entry.timestamp > this.TCP_CACHE_TTL) {
-                this.tcp_cache.delete(seq);
-            }
-        }
+        // Limpar cada conexão individualmente
+        for (const [connKey, conn] of this.tcp_connections) {
+            if (!conn) continue;
 
-        while (this.tcp_cache.size > this.MAX_TCP_CACHE_SIZE) {
-            const oldestKey = this.tcp_cache.keys().next().value;
-            if (oldestKey === undefined) break;
-            this.logger.warn(`TCP cache ultrapassou ${this.MAX_TCP_CACHE_SIZE} entradas, descartando seq ${oldestKey}`);
-            this.tcp_cache.delete(oldestKey);
+            // TIMEOUT: Se buffer travado por 5s sem progresso, limpar
+            if (conn._data && conn._data.length > 0 &&
+                now - conn.last_packet_time > 5000) {
+                this.logger.warn(`[TIMEOUT] Conexão ${connKey} travada (buffer=${conn._data.length}bytes), limpando...`);
+                conn._data = Buffer.alloc(0);
+                conn.tcp_next_seq = -1;
+            }
+
+            // Limpar entradas antigas do cache
+            if (conn.tcp_cache) {
+                for (const [seq, entry] of conn.tcp_cache) {
+                    if (!entry || !entry.buffer) {
+                        conn.tcp_cache.delete(seq);
+                        continue;
+                    }
+                    if (now - entry.timestamp > this.TCP_CACHE_TTL) {
+                        conn.tcp_cache.delete(seq);
+                    }
+                }
+
+                // Limitar tamanho do cache
+                while (conn.tcp_cache.size > this.MAX_TCP_CACHE_SIZE) {
+                    const oldestKey = conn.tcp_cache.keys().next().value;
+                    if (oldestKey === undefined) break;
+                    this.logger.warn(`TCP cache de ${connKey} ultrapassou ${this.MAX_TCP_CACHE_SIZE} entradas, descartando seq ${oldestKey}`);
+                    conn.tcp_cache.delete(oldestKey);
+                }
+            }
         }
     }
 
@@ -282,13 +327,13 @@ class Sniffer {
         }
         this.updateGracePeriod();
         const newServerKey = this.normalizeConnectionKey(src_server);
-        
+
         if (!this.current_server || this.current_server === '') {
             this.currentServerKey = newServerKey;
             return true;
         }
         // faz Verificação de isRealServerChange e Validação de Grace Period
-        
+
         if (this.currentServerKey === newServerKey) {
             this.lastValidServerPacket = now;
             this.pendingServerNotice = null;
@@ -307,12 +352,12 @@ class Sniffer {
             }
             this.awaitingServerData = false;
         }
-        
+
         const timeSinceLastValid = now - this.lastValidServerPacket;
         if (timeSinceLastValid < this.serverChangeGracePeriod) {
             return false;
         }
-        
+
         return true;
     }
 
@@ -323,7 +368,7 @@ class Sniffer {
         this.lastValidServerPacket = now;
         this.pendingServerNotice = null;
         this.lastServerChangeTime = now;
-        
+
         if (this.userDataManager && typeof this.userDataManager.setServerLine === 'function') {
             this.userDataManager.setServerLine(src_server);
         }
@@ -420,34 +465,34 @@ class Sniffer {
             // PRIORIDADE: Detectar handshake com cooldown + verificação de mudança real
             if (handshakeType && normalizedServerKey !== this.currentServerKey) {
                 const timeSinceLastHandshake = now - this.lastHandshakeTime;
-                
+
                 // Verificar mudança real de servidor (IP ou porta diferente)
                 const hasRealServerChange = this.currentServerKey !== normalizedServerKey;
                 if (!hasRealServerChange) {
                     return;
                 }
-                
+
                 // Aplicar cooldown: ignorar handshakes muito próximos
                 if (timeSinceLastHandshake < this.HANDSHAKE_COOLDOWN) {
                     return;
                 }
-                
+
                 // Atualizar timestamp do último handshake
                 this.lastHandshakeTime = now;
                 this.lastHandshakeType = handshakeType;
-                
+
                 await this.applyServerChange(handshakeType, src_server, buf, tcpPacket);
                 return;
             }
-            
+
             // Verificar mudança real de servidor (sem handshake)
             const isServerChange = this.isRealServerChange(src_server);
-            
+
             if (isServerChange) {
                 await this.applyServerChange(null, src_server, buf, tcpPacket);
                 return;
             }
-            
+
             // CANCELA a espera e processa o dano imediatamente.
             if (this.awaitingServerData && buf.length > 4) {
                 const possibleLen = buf.readUInt32BE();
@@ -458,7 +503,7 @@ class Sniffer {
                 } else {
                 }
             }
-            
+
             // Atualizar timestamp de último pacote válido
             if (!isServerChange && normalizedServerKey === this.currentServerKey) {
                 this.lastValidServerPacket = now;
@@ -466,90 +511,103 @@ class Sniffer {
                 this.awaitingServerData = false;
             }
 
-            if (this.tcp_next_seq === -1) {
+            // NOVO: Obter/criar conexão específica
+            const conn = this.getOrCreateConnection(normalizedServerKey);
+
+            // FILTRO: Ignorar pacotes de outras conexões (APÓS detectar mudança)
+            if (this.currentServerKey && normalizedServerKey !== this.currentServerKey) {
+                return; // Seguro pois mudança já foi detectada acima
+            }
+
+            // Marcar como conexão ativa se for a do servidor atual
+            if (normalizedServerKey === this.currentServerKey) {
+                this.activeConnection = conn;
+            }
+
+            // Inicialização do tcp_next_seq DA CONEXÃO
+            if (conn.tcp_next_seq === -1) {
                 if (buf.length > 4) {
                     const firstLen = buf.readUInt32BE();
                     if (firstLen < 0x0fffff) {
-                        this.tcp_next_seq = tcpPacket.info.seqno;
+                        conn.tcp_next_seq = tcpPacket.info.seqno;
                     }
                 }
             }
 
-            // Isso elimina o spam de "bufLen=0" que vemos no log.
-            if ((this.tcp_next_seq - tcpPacket.info.seqno) << 0 <= 0 || this.tcp_next_seq === -1) {
+            // Adicionar ao cache DA CONEXÃO se necessário
+            if ((conn.tcp_next_seq - tcpPacket.info.seqno) << 0 <= 0 || conn.tcp_next_seq === -1) {
                 if (buf.length === 0) {
                     // Apenas atualizamos o timestamp para manter a conexão viva
-                    this.tcp_last_time = now;
+                    conn.tcp_last_time = now;
                 } else {
                     // Proteção extra de inicialização
-                    if (this.tcp_next_seq === -1 && this.tcp_cache.size > 100) {
-                        this.tcp_cache.clear();
+                    if (conn.tcp_next_seq === -1 && conn.tcp_cache.size > 100) {
+                        conn.tcp_cache.clear();
                     }
-                    this.tcp_cache.set(tcpPacket.info.seqno, { buffer: buf, timestamp: now });
+                    conn.tcp_cache.set(tcpPacket.info.seqno, { buffer: buf, timestamp: now });
                 }
             }
-            
-            
-            while (this.tcp_cache.has(this.tcp_next_seq)) {
-                const seq = this.tcp_next_seq;
-                const cachedEntry = this.tcp_cache.get(seq);
+
+
+            // Processar cache DA CONEXÃO
+            while (conn.tcp_cache.has(conn.tcp_next_seq)) {
+                const seq = conn.tcp_next_seq;
+                const cachedEntry = conn.tcp_cache.get(seq);
                 const cachedTcpData = cachedEntry ? cachedEntry.buffer : null;
-                
+
                 if (!cachedTcpData) {
-                    this.tcp_cache.delete(seq);
+                    conn.tcp_cache.delete(seq);
                     break;
                 }
 
-                if (this._data.length === 0) {
+                if (conn._data.length === 0) {
                     const len = cachedTcpData.length;
 
-
-                    // POR ISSO, DEVEMOS DESCARTAR PELO TAMANHO ANTES DE LER O HEADER.
+                    // FILTRO 1: EXITLAG KEEP-ALIVE (41/53 bytes)
                     if (len <= 4 || len === 41 || len === 53) {
-                        this.tcp_next_seq = (seq + len) >>> 0;
-                        this.tcp_cache.delete(seq);
-                        this.tcp_last_time = Date.now();
-                        continue; // <--- Pula instantaneamente
+                        conn.tcp_next_seq = (seq + len) >>> 0;
+                        conn.tcp_cache.delete(seq);
+                        conn.last_packet_time = now; // Atualizar timestamp para timeout
+                        continue;
                     }
 
-                    // 2. Validação de Header (para outros tamanhos desconhecidos)
-                    // Só lemos o header se o pacote NÃO for um dos lixos conhecidos.
+                    // FILTRO 2: Validação de Header Blue Protocol
                     const possibleHeader = cachedTcpData.readUInt32BE();
-                    
-                    // Se o header diz que o pacote tem mais de 1MB (0x0fffff), é LIXO CONFIRMADO.
-                    if (possibleHeader > 0x0fffff) {
-                        this.tcp_next_seq = (seq + len) >>> 0;
-                        this.tcp_cache.delete(seq);
-                        this.tcp_last_time = Date.now();
-                        continue; 
+                    if (possibleHeader > 0x0fffff || possibleHeader === 0) {
+                        this.logger.debug(`[CORRUPT-HEADER] Descartando pacote: size=${possibleHeader} len=${len}`);
+                        conn.tcp_next_seq = (seq + len) >>> 0;
+                        conn.tcp_cache.delete(seq);
+                        conn.last_packet_time = now;
+                        continue;
                     }
-                    
-                    // Se chegou aqui, o cabeçalho é VÁLIDO (menor que 1MB).
-                    // O pacote é do jogo e será processado normalmente.
+
+                    // Se chegou aqui, o header é VÁLIDO
                 }
 
-                this._data = this._data.length === 0 ? cachedTcpData : Buffer.concat([this._data, cachedTcpData]);
-                this.tcp_next_seq = (seq + cachedTcpData.length) >>> 0;
-                this.tcp_cache.delete(seq);
-                this.tcp_last_time = Date.now();
+                conn._data = conn._data.length === 0 ? cachedTcpData : Buffer.concat([conn._data, cachedTcpData]);
+                conn.tcp_next_seq = (seq + cachedTcpData.length) >>> 0;
+                conn.tcp_cache.delete(seq);
+                conn.last_packet_time = now; // Atualizar timestamp de sucesso
             }
 
             this.cleanupTcpCache(now);
 
-            while (this._data.length > 4) {
-                let packetSize = this._data.readUInt32BE();
+            // Processar pacotes completos do buffer DA CONEXÃO
+            while (conn._data.length > 4) {
+                let packetSize = conn._data.readUInt32BE();
 
-                if (this._data.length < packetSize) break;
+                if (conn._data.length < packetSize) break;
 
-                if (this._data.length >= packetSize) {
-                    const packet = this._data.subarray(0, packetSize);
-                    this._data = this._data.subarray(packetSize);
+                if (conn._data.length >= packetSize) {
+                    const packet = conn._data.subarray(0, packetSize);
+                    conn._data = conn._data.subarray(packetSize);
                     if (this.packetProcessor) {
                         this.packetProcessor.processPacket(packet, this.isPaused, this.globalSettings);
                     }
                 } else if (packetSize > 0x0fffff) {
-                    this.logger.error(`Invalid Length!! ${this._data.length},${packetSize},${this._data.toString('hex')},${this.tcp_next_seq}`);
-                    process.exit(1);
+                    this.logger.error(`[CORRUPT] Invalid packet size: ${packetSize} (buffer=${conn._data.length}bytes, conn=${normalizedServerKey})`);
+                    conn._data = Buffer.alloc(0); // Limpar buffer corrompido
+                    conn.tcp_next_seq = -1;
                     break;
                 }
             }
@@ -679,13 +737,13 @@ class Sniffer {
     /** Método de cleanup para limpar recursos antes de fechar */
     cleanup() {
         this.logger.info('Limpando recursos do Sniffer...');
-        
+
         // Limpar intervalo de limpeza de fragmentos
         if (this.fragmentCleanupInterval) {
             clearInterval(this.fragmentCleanupInterval);
             this.fragmentCleanupInterval = null;
         }
-        
+
         this.logger.info('Recursos do Sniffer limpos com sucesso');
     }
 }

@@ -92,7 +92,7 @@ class StatisticData {
             critical: 0,
             lucky: 0,
             crit_lucky: 0,
-            hpLessen: 0, 
+            hpLessen: 0,
             total: 0,
         };
         this.count = {
@@ -195,10 +195,10 @@ class StatisticData {
         }
         // Tempo total = fim - início - tempo pausado
         const actualElapsedTime = (this.timeRange[1] - this.timeRange[0]) - this.totalPausedTime;
-        
+
         // Evitar divisão por zero ou tempos negativos
         if (actualElapsedTime <= 0) return 0;
-        
+
         const totalPerSecond = (this.stats.total / actualElapsedTime) * 1000 || 0;
         if (!Number.isFinite(totalPerSecond)) return 0;
         return totalPerSecond;
@@ -302,7 +302,7 @@ class UserData {
     updateRealtimeDps() {
         this.damageStats.updateRealtimeStats();
         this.healingStats.updateRealtimeStats();
-        
+
         // Limpar janelas de skills individuais para economizar memória
         for (const skillStat of this.skillUsage.values()) {
             skillStat.updateRealtimeStats();
@@ -438,7 +438,7 @@ class UserDataManager {
         this.fightEnded = false; // Indica se luta terminou recentemente
         this.fightHistory = []; // Histórico das últimas 20 lutas
         this.MAX_FIGHT_HISTORY = 20; // Máximo de lutas no histórico
-        
+
         // Usar diretório de dados customizado se fornecido, senão usar diretório do processo
         const baseDir = dataDir || process.cwd();
         this.DEFAULT_PLAYER_MAP_PATH = path.join(process.cwd(), 'player_map.json');
@@ -467,11 +467,12 @@ class UserDataManager {
         this.ENEMY_CACHE_TTL_MS = 2 * 60 * 1000; // Remover inimigos após 2 minutos sem atualização
 
         this.isClearing = false;
-        
+
         // BPTimer integration
         this.bpTimerClient = null;
         this.pendingBPTimerReports = new Set();
         this.currentServerLine = 1; // Canal atual
+        this.currentPlayerUid = null; // UID do jogador atual (para detecção de região no BPTimer)
         this.lineSetBySceneData = false; // Flag para indicar se Line veio do SceneData
         this.linePriorityExpiration = 0;
         this.SCENE_LINE_PRIORITY_MS = 10000;
@@ -492,13 +493,13 @@ class UserDataManager {
         // Inicializar BPTimer client
         await this.initializeBPTimer();
     }
-    
+
     /** Inicializar cliente BPTimer */
     async initializeBPTimer() {
         if (!this.pendingBPTimerReports) {
             this.pendingBPTimerReports = new Set();
         }
-        
+
         try {
             // Carregar módulo ESM dinamicamente usando import()
             if (!BPTimerClient) {
@@ -512,17 +513,17 @@ class UserDataManager {
                     return;
                 }
             }
-            
+
             const apiKey = process.env.BPTIMER_API_KEY;
-            
+
             // Apenas inicializar se tiver API key configurada
             if (!apiKey || apiKey.trim() === '') {
                 this.bpTimerClient = null;
                 return;
             }
-            
+
             const enabled = this.globalSettings.bptimerEnabled === true;
-            
+
             this.bpTimerClient = new BPTimerClient({
                 api_url: 'https://db.bptimer.com',
                 api_key: apiKey,
@@ -533,21 +534,21 @@ class UserDataManager {
                 },
                 log_level: 'info'
             });
-            
+
             this.logger.info(`BPTimer client inicializado (${enabled ? 'habilitado' : 'desabilitado'})`);
         } catch (error) {
             this.logger.error('Erro ao inicializar BPTimer client:', error);
             this.bpTimerClient = null;
         }
     }
-    
+
     /** Atualizar configurações do BPTimer */
     updateBPTimerSettings() {
         if (!this.bpTimerClient) {
             this.initializeBPTimer();
             return;
         }
-        
+
         try {
             const enabled = this.globalSettings.bptimerEnabled !== false;
             this.bpTimerClient.setEnabled(enabled);
@@ -562,7 +563,7 @@ class UserDataManager {
             await fsPromises.access(this.USER_CACHE_PATH);
             const data = await fsPromises.readFile(this.USER_CACHE_PATH, 'utf8');
             const cacheArray = JSON.parse(data);
-            
+
             // Converter array para Map
             this.userCache = new Map(cacheArray);
             this.logger.info(`Cache de usuários carregado: ${this.userCache.size} usuários`);
@@ -602,7 +603,7 @@ class UserDataManager {
         if (this.cacheSaveTimer) {
             clearTimeout(this.cacheSaveTimer);
         }
-        
+
         // Agendar novo salvamento após CACHE_SAVE_DELAY
         this.cacheSaveTimer = setTimeout(() => {
             this.saveUserCache().catch(err => {
@@ -693,7 +694,7 @@ class UserDataManager {
             await fsPromises.access(this.FIGHT_HISTORY_PATH);
             const data = await fsPromises.readFile(this.FIGHT_HISTORY_PATH, 'utf8');
             this.fightHistory = JSON.parse(data);
-            
+
             // Limitar a MAX_FIGHT_HISTORY ao carregar (caso o arquivo tenha mais lutas)
             if (this.fightHistory.length > this.MAX_FIGHT_HISTORY) {
                 const originalLength = this.fightHistory.length;
@@ -702,7 +703,7 @@ class UserDataManager {
                 // Salvar o arquivo corrigido
                 await this.saveFightHistoryToFile();
             }
-            
+
             this.logger.info(`Histórico de lutas carregado: ${this.fightHistory.length} lutas`);
         } catch (error) {
             if (error.code === 'ENOENT') {
@@ -737,10 +738,10 @@ class UserDataManager {
             const user = new UserData(uid);
             const uidStr = String(uid);
             const cachedData = this.userCache.get(uidStr);
-            
+
             // Definir nome padrão primeiro
             let hasName = false;
-            
+
             if (this.playerMap.has(uidStr)) {
                 const nameFromPlayerMap = this.playerMap.get(uidStr);
                 user.setName(nameFromPlayerMap);
@@ -759,12 +760,12 @@ class UserDataManager {
                     user.setAttrKV('max_hp', cachedData.maxHp);
                 }
             }
-            
+
             // Se não tem nome, usar nome temporário
             if (!hasName) {
                 user.setName(`Player ${uid}`);
             }
-            
+
             if (this.hpCache.has(uid)) {
                 user.setAttrKV('hp', this.hpCache.get(uid));
             }
@@ -792,11 +793,11 @@ class UserDataManager {
         if (!this.fightActive) {
             this.startFight();
         }
-        
+
         // Atualizar tempo do último dano
         this.lastDamageTime = Date.now();
         this.lastLogTime = this.lastDamageTime;
-        
+
         const user = this.getUser(uid);
         user.addDamage(skillId, element, damage, isCrit, isLucky, isCauseLucky, hpLessenValue);
     }
@@ -817,7 +818,7 @@ class UserDataManager {
         // Atualizar tempo do último dano/healing
         this.lastDamageTime = Date.now();
         this.lastLogTime = this.lastDamageTime;
-        
+
         if (uid !== 0) {
             const user = this.getUser(uid);
             user.addHealing(skillId, element, healing, isCrit, isLucky, isCauseLucky);
@@ -874,7 +875,7 @@ class UserDataManager {
         const user = this.getUser(uid);
         if (user.profession !== profession) {
             user.setProfession(profession);
-            this.logger.info(`Found profession ${profession} for uid ${uid}`);
+            // this.logger.info(`Found profession ${profession} for uid ${uid}`);
         }
     }
 
@@ -892,7 +893,7 @@ class UserDataManager {
             const cachedData = this.userCache.get(uidStr) || {};
             cachedData.name = name;
             this.userCache.set(uidStr, cachedData);
-            
+
             // Agendar salvamento em arquivo com debounce (reduz I/O)
             this.scheduleCacheSave();
 
@@ -913,13 +914,13 @@ class UserDataManager {
         if (user.fightPoint != fightPoint) {
             user.setFightPoint(fightPoint);
             this.logger.info(`Found fight point ${fightPoint} for uid ${uid}`);
-            
+
             // Atualizar cache em memória
             const uidStr = String(uid);
             const cachedData = this.userCache.get(uidStr) || {};
             cachedData.fightPoint = fightPoint;
             this.userCache.set(uidStr, cachedData);
-            
+
             // Agendar salvamento em arquivo com debounce (reduz I/O)
             this.scheduleCacheSave();
         }
@@ -934,7 +935,7 @@ class UserDataManager {
         const user = this.getUser(uid);
         user.attr[key] = value;
     }
-    
+
     /** Definir canal/linha do servidor atual */
     setServerLine(serverString) {
         const now = Date.now();
@@ -946,21 +947,21 @@ class UserDataManager {
             }
             this.lineSetBySceneData = false;
         }
-        
+
         if (!serverString || typeof serverString !== 'string') return;
-        
+
         // Ignorar IPs locais (192.168.x.x, 10.x.x.x, 172.16-31.x.x)
         if (serverString.match(/192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[0-1])\./)) {
             return; // Não fazer nada para IPs locais
         }
-        
+
         // Tentar extrair número da linha do nome do servidor
         const match = serverString.match(/line[_\s-]?(\d+)|l(\d+)|canal[_\s-]?(\d+)/i);
         if (match) {
             this.currentServerLine = parseInt(match[1] || match[2] || match[3]);
             return;
         }
-        
+
         // Se não encontrar, usar hash simples baseado no IP do servidor REMOTO
         const ipMatch = serverString.match(/(\d+\.\d+\.\d+\.\d+):(\d+)/);
         if (ipMatch) {
@@ -1039,13 +1040,13 @@ class UserDataManager {
                 this.logger.error('Erro ao salvar luta em background:', error);
             });
     }
-    
+
     /** Reportar HP de boss para BPTimer */
-    async reportBossHP(enemyUuid, monsterId, hp, maxHp) {
+    async reportBossHP(enemyUuid, monsterId, hp, maxHp, playerUid = null) {
         if (!this.bpTimerClient || !this.bpTimerClient.isEnabled()) {
             return;
         }
-        
+
         if (!monsterId || hp === undefined || maxHp === undefined || maxHp === 0) {
             return;
         }
@@ -1069,7 +1070,7 @@ class UserDataManager {
         if (!this.pendingBPTimerReports) {
             this.pendingBPTimerReports = new Set();
         }
-        
+
         try {
             const hpPctRaw = (hp / maxHp) * 100;
             const hpPct = Math.max(0, Math.min(100, Math.floor(hpPctRaw)));
@@ -1078,21 +1079,36 @@ class UserDataManager {
 
             // Obter posição do boss do cache (ATTR_POS)
             const position = this.enemyCache.pos.get(enemyUuid);
-            const pos_x = position?.x ?? 0;
-            const pos_y = position?.y ?? 0;
-            const pos_z = position?.z ?? 0;
+            const pos_x = position?.x;
+            const pos_y = position?.y;
+            const pos_z = position?.z;
+
+            // Obter account_id do jogador atual (para detecção de região)
+            // O BPTimer usa isso para determinar automaticamente a região do servidor
+            const account_id = playerUid || this.currentPlayerUid;
 
             const sendReport = async () => {
                 this.pendingBPTimerReports.add(reportKey);
                 try {
-                    const result = await this.bpTimerClient.reportHP({
+                    const reportParams = {
                         monster_id: monsterId,
                         hp_pct: hpPct,
-                        line: this.currentServerLine,
-                        pos_x: pos_x,
-                        pos_y: pos_y,
-                        pos_z: pos_z
-                    });
+                        line: this.currentServerLine
+                    };
+
+                    // Adicionar posição apenas se disponível (alguns mobs requerem)
+                    if (pos_x !== undefined && pos_y !== undefined && pos_z !== undefined) {
+                        reportParams.pos_x = pos_x;
+                        reportParams.pos_y = pos_y;
+                        reportParams.pos_z = pos_z;
+                    }
+
+                    // Adicionar account_id se disponível (para detecção de região)
+                    if (account_id) {
+                        reportParams.account_id = account_id;
+                    }
+
+                    const result = await this.bpTimerClient.reportHP(reportParams);
 
                     // Salvar HP reportado
                     this.lastBPTimerReport.set(reportKey, hpPct);
@@ -1187,7 +1203,7 @@ class UserDataManager {
         this.enemyCache.attrId.clear();
         this.enemyCache.lastSeen.clear();
         this.enemyCache.hp_pct.clear();
-        
+
         // Limpar cache de HP reportado do BPTimer para permitir novo report
         if (this.lastBPTimerReport) {
             this.lastBPTimerReport.clear();
@@ -1286,13 +1302,13 @@ class UserDataManager {
     async endFight() {
         if (this.fightActive && this.users.size > 0) {
             await this.saveFightToHistory();
-            
+
             // Se autoResetOnFightEnd estiver ativo, limpar dados
             if (this.globalSettings.autoResetOnFightEnd) {
                 this.users = new Map();
                 this.startTime = Date.now();
             }
-            
+
             this.fightActive = false;
             this.fightEnded = true; // Marcar que luta terminou
             this.logger.info('Luta finalizada e salva no histórico!');
@@ -1309,7 +1325,7 @@ class UserDataManager {
         const startTime = startTimeSnapshot ?? this.startTime;
         const endTime = Date.now();
         const duration = endTime - startTime;
-        
+
         // Criar snapshot dos dados atuais
         const fightData = {
             id: Date.now(), // ID único baseado em timestamp
@@ -1332,9 +1348,9 @@ class UserDataManager {
                 takenDamage: user.takenDamage,
                 deadCount: user.deadCount,
                 fightPoint: user.fightPoint,
-                critRate: user.damageStats.count.total > 0 ? 
+                critRate: user.damageStats.count.total > 0 ?
                     (user.damageStats.count.critical / user.damageStats.count.total * 100) : 0,
-                luckyRate: user.damageStats.count.total > 0 ? 
+                luckyRate: user.damageStats.count.total > 0 ?
                     (user.damageStats.count.lucky / user.damageStats.count.total * 100) : 0,
                 peakDps: user.damageStats.realtimeStats.max
             };
@@ -1353,7 +1369,7 @@ class UserDataManager {
         }
 
         this.logger.info(`Luta salva no histórico. Total de lutas: ${this.fightHistory.length}`);
-        
+
         // Salvar no arquivo JSON
         await this.saveFightHistoryToFile();
 
@@ -1387,13 +1403,13 @@ class UserDataManager {
             // Deletar arquivo de cache
             await fsPromises.unlink(this.USER_CACHE_PATH);
             this.logger.info('Arquivo de cache deletado:', this.USER_CACHE_PATH);
-            
+
             // Limpar cache em memória
             this.userCache.clear();
-            
+
             // Recarregar cache (vazio)
             await this.loadUserCache();
-            
+
             this.logger.info('Cache de usuários limpo com sucesso!');
         } catch (error) {
             if (error.code === 'ENOENT') {
@@ -1410,7 +1426,7 @@ class UserDataManager {
         if (this.fightActive) {
             const timeSinceLastDamage = Date.now() - this.lastDamageTime;
             const FIGHT_TIMEOUT = 30000; // 30 segundos
-            
+
             if (timeSinceLastDamage > FIGHT_TIMEOUT) {
                 this.endFight();
             }
@@ -1498,19 +1514,19 @@ class UserDataManager {
     /** Método de cleanup para limpar timers antes de fechar */
     cleanup() {
         this.logger.info('Limpando recursos do DataManager...');
-        
+
         // Limpar timer de salvamento de cache
         if (this.cacheSaveTimer) {
             clearTimeout(this.cacheSaveTimer);
             this.cacheSaveTimer = null;
         }
-        
+
         // Limpar timer de salvamento de player map
         if (this.playerMapSaveTimer) {
             clearTimeout(this.playerMapSaveTimer);
             this.playerMapSaveTimer = null;
         }
-        
+
         this.logger.info('Recursos do DataManager limpos com sucesso');
     }
 }

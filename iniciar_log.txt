@@ -1,0 +1,583 @@
+[2025-11-28T07:08:01.905Z] server stdout: [2025-11-28 04:08:01] [info] [PROCESS] 1 packets processed, remaining_data=0
+
+[2025-11-28T07:08:01.906Z] server stdout: [2025-11-28 04:08:01] [info] [PROCESS] 1 packets processed, remaining_data=0
+
+[2025-11-28T07:08:01.978Z] server stdout: [2025-11-28 04:08:01] [debug] [CACHE] Removidos 20 inimigos inativos (120000ms)
+
+[2025-11-28T07:08:01.979Z] server stdout: [2025-11-28 04:08:01] [debug] [CACHE] Removidos 20 inimigos inativos (120000ms)
+
+[2025-11-28T07:08:02.632Z] server stdout: [2025-11-28 04:08:02] [info] [DIAG] tcp_next_seq=993727376, cache_size=0, _data_len=0, server=192.168.3.2:64641 <-> 43.174.2
+
+[2025-11-28T07:08:02.633Z] server stdout: [2025-11-28 04:08:02] [info] [DIAG] tcp_next_seq=993727376, cache_size=0, _data_len=0, server=192.168.3.2:64641 <-> 43.174.2
+
+[2025-11-28T07:08:03.186Z] server stdout: [2025-11-28 04:08:03] [warn] [SEQ-REJECT] pkt_seq=3674737672, next_seq=993729264, diff=2681008408, len=0
+
+[2025-11-28T07:08:03.186Z] server stdout: [2025-11-28 04:08:03] [warn] [SEQ-REJECT] pkt_seq=3674737672, next_seq=993729264, diff=2681008408, len=0
+
+[2025-11-28T07:08:04.943Z] server stdout: [2025-11-28 04:08:04] [info] [PROCESS] 1 packets processed, remaining_data=0
+
+[2025-11-28T07:08:04.944Z] server stdout: [2025-11-28 04:08:04] [info] [PROCESS] 1 packets processed, remaining_data=0
+
+[2025-11-28T07:08:05.192Z] server stdout: [2025-11-28 04:08:05] [warn] [SEQ-REJECT] pkt_seq=3674737999, next_seq=993736558, diff=2681001441, len=10
+
+[2025-11-28T07:08:05.193Z] server stdout: [2025-11-28 04:08:05] [warn] [SEQ-REJECT] pkt_seq=3674737999, next_seq=993736558, diff=2681001441, len=10
+
+[2025-11-28T07:08:07.214Z] server stdout: [2025-11-28 04:08:07] [warn] [SEQ-REJECT] pkt_seq=3674738295, next_seq=993742694, diff=2680995601, len=0
+
+[2025-11-28T07:08:07.215Z] server stdout: [2025-11-28 04:08:07] [warn] [SEQ-REJECT] pkt_seq=3674738295, next_seq=993742694, diff=2680995601, len=0
+
+[2025-11-28T07:08:07.733Z] server stdout: [2025-11-28 04:08:07] [info] [DIAG] tcp_next_seq=993742694, cache_size=0, _data_len=0, server=192.168.3.2:64641 <-> 43.174.2
+
+[2025-11-28T07:08:07.733Z] server stdout: [2025-11-28 04:08:07] [info] [DIAG] tcp_next_seq=993742694, cache_size=0, _data_len=0, server=192.168.3.2:64641 <-> 43.174.2
+
+[2025-11-28T07:08:09.665Z] server stdout: [2025-11-28 04:08:09] [info] [SERVER-CHANGE] type=short from=43.174.233.119:20041 -> 192.168.3.2:64641 to=43.174.233.119:20046 -> 192.168.3.2:58278 Δ=138017ms
+[2025-11-28 04:08:09] [info] [SERVER] Mudança de sala detectada.
+
+[2025-11-28T07:08:09.666Z] server stdout: [2025-11-28 04:08:09] [info] [SERVER-CHANGE] type=short from=43.174.233.119:20041 -> 192.168.3.2:64641 to=43.174.233.119:20046 -> 192.168.3.2:58278 Δ=138017ms
+[2025-11-28 04:08:09] [info] [SERVER] Mudança de sala detectada.
+
+[2025-11-28T07:08:09.666Z] server stdout: [2025-11-28 04:08:09] [info] [BPTimer] Cache de HP reportado limpo
+
+[2025-11-28T07:08:09.667Z] server stdout: [2025-11-28 04:08:09] [info] [BPTimer] Cache de HP reportado limpo
+
+[2025-11-28T07:08:09.670Z] server stdout: [2025-11-28 04:08:09] [info] [PROCESS] 1 packets processed, remaining_data=0
+
+[2025-11-28T07:08:09.670Z] server stdout: [2025-11-28 04:08:09] [info] [PROCESS] 1 packets processed, remaining_data=0
+
+[2025-11-28T07:08:09.722Z] server stdout: [2025-11-28 04:08:09] [warn] [SEQ-REJECT] pkt_seq=176581779, next_seq=176633879, diff=4294915196, len=1412
+
+[2025-11-28T07:08:09.722Z] server stdout: [2025-11-28 04:08:09] [warn] [SEQ-REJECT] pkt_seq=176581779, next_seq=176633879, diff=4294915196, len=1412
+
+[2025-11-28T07:08:09.746Z] server stdout: [2025-11-28 04:08:09] [info] [SCENE] Mudança detectada via SceneData (map=74, level=74, dungeon=1a1a0a0f-31c2-4cf3-a67d-24edd444a9aa, line=12)
+[2025-11-28 04:08:09] [info] [BPTimer] Cache de HP reportado limpo
+
+[2025-11-28T07:08:09.747Z] server stdout: [2025-11-28 04:08:09] [info] [SCENE] Mudança detectada via SceneData (map=74, level=74, dungeon=1a1a0a0f-31c2-4cf3-a67d-24edd444a9aa, line=12)
+[2025-11-28 04:08:09] [info] [BPTimer] Cache de HP reportado limpo
+
+[2025-11-28T07:08:09.748Z] server stdout: [2025-11-28 04:08:09] [info] Salvando luta antes de limpar (mudança de servidor/mapa)
+[2025-11-28 04:08:09] [info] Luta salva no histórico. Total de lutas: 20
+
+[2025-11-28T07:08:09.748Z] server stdout: [2025-11-28 04:08:09] [info] Salvando luta antes de limpar (mudança de servidor/mapa)
+[2025-11-28 04:08:09] [info] Luta salva no histórico. Total de lutas: 20
+
+[2025-11-28T07:08:09.749Z] server stdout: [2025-11-28 04:08:09] [info] Histórico de lutas salvo: 20 lutas
+[2025-11-28 04:08:09] [debug] Evento fight-saved emitido para namespace /history
+
+[2025-11-28T07:08:09.749Z] server stdout: [2025-11-28 04:08:09] [info] Histórico de lutas salvo: 20 lutas
+[2025-11-28 04:08:09] [debug] Evento fight-saved emitido para namespace /history
+
+[2025-11-28T07:08:12.734Z] server stdout: [2025-11-28 04:08:12] [info] [DIAG] tcp_next_seq=176654259, cache_size=18, _data_len=0, server=192.168.3.2:58278 <-> 43.174.2
+[2025-11-28 04:08:12] [info] [PROCESS] 1 packets processed, remaining_data=0
+
+[2025-11-28T07:08:12.734Z] server stdout: [2025-11-28 04:08:12] [info] [DIAG] tcp_next_seq=176654259, cache_size=18, _data_len=0, server=192.168.3.2:58278 <-> 43.174.2
+[2025-11-28 04:08:12] [info] [PROCESS] 1 packets processed, remaining_data=0
+
+[2025-11-28T07:08:14.849Z] server stdout: [2025-11-28 04:08:14] [info] Found fight point 23521 for uid 7176848
+
+[2025-11-28T07:08:14.849Z] server stdout: [2025-11-28 04:08:14] [info] Found fight point 23521 for uid 7176848
+
+[2025-11-28T07:08:14.850Z] server stdout: [2025-11-28 04:08:14] [info] Found player name sakura for uid 91548525
+[2025-11-28 04:08:14] [info] Found fight point 18719 for uid 91548525
+[2025-11-28 04:08:14] [info] Found player name Asterius for uid 4942372
+[2025-11-28 04:08:14] [info] Found fight point 20480 for uid 4942372
+[2025-11-28 04:08:14] [info] Found player name Velvet for uid 5337711
+[2025-11-28 04:08:14] [info] Found fight point 22993 for uid 5337711
+[2025-11-28 04:08:14] [info] Found player name Sherrie for uid 35023624
+[2025-11-28 04:08:14] [info] Found fight point 18009 for uid 35023624
+[2025-11-28 04:08:14] [info] Found fight point 18094 for uid 4111305
+[2025-11-28 04:08:14] [info] Found player name Ayunai for uid 4930015
+[2025-11-28 04:08:14] [info] Found fight point 23632 for uid 4930015
+[2025-11-28 04:08:14] [info] Found player name JayS for uid 2261418
+[2025-11-28 04:08:14] [info] Found fight point 20052 for uid 2261418
+
+[2025-11-28T07:08:14.850Z] server stdout: [2025-11-28 04:08:14] [info] Found player name sakura for uid 91548525
+[2025-11-28 04:08:14] [info] Found fight point 18719 for uid 91548525
+[2025-11-28 04:08:14] [info] Found player name Asterius for uid 4942372
+[2025-11-28 04:08:14] [info] Found fight point 20480 for uid 4942372
+[2025-11-28 04:08:14] [info] Found player name Velvet for uid 5337711
+[2025-11-28 04:08:14] [info] Found fight point 22993 for uid 5337711
+[2025-11-28 04:08:14] [info] Found player name Sherrie for uid 35023624
+[2025-11-28 04:08:14] [info] Found fight point 18009 for uid 35023624
+[2025-11-28 04:08:14] [info] Found fight point 18094 for uid 4111305
+[2025-11-28 04:08:14] [info] Found player name Ayunai for uid 4930015
+[2025-11-28 04:08:14] [info] Found fight point 23632 for uid 4930015
+[2025-11-28 04:08:14] [info] Found player name JayS for uid 2261418
+[2025-11-28 04:08:14] [info] Found fight point 20052 for uid 2261418
+
+[2025-11-28T07:08:14.931Z] server stdout: [2025-11-28 04:08:14] [info] Nova luta iniciada!
+
+[2025-11-28T07:08:14.932Z] server stdout: [2025-11-28 04:08:14] [info] Nova luta iniciada!
+
+[2025-11-28T07:08:15.117Z] server stdout: [2025-11-28 04:08:15] [info] [BPTimer] [BPTimer] Reported 15% HP for Venobzzar Incubator (10077) on Line 12
+
+[2025-11-28T07:08:15.117Z] server stdout: [2025-11-28 04:08:15] [info] [BPTimer] [BPTimer] Reported 15% HP for Venobzzar Incubator (10077) on Line 12
+
+[2025-11-28T07:08:15.787Z] server stdout: [2025-11-28 04:08:15] [info] [PROCESS] 1 packets processed, remaining_data=0
+
+[2025-11-28T07:08:15.787Z] server stdout: [2025-11-28 04:08:15] [info] [PROCESS] 1 packets processed, remaining_data=0
+
+[2025-11-28T07:08:17.734Z] server stdout: [2025-11-28 04:08:17] [info] [DIAG] tcp_next_seq=176746811, cache_size=97, _data_len=0, server=192.168.3.2:58278 <-> 43.174.2
+
+[2025-11-28T07:08:17.735Z] server stdout: [2025-11-28 04:08:17] [info] [DIAG] tcp_next_seq=176746811, cache_size=97, _data_len=0, server=192.168.3.2:58278 <-> 43.174.2
+
+[2025-11-28T07:08:17.851Z] server stdout: [2025-11-28 04:08:17] [info] Player map salvo com 624 entradas
+
+[2025-11-28T07:08:17.852Z] server stdout: [2025-11-28 04:08:17] [info] Player map salvo com 624 entradas
+
+[2025-11-28T07:08:17.853Z] server stdout: [2025-11-28 04:08:17] [info] Cache de usuários salvo: 606 usuários
+
+[2025-11-28T07:08:17.853Z] server stdout: [2025-11-28 04:08:17] [info] Cache de usuários salvo: 606 usuários
+
+[2025-11-28T07:08:18.794Z] server stdout: [2025-11-28 04:08:18] [info] [PROCESS] 1 packets processed, remaining_data=0
+
+[2025-11-28T07:08:18.794Z] server stdout: [2025-11-28 04:08:18] [info] [PROCESS] 1 packets processed, remaining_data=0
+
+[2025-11-28T07:08:21.483Z] server stdout: [2025-11-28 04:08:21] [info] [BPTimer] [BPTimer] Reported 10% HP for Venobzzar Incubator (10077) on Line 12
+
+[2025-11-28T07:08:21.484Z] server stdout: [2025-11-28 04:08:21] [info] [BPTimer] [BPTimer] Reported 10% HP for Venobzzar Incubator (10077) on Line 12
+
+[2025-11-28T07:08:21.808Z] server stdout: [2025-11-28 04:08:21] [info] [PROCESS] 1 packets processed, remaining_data=0
+
+[2025-11-28T07:08:21.808Z] server stdout: [2025-11-28 04:08:21] [info] [PROCESS] 1 packets processed, remaining_data=0
+
+[2025-11-28T07:08:22.741Z] server stdout: [2025-11-28 04:08:22] [info] [DIAG] tcp_next_seq=176873258, cache_size=229, _data_len=0, server=192.168.3.2:58278 <-> 43.174.2
+
+[2025-11-28T07:08:22.742Z] server stdout: [2025-11-28 04:08:22] [info] [DIAG] tcp_next_seq=176873258, cache_size=229, _data_len=0, server=192.168.3.2:58278 <-> 43.174.2
+
+[2025-11-28T07:08:24.810Z] server stdout: [2025-11-28 04:08:24] [info] [PROCESS] 1 packets processed, remaining_data=0
+
+[2025-11-28T07:08:24.811Z] server stdout: [2025-11-28 04:08:24] [info] [PROCESS] 1 packets processed, remaining_data=0
+
+[2025-11-28T07:08:27.745Z] server stdout: [2025-11-28 04:08:27] [info] [DIAG] tcp_next_seq=177011130, cache_size=336, _data_len=0, server=192.168.3.2:58278 <-> 43.174.2
+
+[2025-11-28T07:08:27.746Z] server stdout: [2025-11-28 04:08:27] [info] [DIAG] tcp_next_seq=177011130, cache_size=336, _data_len=0, server=192.168.3.2:58278 <-> 43.174.2
+
+[2025-11-28T07:08:27.859Z] server stdout: [2025-11-28 04:08:27] [info] [PROCESS] 1 packets processed, remaining_data=0
+
+[2025-11-28T07:08:27.859Z] server stdout: [2025-11-28 04:08:27] [info] [PROCESS] 1 packets processed, remaining_data=0
+
+[2025-11-28T07:08:29.262Z] server stdout: [2025-11-28 04:08:29] [info] [BPTimer] [BPTimer] Reported 5% HP for Venobzzar Incubator (10077) on Line 12
+
+[2025-11-28T07:08:29.263Z] server stdout: [2025-11-28 04:08:29] [info] [BPTimer] [BPTimer] Reported 5% HP for Venobzzar Incubator (10077) on Line 12
+
+[2025-11-28T07:08:29.789Z] server stdout: [2025-11-28 04:08:29] [error] Fail while parsing data for player 5409245.
+Err: Error: Data corruption detected
+[2025-11-28 04:08:29] [warn] [CORRUPT-HEADER] packetSize=618539343, _data_len=1379, descartando buffer
+
+[2025-11-28T07:08:29.790Z] server stdout: [2025-11-28 04:08:29] [error] Fail while parsing data for player 5409245.
+Err: Error: Data corruption detected
+[2025-11-28 04:08:29] [warn] [CORRUPT-HEADER] packetSize=618539343, _data_len=1379, descartando buffer
+
+[2025-11-28T07:08:30.859Z] server stdout: [2025-11-28 04:08:30] [info] [PROCESS] 1 packets processed, remaining_data=0
+
+[2025-11-28T07:08:30.860Z] server stdout: [2025-11-28 04:08:30] [info] [PROCESS] 1 packets processed, remaining_data=0
+
+[2025-11-28T07:08:32.756Z] server stdout: [2025-11-28 04:08:32] [info] [DIAG] tcp_next_seq=177205123, cache_size=416, _data_len=0, server=192.168.3.2:58278 <-> 43.174.2
+
+[2025-11-28T07:08:32.757Z] server stdout: [2025-11-28 04:08:32] [info] [DIAG] tcp_next_seq=177205123, cache_size=416, _data_len=0, server=192.168.3.2:58278 <-> 43.174.2
+
+[2025-11-28T07:08:33.871Z] server stdout: [2025-11-28 04:08:33] [info] [PROCESS] 1 packets processed, remaining_data=0
+
+[2025-11-28T07:08:33.872Z] server stdout: [2025-11-28 04:08:33] [info] [PROCESS] 1 packets processed, remaining_data=0
+
+[2025-11-28T07:08:34.611Z] server stdout: [2025-11-28 04:08:34] [info] [BPTimer] [BPTimer] Reported 0% HP for Venobzzar Incubator (10077) on Line 12
+
+[2025-11-28T07:08:34.612Z] server stdout: [2025-11-28 04:08:34] [info] [BPTimer] [BPTimer] Reported 0% HP for Venobzzar Incubator (10077) on Line 12
+
+[2025-11-28T07:08:36.897Z] server stdout: [2025-11-28 04:08:36] [info] [PROCESS] 1 packets processed, remaining_data=0
+
+[2025-11-28T07:08:36.898Z] server stdout: [2025-11-28 04:08:36] [info] [PROCESS] 1 packets processed, remaining_data=0
+
+[2025-11-28T07:08:37.779Z] server stdout: [2025-11-28 04:08:37] [info] [DIAG] tcp_next_seq=177364223, cache_size=416, _data_len=0, server=192.168.3.2:58278 <-> 43.174.2
+
+[2025-11-28T07:08:37.779Z] server stdout: [2025-11-28 04:08:37] [info] [DIAG] tcp_next_seq=177364223, cache_size=416, _data_len=0, server=192.168.3.2:58278 <-> 43.174.2
+
+[2025-11-28T07:08:39.915Z] server stdout: [2025-11-28 04:08:39] [info] [PROCESS] 1 packets processed, remaining_data=0
+
+[2025-11-28T07:08:39.916Z] server stdout: [2025-11-28 04:08:39] [info] [PROCESS] 1 packets processed, remaining_data=0
+
+[2025-11-28T07:08:42.031Z] server stdout: [2025-11-28 04:08:42] [error] Fail while parsing data for player 5409245.
+Err: Error: Data corruption detected
+[2025-11-28 04:08:42] [warn] [CORRUPT-HEADER] packetSize=1927643607, _data_len=852, descartando buffer
+
+[2025-11-28T07:08:42.031Z] server stdout: [2025-11-28 04:08:42] [error] Fail while parsing data for player 5409245.
+Err: Error: Data corruption detected
+[2025-11-28 04:08:42] [warn] [CORRUPT-HEADER] packetSize=1927643607, _data_len=852, descartando buffer
+
+[2025-11-28T07:08:42.835Z] server stdout: [2025-11-28 04:08:42] [info] [DIAG] tcp_next_seq=177431132, cache_size=363, _data_len=0, server=192.168.3.2:58278 <-> 43.174.2
+
+[2025-11-28T07:08:42.836Z] server stdout: [2025-11-28 04:08:42] [info] [DIAG] tcp_next_seq=177431132, cache_size=363, _data_len=0, server=192.168.3.2:58278 <-> 43.174.2
+
+[2025-11-28T07:08:42.993Z] server stdout: [2025-11-28 04:08:42] [info] [PROCESS] 1 packets processed, remaining_data=0
+
+[2025-11-28T07:08:42.994Z] server stdout: [2025-11-28 04:08:42] [info] [PROCESS] 1 packets processed, remaining_data=0
+
+[2025-11-28T07:08:45.998Z] server stdout: [2025-11-28 04:08:45] [info] [PROCESS] 1 packets processed, remaining_data=0
+
+[2025-11-28T07:08:45.999Z] server stdout: [2025-11-28 04:08:45] [info] [PROCESS] 1 packets processed, remaining_data=0
+
+[2025-11-28T07:08:47.838Z] server stdout: [2025-11-28 04:08:47] [info] [DIAG] tcp_next_seq=177471962, cache_size=276, _data_len=0, server=192.168.3.2:58278 <-> 43.174.2
+
+[2025-11-28T07:08:47.839Z] server stdout: [2025-11-28 04:08:47] [info] [DIAG] tcp_next_seq=177471962, cache_size=276, _data_len=0, server=192.168.3.2:58278 <-> 43.174.2
+
+[2025-11-28T07:08:48.539Z] server stdout: [2025-11-28 04:08:48] [info] [SERVER-CHANGE] type=short from=43.174.233.119:20046 -> 192.168.3.2:58278 to=43.174.233.119:20050 -> 192.168.3.2:64729 Δ=38874ms
+[2025-11-28 04:08:48] [info] [SERVER] Mudança de sala detectada.
+
+[2025-11-28T07:08:48.540Z] server stdout: [2025-11-28 04:08:48] [info] [SERVER-CHANGE] type=short from=43.174.233.119:20046 -> 192.168.3.2:58278 to=43.174.233.119:20050 -> 192.168.3.2:64729 Δ=38874ms
+[2025-11-28 04:08:48] [info] [SERVER] Mudança de sala detectada.
+
+[2025-11-28T07:08:48.540Z] server stdout: [2025-11-28 04:08:48] [info] [BPTimer] Cache de HP reportado limpo
+[2025-11-28 04:08:48] [warn] [SEQ-REJECT] pkt_seq=3520678306, next_seq=921870132, diff=2598808174, len=0
+
+[2025-11-28T07:08:48.541Z] server stdout: [2025-11-28 04:08:48] [info] [BPTimer] Cache de HP reportado limpo
+[2025-11-28 04:08:48] [warn] [SEQ-REJECT] pkt_seq=3520678306, next_seq=921870132, diff=2598808174, len=0
+
+[2025-11-28T07:08:48.682Z] server stdout: [2025-11-28 04:08:48] [info] [SCENE] Mudança detectada via SceneData (map=74, level=74, dungeon=d21ad6ad-c9e5-443a-9274-ae0900760e8e, line=13)
+[2025-11-28 04:08:48] [info] [BPTimer] Cache de HP reportado limpo
+
+[2025-11-28T07:08:48.682Z] server stdout: [2025-11-28 04:08:48] [info] [SCENE] Mudança detectada via SceneData (map=74, level=74, dungeon=d21ad6ad-c9e5-443a-9274-ae0900760e8e, line=13)
+[2025-11-28 04:08:48] [info] [BPTimer] Cache de HP reportado limpo
+
+[2025-11-28T07:08:48.683Z] server stdout: [2025-11-28 04:08:48] [info] Salvando luta antes de limpar (mudança de servidor/mapa)
+[2025-11-28 04:08:48] [info] Luta salva no histórico. Total de lutas: 20
+
+[2025-11-28T07:08:48.684Z] server stdout: [2025-11-28 04:08:48] [info] Salvando luta antes de limpar (mudança de servidor/mapa)
+[2025-11-28 04:08:48] [info] Luta salva no histórico. Total de lutas: 20
+
+[2025-11-28T07:08:48.685Z] server stdout: [2025-11-28 04:08:48] [info] Histórico de lutas salvo: 20 lutas
+
+[2025-11-28T07:08:48.685Z] server stdout: [2025-11-28 04:08:48] [info] Histórico de lutas salvo: 20 lutas
+
+[2025-11-28T07:08:48.686Z] server stdout: [2025-11-28 04:08:48] [debug] Evento fight-saved emitido para namespace /history
+
+[2025-11-28T07:08:48.686Z] server stdout: [2025-11-28 04:08:48] [debug] Evento fight-saved emitido para namespace /history
+
+[2025-11-28T07:08:49.025Z] server stdout: [2025-11-28 04:08:49] [info] [PROCESS] 1 packets processed, remaining_data=0
+
+[2025-11-28T07:08:49.026Z] server stdout: [2025-11-28 04:08:49] [info] [PROCESS] 1 packets processed, remaining_data=0
+
+[2025-11-28T07:08:50.587Z] server stdout: [2025-11-28 04:08:50] [warn] [SEQ-REJECT] pkt_seq=3520678512, next_seq=921942685, diff=2598735827, len=10
+
+[2025-11-28T07:08:50.587Z] server stdout: [2025-11-28 04:08:50] [warn] [SEQ-REJECT] pkt_seq=3520678512, next_seq=921942685, diff=2598735827, len=10
+
+[2025-11-28T07:08:52.091Z] server stdout: [2025-11-28 04:08:52] [info] [PROCESS] 1 packets processed, remaining_data=0
+
+[2025-11-28T07:08:52.092Z] server stdout: [2025-11-28 04:08:52] [info] [PROCESS] 1 packets processed, remaining_data=0
+
+[2025-11-28T07:08:52.611Z] server stdout: [2025-11-28 04:08:52] [warn] [SEQ-REJECT] pkt_seq=3520678722, next_seq=921942941, diff=2598735781, len=6
+
+[2025-11-28T07:08:52.612Z] server stdout: [2025-11-28 04:08:52] [warn] [SEQ-REJECT] pkt_seq=3520678722, next_seq=921942941, diff=2598735781, len=6
+
+[2025-11-28T07:08:52.906Z] server stdout: [2025-11-28 04:08:52] [info] [DIAG] tcp_next_seq=921942977, cache_size=0, _data_len=0, server=192.168.3.2:64729 <-> 43.174.2
+
+[2025-11-28T07:08:52.907Z] server stdout: [2025-11-28 04:08:52] [info] [DIAG] tcp_next_seq=921942977, cache_size=0, _data_len=0, server=192.168.3.2:64729 <-> 43.174.2
+
+[2025-11-28T07:08:54.617Z] server stdout: [2025-11-28 04:08:54] [warn] [SEQ-REJECT] pkt_seq=3520679631, next_seq=921952786, diff=2598726845, len=10
+
+[2025-11-28T07:08:54.617Z] server stdout: [2025-11-28 04:08:54] [warn] [SEQ-REJECT] pkt_seq=3520679631, next_seq=921952786, diff=2598726845, len=10
+
+[2025-11-28T07:08:55.110Z] server stdout: [2025-11-28 04:08:55] [info] [PROCESS] 1 packets processed, remaining_data=0
+
+[2025-11-28T07:08:55.111Z] server stdout: [2025-11-28 04:08:55] [info] [PROCESS] 1 packets processed, remaining_data=0
+
+[2025-11-28T07:08:56.656Z] server stdout: [2025-11-28 04:08:56] [warn] [SEQ-REJECT] pkt_seq=3520679958, next_seq=921956284, diff=2598723674, len=10
+
+[2025-11-28T07:08:56.657Z] server stdout: [2025-11-28 04:08:56] [warn] [SEQ-REJECT] pkt_seq=3520679958, next_seq=921956284, diff=2598723674, len=10
+
+[2025-11-28T07:08:57.941Z] server stdout: [2025-11-28 04:08:57] [info] [DIAG] tcp_next_seq=921956499, cache_size=0, _data_len=0, server=192.168.3.2:64729 <-> 43.174.2
+
+[2025-11-28T07:08:57.942Z] server stdout: [2025-11-28 04:08:57] [info] [DIAG] tcp_next_seq=921956499, cache_size=0, _data_len=0, server=192.168.3.2:64729 <-> 43.174.2
+
+[2025-11-28T07:08:58.184Z] server stdout: [2025-11-28 04:08:58] [info] [PROCESS] 1 packets processed, remaining_data=0
+
+[2025-11-28T07:08:58.185Z] server stdout: [2025-11-28 04:08:58] [info] [PROCESS] 1 packets processed, remaining_data=0
+
+[2025-11-28T07:08:58.933Z] server stdout: [2025-11-28 04:08:58] [info] [SERVER-CHANGE] type=short from=43.174.233.119:20050 -> 192.168.3.2:64729 to=43.174.233.119:20054 -> 192.168.3.2:64731 Δ=10394ms
+[2025-11-28 04:08:58] [info] [SERVER] Mudança de sala detectada.
+
+[2025-11-28T07:08:58.933Z] server stdout: [2025-11-28 04:08:58] [info] [SERVER-CHANGE] type=short from=43.174.233.119:20050 -> 192.168.3.2:64729 to=43.174.233.119:20054 -> 192.168.3.2:64731 Δ=10394ms
+[2025-11-28 04:08:58] [info] [SERVER] Mudança de sala detectada.
+
+[2025-11-28T07:08:58.934Z] server stdout: [2025-11-28 04:08:58] [info] [BPTimer] Cache de HP reportado limpo
+
+[2025-11-28T07:08:58.935Z] server stdout: [2025-11-28 04:08:58] [info] [BPTimer] Cache de HP reportado limpo
+
+[2025-11-28T07:08:59.079Z] server stdout: [2025-11-28 04:08:59] [info] [SCENE] Mudança detectada via SceneData (map=74, level=74, dungeon=c0efb706-e128-48e0-a3dc-8f51688e7ae6, line=14)
+[2025-11-28 04:08:59] [info] [BPTimer] Cache de HP reportado limpo
+
+[2025-11-28T07:08:59.079Z] server stdout: [2025-11-28 04:08:59] [info] [SCENE] Mudança detectada via SceneData (map=74, level=74, dungeon=c0efb706-e128-48e0-a3dc-8f51688e7ae6, line=14)
+[2025-11-28 04:08:59] [info] [BPTimer] Cache de HP reportado limpo
+
+[2025-11-28T07:09:00.460Z] server stdout: [2025-11-28 04:09:00] [warn] [SEQ-REJECT] pkt_seq=2387969583, next_seq=2387969585, diff=4294967294, len=1
+
+[2025-11-28T07:09:00.460Z] server stdout: [2025-11-28 04:09:00] [warn] [SEQ-REJECT] pkt_seq=2387969583, next_seq=2387969585, diff=4294967294, len=1
+
+[2025-11-28T07:09:01.206Z] server stdout: [2025-11-28 04:09:01] [info] [PROCESS] 1 packets processed, remaining_data=0
+
+[2025-11-28T07:09:01.206Z] server stdout: [2025-11-28 04:09:01] [info] [PROCESS] 1 packets processed, remaining_data=0
+
+[2025-11-28T07:09:02.965Z] server stdout: [2025-11-28 04:09:02] [info] [DIAG] tcp_next_seq=2387969901, cache_size=26, _data_len=0, server=192.168.3.2:64731 <-> 43.174.2
+
+[2025-11-28T07:09:02.965Z] server stdout: [2025-11-28 04:09:02] [info] [DIAG] tcp_next_seq=2387969901, cache_size=26, _data_len=0, server=192.168.3.2:64731 <-> 43.174.2
+
+[2025-11-28T07:09:04.180Z] server stdout: [2025-11-28 04:09:04] [info] Found player name Lyssiea for uid 110799276
+[2025-11-28 04:09:04] [info] Found fight point 17814 for uid 110799276
+
+[2025-11-28T07:09:04.180Z] server stdout: [2025-11-28 04:09:04] [info] Found player name Lyssiea for uid 110799276
+[2025-11-28 04:09:04] [info] Found fight point 17814 for uid 110799276
+
+[2025-11-28T07:09:04.259Z] server stdout: [2025-11-28 04:09:04] [info] Nova luta iniciada!
+[2025-11-28 04:09:04] [info] [PROCESS] 1 packets processed, remaining_data=0
+
+[2025-11-28T07:09:04.260Z] server stdout: [2025-11-28 04:09:04] [info] Nova luta iniciada!
+[2025-11-28 04:09:04] [info] [PROCESS] 1 packets processed, remaining_data=0
+
+[2025-11-28T07:09:04.653Z] server stdout: [2025-11-28 04:09:04] [warn] [SEQ-REJECT] pkt_seq=2387982570, next_seq=2387982574, diff=4294967292, len=1
+
+[2025-11-28T07:09:04.653Z] server stdout: [2025-11-28 04:09:04] [warn] [SEQ-REJECT] pkt_seq=2387982570, next_seq=2387982574, diff=4294967292, len=1
+
+[2025-11-28T07:09:07.181Z] server stdout: [2025-11-28 04:09:07] [info] Player map salvo com 625 entradas
+
+[2025-11-28T07:09:07.181Z] server stdout: [2025-11-28 04:09:07] [info] Player map salvo com 625 entradas
+
+[2025-11-28T07:09:07.182Z] server stdout: [2025-11-28 04:09:07] [info] Cache de usuários salvo: 607 usuários
+
+[2025-11-28T07:09:07.183Z] server stdout: [2025-11-28 04:09:07] [info] Cache de usuários salvo: 607 usuários
+
+[2025-11-28T07:09:07.336Z] server stdout: [2025-11-28 04:09:07] [info] [PROCESS] 1 packets processed, remaining_data=0
+
+[2025-11-28T07:09:07.337Z] server stdout: [2025-11-28 04:09:07] [info] [PROCESS] 1 packets processed, remaining_data=0
+
+[2025-11-28T07:09:07.978Z] server stdout: [2025-11-28 04:09:07] [info] [DIAG] tcp_next_seq=2387999372, cache_size=97, _data_len=0, server=192.168.3.2:64731 <-> 43.174.2
+
+[2025-11-28T07:09:07.979Z] server stdout: [2025-11-28 04:09:07] [info] [DIAG] tcp_next_seq=2387999372, cache_size=97, _data_len=0, server=192.168.3.2:64731 <-> 43.174.2
+
+[2025-11-28T07:09:12.289Z] server stdout: [2025-11-28 04:09:12] [info] [SERVER-CHANGE] type=short from=43.174.233.119:20054 -> 192.168.3.2:64731 to=43.174.233.119:20058 -> 192.168.3.2:64734 Δ=13356ms
+[2025-11-28 04:09:12] [info] [SERVER] Mudança de sala detectada.
+
+[2025-11-28T07:09:12.290Z] server stdout: [2025-11-28 04:09:12] [info] [SERVER-CHANGE] type=short from=43.174.233.119:20054 -> 192.168.3.2:64731 to=43.174.233.119:20058 -> 192.168.3.2:64734 Δ=13356ms
+[2025-11-28 04:09:12] [info] [SERVER] Mudança de sala detectada.
+
+[2025-11-28T07:09:12.290Z] server stdout: [2025-11-28 04:09:12] [info] [BPTimer] Cache de HP reportado limpo
+
+[2025-11-28T07:09:12.291Z] server stdout: [2025-11-28 04:09:12] [info] [BPTimer] Cache de HP reportado limpo
+
+[2025-11-28T07:09:12.297Z] server stdout: [2025-11-28 04:09:12] [info] [PROCESS] 1 packets processed, remaining_data=0
+[2025-11-28 04:09:12] [warn] [SEQ-REJECT] pkt_seq=3859695808, next_seq=3952471469, diff=4202191635, len=0
+
+[2025-11-28T07:09:12.298Z] server stdout: [2025-11-28 04:09:12] [info] [PROCESS] 1 packets processed, remaining_data=0
+[2025-11-28 04:09:12] [warn] [SEQ-REJECT] pkt_seq=3859695808, next_seq=3952471469, diff=4202191635, len=0
+
+[2025-11-28T07:09:12.395Z] server stdout: [2025-11-28 04:09:12] [info] [SCENE] Mudança detectada via SceneData (map=74, level=74, dungeon=7280f613-c9bd-4954-adca-9132842723b5, line=15)
+[2025-11-28 04:09:12] [info] [BPTimer] Cache de HP reportado limpo
+[2025-11-28 04:09:12] [info] Salvando luta antes de limpar (mudança de servidor/mapa)
+
+[2025-11-28T07:09:12.396Z] server stdout: [2025-11-28 04:09:12] [info] [SCENE] Mudança detectada via SceneData (map=74, level=74, dungeon=7280f613-c9bd-4954-adca-9132842723b5, line=15)
+[2025-11-28 04:09:12] [info] [BPTimer] Cache de HP reportado limpo
+[2025-11-28 04:09:12] [info] Salvando luta antes de limpar (mudança de servidor/mapa)
+
+[2025-11-28T07:09:12.396Z] server stdout: [2025-11-28 04:09:12] [info] Luta salva no histórico. Total de lutas: 20
+
+[2025-11-28T07:09:12.397Z] server stdout: [2025-11-28 04:09:12] [info] Luta salva no histórico. Total de lutas: 20
+
+[2025-11-28T07:09:12.401Z] server stdout: [2025-11-28 04:09:12] [info] Histórico de lutas salvo: 20 lutas
+
+[2025-11-28T07:09:12.401Z] server stdout: [2025-11-28 04:09:12] [info] Histórico de lutas salvo: 20 lutas
+
+[2025-11-28T07:09:12.402Z] server stdout: [2025-11-28 04:09:12] [debug] Evento fight-saved emitido para namespace /history
+
+[2025-11-28T07:09:12.402Z] server stdout: [2025-11-28 04:09:12] [debug] Evento fight-saved emitido para namespace /history
+
+[2025-11-28T07:09:12.991Z] server stdout: [2025-11-28 04:09:12] [info] [DIAG] tcp_next_seq=3952542826, cache_size=0, _data_len=0, server=192.168.3.2:64734 <-> 43.174.2
+
+[2025-11-28T07:09:12.991Z] server stdout: [2025-11-28 04:09:12] [info] [DIAG] tcp_next_seq=3952542826, cache_size=0, _data_len=0, server=192.168.3.2:64734 <-> 43.174.2
+
+[2025-11-28T07:09:14.388Z] server stdout: [2025-11-28 04:09:14] [warn] [SEQ-REJECT] pkt_seq=3859696024, next_seq=3952543849, diff=4202119471, len=0
+
+[2025-11-28T07:09:14.389Z] server stdout: [2025-11-28 04:09:14] [warn] [SEQ-REJECT] pkt_seq=3859696024, next_seq=3952543849, diff=4202119471, len=0
+
+[2025-11-28T07:09:15.333Z] server stdout: [2025-11-28 04:09:15] [info] [PROCESS] 1 packets processed, remaining_data=0
+
+[2025-11-28T07:09:15.334Z] server stdout: [2025-11-28 04:09:15] [info] [PROCESS] 1 packets processed, remaining_data=0
+
+[2025-11-28T07:09:16.413Z] server stdout: [2025-11-28 04:09:16] [warn] [SEQ-REJECT] pkt_seq=3859696214, next_seq=3952544105, diff=4202119405, len=6
+
+[2025-11-28T07:09:16.413Z] server stdout: [2025-11-28 04:09:16] [warn] [SEQ-REJECT] pkt_seq=3859696214, next_seq=3952544105, diff=4202119405, len=6
+
+[2025-11-28T07:09:17.620Z] server stdout: [2025-11-28 04:09:17] [info] Found player name Nyarumelon for uid 4518078
+[2025-11-28 04:09:17] [info] Found fight point 16754 for uid 4518078
+
+[2025-11-28T07:09:17.620Z] server stdout: [2025-11-28 04:09:17] [info] Found player name Nyarumelon for uid 4518078
+[2025-11-28 04:09:17] [info] Found fight point 16754 for uid 4518078
+
+[2025-11-28T07:09:17.621Z] server stdout: [2025-11-28 04:09:17] [info] Found player name Shzerene for uid 156469614
+[2025-11-28 04:09:17] [info] Found fight point 13211 for uid 156469614
+[2025-11-28 04:09:17] [info] Found player name Deltaflareon for uid 154626890
+[2025-11-28 04:09:17] [info] Found fight point 16232 for uid 154626890
+
+[2025-11-28T07:09:17.621Z] server stdout: [2025-11-28 04:09:17] [info] Found player name Shzerene for uid 156469614
+[2025-11-28 04:09:17] [info] Found fight point 13211 for uid 156469614
+[2025-11-28 04:09:17] [info] Found player name Deltaflareon for uid 154626890
+[2025-11-28 04:09:17] [info] Found fight point 16232 for uid 154626890
+
+[2025-11-28T07:09:17.696Z] server stdout: [2025-11-28 04:09:17] [info] Nova luta iniciada!
+
+[2025-11-28T07:09:17.697Z] server stdout: [2025-11-28 04:09:17] [info] Nova luta iniciada!
+
+[2025-11-28T07:09:17.911Z] server stdout: [2025-11-28 04:09:17] [info] [BPTimer] [BPTimer] Reported 90% HP for Venobzzar Incubator (10077) on Line 15
+
+[2025-11-28T07:09:17.911Z] server stdout: [2025-11-28 04:09:17] [info] [BPTimer] [BPTimer] Reported 90% HP for Venobzzar Incubator (10077) on Line 15
+
+[2025-11-28T07:09:18.007Z] server stdout: [2025-11-28 04:09:18] [info] [DIAG] tcp_next_seq=3952563662, cache_size=0, _data_len=0, server=192.168.3.2:64734 <-> 43.174.2
+
+[2025-11-28T07:09:18.008Z] server stdout: [2025-11-28 04:09:18] [info] [DIAG] tcp_next_seq=3952563662, cache_size=0, _data_len=0, server=192.168.3.2:64734 <-> 43.174.2
+
+[2025-11-28T07:09:18.374Z] server stdout: [2025-11-28 04:09:18] [info] [PROCESS] 1 packets processed, remaining_data=0
+
+[2025-11-28T07:09:18.374Z] server stdout: [2025-11-28 04:09:18] [info] [PROCESS] 1 packets processed, remaining_data=0
+
+[2025-11-28T07:09:18.457Z] server stdout: [2025-11-28 04:09:18] [warn] [SEQ-REJECT] pkt_seq=3859697133, next_seq=3952569760, diff=4202094669, len=10
+
+[2025-11-28T07:09:18.457Z] server stdout: [2025-11-28 04:09:18] [warn] [SEQ-REJECT] pkt_seq=3859697133, next_seq=3952569760, diff=4202094669, len=10
+
+[2025-11-28T07:09:20.473Z] server stdout: [2025-11-28 04:09:20] [warn] [SEQ-REJECT] pkt_seq=3859700721, next_seq=3952588103, diff=4202079914, len=84
+
+[2025-11-28T07:09:20.474Z] server stdout: [2025-11-28 04:09:20] [warn] [SEQ-REJECT] pkt_seq=3859700721, next_seq=3952588103, diff=4202079914, len=84
+
+[2025-11-28T07:09:20.622Z] server stdout: [2025-11-28 04:09:20] [info] Player map salvo com 628 entradas
+
+[2025-11-28T07:09:20.623Z] server stdout: [2025-11-28 04:09:20] [info] Player map salvo com 628 entradas
+
+[2025-11-28T07:09:20.624Z] server stdout: [2025-11-28 04:09:20] [info] Cache de usuários salvo: 610 usuários
+
+[2025-11-28T07:09:20.624Z] server stdout: [2025-11-28 04:09:20] [info] Cache de usuários salvo: 610 usuários
+
+[2025-11-28T07:09:21.322Z] server stdout: [2025-11-28 04:09:21] [info] [BPTimer] [BPTimer] Reported 85% HP for Venobzzar Incubator (10077) on Line 15
+
+[2025-11-28T07:09:21.323Z] server stdout: [2025-11-28 04:09:21] [info] [BPTimer] [BPTimer] Reported 85% HP for Venobzzar Incubator (10077) on Line 15
+
+[2025-11-28T07:09:21.407Z] server stdout: [2025-11-28 04:09:21] [info] [PROCESS] 1 packets processed, remaining_data=0
+
+[2025-11-28T07:09:21.408Z] server stdout: [2025-11-28 04:09:21] [info] [PROCESS] 1 packets processed, remaining_data=0
+
+[2025-11-28T07:09:22.488Z] server stdout: [2025-11-28 04:09:22] [warn] [SEQ-REJECT] pkt_seq=3859702982, next_seq=3952609807, diff=4202060471, len=10
+
+[2025-11-28T07:09:22.489Z] server stdout: [2025-11-28 04:09:22] [warn] [SEQ-REJECT] pkt_seq=3859702982, next_seq=3952609807, diff=4202060471, len=10
+
+[2025-11-28T07:09:23.058Z] server stdout: [2025-11-28 04:09:23] [info] [DIAG] tcp_next_seq=3952615516, cache_size=0, _data_len=0, server=192.168.3.2:64734 <-> 43.174.2
+
+[2025-11-28T07:09:23.059Z] server stdout: [2025-11-28 04:09:23] [info] [DIAG] tcp_next_seq=3952615516, cache_size=0, _data_len=0, server=192.168.3.2:64734 <-> 43.174.2
+
+[2025-11-28T07:09:24.464Z] server stdout: [2025-11-28 04:09:24] [info] [PROCESS] 1 packets processed, remaining_data=0
+
+[2025-11-28T07:09:24.465Z] server stdout: [2025-11-28 04:09:24] [info] [PROCESS] 1 packets processed, remaining_data=0
+
+[2025-11-28T07:09:24.546Z] server stdout: [2025-11-28 04:09:24] [warn] [SEQ-REJECT] pkt_seq=3859704772, next_seq=3952631858, diff=4202040210, len=10
+
+[2025-11-28T07:09:24.546Z] server stdout: [2025-11-28 04:09:24] [warn] [SEQ-REJECT] pkt_seq=3859704772, next_seq=3952631858, diff=4202040210, len=10
+
+[2025-11-28T07:09:26.550Z] server stdout: [2025-11-28 04:09:26] [warn] [SEQ-REJECT] pkt_seq=3859709186, next_seq=3952657476, diff=4202019006, len=138
+
+[2025-11-28T07:09:26.550Z] server stdout: [2025-11-28 04:09:26] [warn] [SEQ-REJECT] pkt_seq=3859709186, next_seq=3952657476, diff=4202019006, len=138
+
+[2025-11-28T07:09:27.500Z] server stdout: [2025-11-28 04:09:27] [info] [PROCESS] 1 packets processed, remaining_data=0
+
+[2025-11-28T07:09:27.500Z] server stdout: [2025-11-28 04:09:27] [info] [PROCESS] 1 packets processed, remaining_data=0
+
+[2025-11-28T07:09:28.063Z] server stdout: [2025-11-28 04:09:28] [info] [DIAG] tcp_next_seq=3952677960, cache_size=0, _data_len=0, server=192.168.3.2:64734 <-> 43.174.2
+
+[2025-11-28T07:09:28.064Z] server stdout: [2025-11-28 04:09:28] [info] [DIAG] tcp_next_seq=3952677960, cache_size=0, _data_len=0, server=192.168.3.2:64734 <-> 43.174.2
+
+[2025-11-28T07:09:28.551Z] server stdout: [2025-11-28 04:09:28] [warn] [SEQ-REJECT] pkt_seq=3859714915, next_seq=3952685469, diff=4201996742, len=84
+
+[2025-11-28T07:09:28.552Z] server stdout: [2025-11-28 04:09:28] [warn] [SEQ-REJECT] pkt_seq=3859714915, next_seq=3952685469, diff=4201996742, len=84
+
+[2025-11-28T07:09:30.142Z] server stdout: [2025-11-28 04:09:30] [info] [BPTimer] [BPTimer] Reported 80% HP for Venobzzar Incubator (10077) on Line 15
+
+[2025-11-28T07:09:30.142Z] server stdout: [2025-11-28 04:09:30] [info] [BPTimer] [BPTimer] Reported 80% HP for Venobzzar Incubator (10077) on Line 15
+
+[2025-11-28T07:09:30.504Z] server stdout: [2025-11-28 04:09:30] [info] [PROCESS] 1 packets processed, remaining_data=0
+
+[2025-11-28T07:09:30.504Z] server stdout: [2025-11-28 04:09:30] [info] [PROCESS] 1 packets processed, remaining_data=0
+
+[2025-11-28T07:09:30.571Z] server stdout: [2025-11-28 04:09:30] [warn] [SEQ-REJECT] pkt_seq=3859718901, next_seq=3952708445, diff=4201977752, len=82
+
+[2025-11-28T07:09:30.571Z] server stdout: [2025-11-28 04:09:30] [warn] [SEQ-REJECT] pkt_seq=3859718901, next_seq=3952708445, diff=4201977752, len=82
+
+[2025-11-28T07:09:32.584Z] server stdout: [2025-11-28 04:09:32] [warn] [SEQ-REJECT] pkt_seq=3859724439, next_seq=3952736400, diff=4201955335, len=0
+
+[2025-11-28T07:09:32.585Z] server stdout: [2025-11-28 04:09:32] [warn] [SEQ-REJECT] pkt_seq=3859724439, next_seq=3952736400, diff=4201955335, len=0
+
+[2025-11-28T07:09:33.071Z] server stdout: [2025-11-28 04:09:33] [info] [DIAG] tcp_next_seq=3952742378, cache_size=0, _data_len=0, server=192.168.3.2:64734 <-> 43.174.2
+
+[2025-11-28T07:09:33.071Z] server stdout: [2025-11-28 04:09:33] [info] [DIAG] tcp_next_seq=3952742378, cache_size=0, _data_len=0, server=192.168.3.2:64734 <-> 43.174.2
+
+[2025-11-28T07:09:33.424Z] server stdout: [2025-11-28 04:09:33] [error] Fail while parsing data for player 5409245.
+Err: Error: Data corruption detected
+[2025-11-28 04:09:33] [warn] [CORRUPT-HEADER] packetSize=1783140304, _data_len=759, descartando buffer
+
+[2025-11-28T07:09:33.424Z] server stdout: [2025-11-28 04:09:33] [error] Fail while parsing data for player 5409245.
+Err: Error: Data corruption detected
+[2025-11-28 04:09:33] [warn] [CORRUPT-HEADER] packetSize=1783140304, _data_len=759, descartando buffer
+
+[2025-11-28T07:09:33.526Z] server stdout: [2025-11-28 04:09:33] [info] [PROCESS] 1 packets processed, remaining_data=0
+
+[2025-11-28T07:09:33.526Z] server stdout: [2025-11-28 04:09:33] [info] [PROCESS] 1 packets processed, remaining_data=0
+
+[2025-11-28T07:09:34.603Z] server stdout: [2025-11-28 04:09:34] [warn] [SEQ-REJECT] pkt_seq=3859728758, next_seq=3952761430, diff=4201934624, len=84
+
+[2025-11-28T07:09:34.603Z] server stdout: [2025-11-28 04:09:34] [warn] [SEQ-REJECT] pkt_seq=3859728758, next_seq=3952761430, diff=4201934624, len=84
+
+[2025-11-28T07:09:36.643Z] server stdout: [2025-11-28 04:09:36] [warn] [SEQ-REJECT] pkt_seq=3859733875, next_seq=3952787425, diff=4201913746, len=0
+
+[2025-11-28T07:09:36.644Z] server stdout: [2025-11-28 04:09:36] [warn] [SEQ-REJECT] pkt_seq=3859733875, next_seq=3952787425, diff=4201913746, len=0
+
+[2025-11-28T07:09:38.114Z] server stdout: [2025-11-28 04:09:38] [info] [DIAG] tcp_next_seq=3952807080, cache_size=0, _data_len=50372, server=192.168.3.2:64734 <-> 43.174.2
+
+[2025-11-28T07:09:38.115Z] server stdout: [2025-11-28 04:09:38] [info] [DIAG] tcp_next_seq=3952807080, cache_size=0, _data_len=50372, server=192.168.3.2:64734 <-> 43.174.2
+
+[2025-11-28T07:09:38.676Z] server stdout: [2025-11-28 04:09:38] [warn] [SEQ-REJECT] pkt_seq=3859738844, next_seq=3952815235, diff=4201890905, len=0
+
+[2025-11-28T07:09:38.676Z] server stdout: [2025-11-28 04:09:38] [warn] [SEQ-REJECT] pkt_seq=3859738844, next_seq=3952815235, diff=4201890905, len=0
+
+[2025-11-28T07:09:40.714Z] server stdout: [2025-11-28 04:09:40] [warn] [SEQ-REJECT] pkt_seq=3859742075, next_seq=3952838450, diff=4201870921, len=10
+
+[2025-11-28T07:09:40.715Z] server stdout: [2025-11-28 04:09:40] [warn] [SEQ-REJECT] pkt_seq=3859742075, next_seq=3952838450, diff=4201870921, len=10
+
+[2025-11-28T07:09:41.962Z] server stdout: [2025-11-28 04:09:41] [warn] [STALE-BUFFER] waiting for 655367 bytes, have 100919, clearing...
+
+[2025-11-28T07:09:41.962Z] server stdout: [2025-11-28 04:09:41] [warn] [STALE-BUFFER] waiting for 655367 bytes, have 100919, clearing...
+
+[2025-11-28T07:09:42.044Z] server stdout: [2025-11-28 04:09:42] [info] [PROCESS] 2 packets processed, remaining_data=0
+
+[2025-11-28T07:09:42.044Z] server stdout: [2025-11-28 04:09:42] [info] [PROCESS] 2 packets processed, remaining_data=0
+
+[2025-11-28T07:09:42.312Z] server stdout: [2025-11-28 04:09:42] [info] [BPTimer] [BPTimer] Reported 75% HP for Venobzzar Incubator (10077) on Line 15
+
+[2025-11-28T07:09:42.313Z] server stdout: [2025-11-28 04:09:42] [info] [BPTimer] [BPTimer] Reported 75% HP for Venobzzar Incubator (10077) on Line 15
+
+[2025-11-28T07:09:42.722Z] server stdout: [2025-11-28 04:09:42] [warn] [SEQ-REJECT] pkt_seq=3859748708, next_seq=3952868471, diff=4201847533, len=10
+
+[2025-11-28T07:09:42.723Z] server stdout: [2025-11-28 04:09:42] [warn] [SEQ-REJECT] pkt_seq=3859748708, next_seq=3952868471, diff=4201847533, len=10
+
+[2025-11-28T07:09:43.126Z] server stdout: [2025-11-28 04:09:43] [info] [DIAG] tcp_next_seq=3952875400, cache_size=0, _data_len=0, server=192.168.3.2:64734 <-> 43.174.2
+
+[2025-11-28T07:09:43.127Z] server stdout: [2025-11-28 04:09:43] [info] [DIAG] tcp_next_seq=3952875400, cache_size=0, _data_len=0, server=192.168.3.2:64734 <-> 43.174.2
+
+[2025-11-28T07:09:44.725Z] server stdout: [2025-11-28 04:09:44] [warn] [SEQ-REJECT] pkt_seq=3859756199, next_seq=3952905357, diff=4201818138, len=0
+
+[2025-11-28T07:09:44.725Z] server stdout: [2025-11-28 04:09:44] [warn] [SEQ-REJECT] pkt_seq=3859756199, next_seq=3952905357, diff=4201818138, len=0
+
+[2025-11-28T07:09:45.057Z] server stdout: [2025-11-28 04:09:45] [info] [PROCESS] 1 packets processed, remaining_data=0
+
+[2025-11-28T07:09:45.057Z] server stdout: [2025-11-28 04:09:45] [info] [PROCESS] 1 packets processed, remaining_data=0
+
+[2025-11-28T07:09:46.755Z] server stdout: [2025-11-28 04:09:46] [warn] [SEQ-REJECT] pkt_seq=3859763480, next_seq=3952944813, diff=4201785963, len=0
+
+[2025-11-28T07:09:46.756Z] server stdout: [2025-11-28 04:09:46] [warn] [SEQ-REJECT] pkt_seq=3859763480, next_seq=3952944813, diff=4201785963, len=0
+
+[2025-11-28T07:09:46.827Z] server stdout: [2025-11-28 04:09:46] [info] [BPTimer] [BPTimer] Reported 70% HP for Venobzzar Incubator (10077) on Line 15
+
+[2025-11-28T07:09:46.827Z] server stdout: [2025-11-28 04:09:46] [info] [BPTimer] [BPTimer] Reported 70% HP for Venobzzar Incubator (10077) on Line 15
+
+[2025-11-28T07:09:47.083Z] Atalhos globais desregistrados
