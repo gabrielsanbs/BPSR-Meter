@@ -476,7 +476,6 @@ class UserDataManager {
         this.lineSetBySceneData = false; // Flag para indicar se Line veio do SceneData
         this.linePriorityExpiration = 0;
         this.SCENE_LINE_PRIORITY_MS = 10000;
-        console.log('[BPTimer] Line inicializada com valor padrão: 1');
         this.currentSceneInfo = null;
         this.currentSceneKey = '';
         this.pendingFightSave = Promise.resolve();

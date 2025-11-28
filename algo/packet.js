@@ -101,7 +101,7 @@ const NotifyMethod = {
 const AttrType = {
     AttrName: 0x01,
     AttrId: 0x0a,
-    AttrPos: 0x1e,
+    AttrPos: 0x34,
     AttrProfessionId: 0xdc,
     AttrFightPoint: 0x272e,
     AttrLevel: 0x2710,
@@ -962,7 +962,7 @@ class PacketProcessor {
 
                     // Sempre atualizar o cache de HP
                     this.userDataManager.enemyCache.hp.set(enemyUuid, enemyHp);
-                    
+
                     if (maxH != null && maxH > 0) {
                         const newPct = Math.floor((enemyHp * 100) / maxH);
                         this.userDataManager.enemyCache.hp_pct.set(enemyUuid, newPct);
