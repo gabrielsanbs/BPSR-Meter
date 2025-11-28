@@ -279,14 +279,14 @@ async function createWindow() {
     logToFile('Porta disponível encontrada: ' + server_port);
 
     mainWindow = new BrowserWindow({
-        width: 620,
+        width: 620, // Ajustado para terminar no botão X
         height: 600,
         transparent: true,
         frame: false,
         alwaysOnTop: true,
         resizable: false,
-        backgroundColor: '#00000000', // Transparente - PNG no CSS resolve software rendering
-        hasShadow: false,
+        backgroundColor: '#00000000', // Transparente RGBA para evitar fundo preto
+        hasShadow: false, // Remover sombra que pode causar fundo preto
         thickFrame: false, // Remove frame grosso do Windows
         titleBarStyle: 'hidden', // Esconde barra de título
         focusable: true, // SEMPRE true - nunca false
@@ -771,6 +771,15 @@ async function createWindow() {
 
     ipcMain.on('stop-mouse-polling', () => {
         stopMousePositionPolling();
+    });
+
+    // Controlar zoom nativo do Electron
+    ipcMain.on('set-zoom', (event, zoomFactor) => {
+        // Aplicar zoom apenas na janela que enviou o comando
+        const senderWindow = BrowserWindow.fromWebContents(event.sender);
+        if (senderWindow && !senderWindow.isDestroyed()) {
+            senderWindow.webContents.setZoomFactor(zoomFactor);
+        }
     });
 
     // Enviar el estado inicial del candado al renderizador una vez que la ventana esté lista

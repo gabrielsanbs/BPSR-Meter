@@ -8,12 +8,12 @@ let isFetchingData = false;
 socket.on('game-connected', (data) => {
     if (data.connected) {
         gameConnected = true;
-        
+
         // IMPORTANTE: Parar qualquer timer de sync que esteja rodando
         if (syncTimerInterval) {
             stopSyncTimer();
         }
-        
+
         // Forçar atualização do ícone imediatamente
         if (typeof updateSyncButtonState === 'function') {
             updateSyncButtonState();
@@ -72,686 +72,705 @@ const professionMap = {
 
 };
 
- const defaultProfession = { name: 'Unknown', icon: 'desconocido.png', role: 'dps' };
+const defaultProfession = { name: 'Unknown', icon: 'desconocido.png', role: 'dps' };
 
-    let lastTotalDamage = 0;
-    let lastDamageChangeTime = Date.now();
-    
-    // Carregar zoom salvo do localStorage (padrão 1.0)
-    let currentZoom = parseFloat(localStorage.getItem('dpsMeterZoom')) || 1.0;
+let lastTotalDamage = 0;
+let lastDamageChangeTime = Date.now();
 
-    
-    let syncTimerInterval;
-    let syncCountdown = 0;
-    const SYNC_RESET_TIME = 80; // Segundos para el reinicio automático
-    let syncTimerDisplayTimeout; // Para el retardo de 200ms
-    let isLocked = false; // Estado de bloqueo de la ventana
-    let logPreviewTimeout; // Declarar logPreviewTimeout aquí
-    let gameConnected = false; // Estado de conexão com o jogo
-    let lastPlayerCount = 0; // Controle para evitar resize desnecessário
-    let resizeThrottleTimeout = null; // Throttle para updateWindowSize
-    let maxPlayersToShow = 6; // Número máximo de jogadores a exibir (configurável)
-    let autoResetEnabled = false; // Estado do reset automático
+// Carregar zoom salvo do localStorage (padrão 1.0)
+let currentZoom = parseFloat(localStorage.getItem('dpsMeterZoom')) || 1.0;
 
-    const dpsTimerDiv = document.getElementById('dps-timer');
-    const playerBarsContainer = document.getElementById('player-bars-container');
-    const syncButton = document.getElementById('sync-button');
-    const syncIcon = document.querySelector('#sync-button .sync-icon');
-    const syncTimerSpan = document.querySelector('#sync-button .sync-timer');
-    const lockButton = document.getElementById('lock-button');
-    const logsSection = document.getElementById('logs-section'); // Declarar logsSection aquí
-    const loadingIndicator = document.getElementById('loading-indicator'); // Indicador de carga
-    const loadingIndicatorText = document.getElementById('loading-indicator-text');
-    const mapChangeNotice = document.getElementById('map-change-notice'); // Aviso de mudar mapa
-    let mapNoticeVisible = true; // Por padrão, mostrar aviso
 
-    if (loadingIndicator) {
-        loadingIndicator.style.display = 'flex';
+let syncTimerInterval;
+let syncCountdown = 0;
+const SYNC_RESET_TIME = 80; // Segundos para el reinicio automático
+let syncTimerDisplayTimeout; // Para el retardo de 200ms
+let isLocked = false; // Estado de bloqueo de la ventana
+let logPreviewTimeout; // Declarar logPreviewTimeout aquí
+let gameConnected = false; // Estado de conexão com o jogo
+let lastPlayerCount = 0; // Controle para evitar resize desnecessário
+let resizeThrottleTimeout = null; // Throttle para updateWindowSize
+let maxPlayersToShow = 6; // Número máximo de jogadores a exibir (configurável)
+let autoResetEnabled = false; // Estado do reset automático
+
+const dpsTimerDiv = document.getElementById('dps-timer');
+const playerBarsContainer = document.getElementById('player-bars-container');
+const syncButton = document.getElementById('sync-button');
+const syncIcon = document.querySelector('#sync-button .sync-icon');
+const syncTimerSpan = document.querySelector('#sync-button .sync-timer');
+const lockButton = document.getElementById('lock-button');
+const logsSection = document.getElementById('logs-section'); // Declarar logsSection aquí
+const loadingIndicator = document.getElementById('loading-indicator'); // Indicador de carga
+const loadingIndicatorText = document.getElementById('loading-indicator-text');
+const mapChangeNotice = document.getElementById('map-change-notice'); // Aviso de mudar mapa
+let mapNoticeVisible = true; // Por padrão, mostrar aviso
+
+if (loadingIndicator) {
+    loadingIndicator.style.display = 'flex';
+}
+
+// Rastrear estados para controle de mouse
+let isMouseOverHeader = false;
+let altPressed = false;
+
+// Permitir interacción con Alt cuando está bloqueado
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Alt') {
+        altPressed = true;
+        if (document.body.classList.contains('locked')) {
+            document.body.classList.add('alt-pressed');
+        }
     }
 
-    // Rastrear estados para controle de mouse
-    let isMouseOverHeader = false;
-    let altPressed = false;
-    
-    // Permitir interacción con Alt cuando está bloqueado
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Alt') {
-            altPressed = true;
-            if (document.body.classList.contains('locked')) {
-                document.body.classList.add('alt-pressed');
-            }
-        }
-        
-        // F10: Reset manual do DPS Meter
-        if (e.key === 'F10') {
-            e.preventDefault(); // Prevenir comportamento padrão do navegador
-            resetDpsMeter();
-        }
-    });
-    
-    document.addEventListener('keyup', (e) => {
-        if (e.key === 'Alt') {
-            altPressed = false;
-            document.body.classList.remove('alt-pressed');
-        }
-    });
+    // F10: Reset manual do DPS Meter
+    if (e.key === 'F10') {
+        e.preventDefault(); // Prevenir comportamento padrão do navegador
+        resetDpsMeter();
+    }
+});
 
-    // Listener para atalho global F10 (funciona mesmo fora da janela)
-    if (window.electronAPI && window.electronAPI.onGlobalShortcutF10) {
-        window.electronAPI.onGlobalShortcutF10(() => {
-            console.log('F10 pressionado globalmente - resetando DPS Meter');
+document.addEventListener('keyup', (e) => {
+    if (e.key === 'Alt') {
+        altPressed = false;
+        document.body.classList.remove('alt-pressed');
+    }
+});
+
+// Listener para atalho global F10 (funciona mesmo fora da janela)
+if (window.electronAPI && window.electronAPI.onGlobalShortcutF10) {
+    window.electronAPI.onGlobalShortcutF10(() => {
+        console.log('F10 pressionado globalmente - resetando DPS Meter');
+        resetDpsMeter();
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const resetButton = document.getElementById('reset-button');
+    if (resetButton) {
+        resetButton.addEventListener('click', () => {
             resetDpsMeter();
         });
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-        const resetButton = document.getElementById('reset-button');
-        if (resetButton) {
-            resetButton.addEventListener('click', () => {
-                resetDpsMeter();
-            });
-        }
+    // Aplicar zoom salvo ao carregar a página
+    applyZoom();
 
-        // Aplicar zoom salvo ao carregar a página
-        applyZoom();
+    // Botón Advanced/Lite
+    const advLiteBtn = document.getElementById('advanced-lite-btn');
+    const liteDpsHealerBtn = document.getElementById('lite-dps-healer-btn');
+    if (advLiteBtn) {
+        advLiteBtn.addEventListener('click', () => {
+            isLiteMode = !isLiteMode;
+            advLiteBtn.classList.toggle('lite', isLiteMode);
+            advLiteBtn.textContent = isLiteMode ? 'Lite' : 'Advanced';
+            // Mostrar/ocultar el botón DPS/Healer
+            if (liteDpsHealerBtn) {
+                liteDpsHealerBtn.style.display = isLiteMode ? 'inline-flex' : 'none';
+            }
+            fetchDataAndRender();
+        });
+    }
+    if (liteDpsHealerBtn) {
+        liteDpsHealerBtn.addEventListener('click', () => {
+            liteModeType = (liteModeType === 'dps') ? 'healer' : 'dps';
+            liteDpsHealerBtn.textContent = (liteModeType === 'dps') ? 'DPS' : 'Healer';
+            liteDpsHealerBtn.classList.toggle('lite', isLiteMode); /* Asegura que el botón Lite/Healer también tenga el estilo 'lite' */
+            fetchDataAndRender();
+        });
+    }
+    // Inicializar visibilidad y estilo del botón al cargar
+    if (liteDpsHealerBtn) {
+        liteDpsHealerBtn.style.display = isLiteMode ? 'inline-flex' : 'none';
+        liteDpsHealerBtn.classList.toggle('lite', isLiteMode);
+    }
 
-        // Botón Advanced/Lite
-        const advLiteBtn = document.getElementById('advanced-lite-btn');
-        const liteDpsHealerBtn = document.getElementById('lite-dps-healer-btn');
-        if (advLiteBtn) {
-            advLiteBtn.addEventListener('click', () => {
-                isLiteMode = !isLiteMode;
-                advLiteBtn.classList.toggle('lite', isLiteMode);
-                advLiteBtn.textContent = isLiteMode ? 'Lite' : 'Advanced';
-                // Mostrar/ocultar el botón DPS/Healer
-                if (liteDpsHealerBtn) {
-                    liteDpsHealerBtn.style.display = isLiteMode ? 'inline-flex' : 'none';
-                }
-                fetchDataAndRender();
-            });
-        }
-        if (liteDpsHealerBtn) {
-            liteDpsHealerBtn.addEventListener('click', () => {
-                liteModeType = (liteModeType === 'dps') ? 'healer' : 'dps';
-                liteDpsHealerBtn.textContent = (liteModeType === 'dps') ? 'DPS' : 'Healer';
-                liteDpsHealerBtn.classList.toggle('lite', isLiteMode); /* Asegura que el botón Lite/Healer también tenga el estilo 'lite' */
-                fetchDataAndRender();
-            });
-        }
-        // Inicializar visibilidad y estilo del botón al cargar
-        if (liteDpsHealerBtn) {
-            liteDpsHealerBtn.style.display = isLiteMode ? 'inline-flex' : 'none';
-            liteDpsHealerBtn.classList.toggle('lite', isLiteMode);
-        }
+    const zoomInButton = document.getElementById('zoom-in-button');
+    const zoomOutButton = document.getElementById('zoom-out-button');
 
-        const zoomInButton = document.getElementById('zoom-in-button');
-        const zoomOutButton = document.getElementById('zoom-out-button');
+    if (zoomInButton) {
+        zoomInButton.addEventListener('click', () => {
+            currentZoom = Math.min(2.0, currentZoom + 0.1); // Limitar zoom máximo a 2.0
+            localStorage.setItem('dpsMeterZoom', currentZoom.toString());
+            applyZoom();
+        });
+    }
 
-        if (zoomInButton) {
-            zoomInButton.addEventListener('click', () => {
-                currentZoom = Math.min(2.0, currentZoom + 0.1); // Limitar zoom máximo a 2.0
-                localStorage.setItem('dpsMeterZoom', currentZoom.toString());
-                applyZoom();
-            });
-        }
+    if (zoomOutButton) {
+        zoomOutButton.addEventListener('click', () => {
+            currentZoom = Math.max(0.5, currentZoom - 0.1); // Limitar zoom mínimo a 0.5
+            localStorage.setItem('dpsMeterZoom', currentZoom.toString());
+            applyZoom();
+        });
+    }
 
-        if (zoomOutButton) {
-            zoomOutButton.addEventListener('click', () => {
-                currentZoom = Math.max(0.5, currentZoom - 0.1); // Limitar zoom mínimo a 0.5
-                localStorage.setItem('dpsMeterZoom', currentZoom.toString());
-                applyZoom();
-            });
-        }
+    if (syncButton) {
+        // syncButton.addEventListener('click', syncData); // El botón de sincronización ya no es clicable
+    }
 
-        if (syncButton) {
-            // syncButton.addEventListener('click', syncData); // El botón de sincronización ya no es clicable
-        }
-
-        if (lockButton) {
-            lockButton.addEventListener('click', () => {
-                if (window.electronAPI) {
-                    window.electronAPI.toggleLockState();
-                }
-            });
-
-            // Escuchar cambios de estado del candado desde el proceso principal
+    if (lockButton) {
+        lockButton.addEventListener('click', () => {
             if (window.electronAPI) {
-                window.electronAPI.onLockStateChanged((locked) => {
-                    isLocked = locked;
-                    lockButton.innerHTML = isLocked ? '<i class="fa-solid fa-lock"></i>' : '<i class="fa-solid fa-lock-open"></i>';
-                    lockButton.title = isLocked ? 'Desbloquear posición' : 'Bloquear posición';
-                    document.body.classList.toggle('locked', isLocked); // Añadir/quitar clase al body
-                    
-                    if (locked) {
-                        // Quando travado, iniciar polling no Electron
-                        window.electronAPI.startMousePolling();
-                    } else {
-                        // Quando destravado, parar polling
-                        window.electronAPI.stopMousePolling();
-                        window.electronAPI.setIgnoreMouseEvents(false);
-                        isMouseOverHeader = false;
-                        altPressed = false;
-                        document.body.classList.remove('alt-pressed');
-                    }
-                });
+                window.electronAPI.toggleLockState();
             }
-        }
+        });
 
-        const minimizeButton = document.getElementById('minimize-button');
-        if (minimizeButton) {
-            minimizeButton.addEventListener('click', () => {
-                if (window.electronAPI) {
-                    window.electronAPI.minimizeWindow();
-                }
-            });
-        }
+        // Escuchar cambios de estado del candado desde el proceso principal
+        if (window.electronAPI) {
+            window.electronAPI.onLockStateChanged((locked) => {
+                isLocked = locked;
+                lockButton.innerHTML = isLocked ? '<i class="fa-solid fa-lock"></i>' : '<i class="fa-solid fa-lock-open"></i>';
+                lockButton.title = isLocked ? 'Desbloquear posición' : 'Bloquear posición';
+                document.body.classList.toggle('locked', isLocked); // Añadir/quitar clase ao body
 
-        const closeButton = document.getElementById('close-button');
-        if (closeButton) {
-            closeButton.addEventListener('click', () => {
-                if (window.electronAPI) {
-                    window.electronAPI.closeWindow();
-                }
-            });
-        }
-
-        // IMPLEMENTAR DRAG MANUAL (solução para overlays transparentes)
-        const dragIndicator = document.getElementById('drag-indicator');
-        if (dragIndicator && window.electronAPI) {
-            let isDragging = false;
-            let startX = 0;
-            let startY = 0;
-
-            dragIndicator.addEventListener('mousedown', (e) => {
-                if (!isLocked) {
-                    isDragging = true;
-                    // Armazenar posição inicial do mouse em coordenadas de tela
-                    startX = e.screenX;
-                    startY = e.screenY;
-                    dragIndicator.style.cursor = 'grabbing';
-                    e.preventDefault(); // Prevenir seleção de texto
-                }
-            });
-
-            document.addEventListener('mousemove', (e) => {
-                if (isDragging && !isLocked) {
-                    // Calcular quanto o mouse se moveu desde o início
-                    const deltaX = e.screenX - startX;
-                    const deltaY = e.screenY - startY;
-                    
-                    // Enviar delta para o processo principal
-                    window.electronAPI.windowDragMove(deltaX, deltaY);
-                    
-                    // Atualizar posição inicial para o próximo movimento
-                    startX = e.screenX;
-                    startY = e.screenY;
-                }
-            });
-
-            document.addEventListener('mouseup', () => {
-                if (isDragging) {
-                    isDragging = false;
-                    dragIndicator.style.cursor = 'grab';
-                }
-            });
-
-            // Garantir que mouseup fora da janela também pare o drag
-            document.addEventListener('mouseleave', () => {
-                if (isDragging) {
-                    isDragging = false;
-                    dragIndicator.style.cursor = 'grab';
-                }
-            });
-        }
-
-        // Botão para ocultar/mostrar aviso de mapa
-        const toggleMapNoticeBtn = document.getElementById('toggle-map-notice');
-        if (toggleMapNoticeBtn && mapChangeNotice) {
-            toggleMapNoticeBtn.addEventListener('click', () => {
-                mapNoticeVisible = !mapNoticeVisible;
-                if (mapNoticeVisible) {
-                    mapChangeNotice.style.display = 'block';
-                    toggleMapNoticeBtn.innerHTML = '<i class="fa-solid fa-eye-slash"></i>';
-                    toggleMapNoticeBtn.title = 'Ocultar aviso';
+                if (locked) {
+                    // Quando travado, iniciar polling no Electron
+                    window.electronAPI.startMousePolling();
                 } else {
-                    mapChangeNotice.style.display = 'none';
-                    toggleMapNoticeBtn.innerHTML = '<i class="fa-solid fa-eye"></i>';
-                    toggleMapNoticeBtn.title = 'Mostrar aviso';
+                    // Quando destravado, parar polling
+                    window.electronAPI.stopMousePolling();
+                    window.electronAPI.setIgnoreMouseEvents(false);
+                    isMouseOverHeader = false;
+                    altPressed = false;
+                    document.body.classList.remove('alt-pressed');
                 }
-                updateWindowSize(); // Recalcular altura da janela
             });
         }
-    });
-
-    function applyZoom() {
-        const dpsMeter = document.querySelector('.dps-meter');
-        if (dpsMeter) {
-
-            dpsMeter.style.transform = `scale(${currentZoom})`;
-            dpsMeter.style.transformOrigin = 'top left';
-            updateWindowSize(); // Redimensionar la ventana al aplicar zoom
-        } else {
-            console.warn('[Zoom] Elemento .dps-meter não encontrado ao aplicar zoom');
-        }
     }
 
-    function updateWindowSize() {
-        const dpsMeter = document.querySelector('.dps-meter');
-        const container = document.getElementById('player-bars-container');
-        if (!dpsMeter || !container || !window.electronAPI) return;
+    const minimizeButton = document.getElementById('minimize-button');
+    if (minimizeButton) {
+        minimizeButton.addEventListener('click', () => {
+            if (window.electronAPI) {
+                window.electronAPI.minimizeWindow();
+            }
+        });
+    }
 
-        // CRÍTICO: Usar número REAL de jogadores renderizados (incluindo lite-bar)
-        const numPlayers = container.querySelectorAll('.player-bar, .lite-bar').length;
-        
-        // Só fazer resize se o número de players mudou (evita fundo preto em updates constantes)
-        if (numPlayers === lastPlayerCount && resizeThrottleTimeout) {
-            return;
-        }
-        
-        lastPlayerCount = numPlayers;
-        
-        // Throttle para evitar resize excessivo
-        if (resizeThrottleTimeout) {
-            clearTimeout(resizeThrottleTimeout);
-        }
-        
-        resizeThrottleTimeout = setTimeout(() => {
-            const baseWidth = 620; // Ajustado para terminar no botão X
-            const headerHeight = document.querySelector('.controls')?.offsetHeight || 50; // Altura de la cabecera
-            const marginTop = 40; // Margen superior del contenedor de barras
-            const borderWidth = 2; // Borde superior e inferior del contenedor
-            const barHeight = 55; // Altura de cada barra de jugador
-            const barGap = 8;    // Espacio entre barras
+    const closeButton = document.getElementById('close-button');
+    if (closeButton) {
+        closeButton.addEventListener('click', () => {
+            if (window.electronAPI) {
+                window.electronAPI.closeWindow();
+            }
+        });
+    }
 
-            // Usar número de jogadores renderizados (já limitado por maxPlayersToShow em fetchDataAndRender)
-            const numPlayersCapped = numPlayers;
+    // IMPLEMENTAR DRAG MANUAL (solução para overlays transparentes)
+    const dragIndicator = document.getElementById('drag-indicator');
+    if (dragIndicator && window.electronAPI) {
+        let isDragging = false;
+        let startX = 0;
+        let startY = 0;
 
-            let barsHeight = 0;
-            if (numPlayersCapped > 0) {
-                barsHeight = (numPlayersCapped * barHeight) + ((numPlayersCapped - 1) * barGap);
+        dragIndicator.addEventListener('mousedown', (e) => {
+            if (!isLocked) {
+                isDragging = true;
+                // Armazenar posição inicial do mouse em coordenadas de tela
+                startX = e.screenX;
+                startY = e.screenY;
+                dragIndicator.style.cursor = 'grabbing';
+                e.preventDefault(); // Prevenir seleção de texto
+            }
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (isDragging && !isLocked) {
+                // Calcular quanto o mouse se moveu desde o início
+                const deltaX = e.screenX - startX;
+                const deltaY = e.screenY - startY;
+
+                // Enviar delta para o processo principal
+                window.electronAPI.windowDragMove(deltaX, deltaY);
+
+                // Atualizar posição inicial para o próximo movimento
+                startX = e.screenX;
+                startY = e.screenY;
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (isDragging) {
+                isDragging = false;
+                dragIndicator.style.cursor = 'grab';
+            }
+        });
+
+        // Garantir que mouseup fora da janela também pare o drag
+        document.addEventListener('mouseleave', () => {
+            if (isDragging) {
+                isDragging = false;
+                dragIndicator.style.cursor = 'grab';
+            }
+        });
+    }
+
+    // Botão para ocultar/mostrar aviso de mapa
+    const toggleMapNoticeBtn = document.getElementById('toggle-map-notice');
+    if (toggleMapNoticeBtn && mapChangeNotice) {
+        toggleMapNoticeBtn.addEventListener('click', () => {
+            mapNoticeVisible = !mapNoticeVisible;
+            if (mapNoticeVisible) {
+                mapChangeNotice.style.display = 'block';
+                toggleMapNoticeBtn.innerHTML = '<i class="fa-solid fa-eye-slash"></i>';
+                toggleMapNoticeBtn.title = 'Ocultar aviso';
             } else {
-                // Altura mínima para el mensaje "Esperando datos..."
-                barsHeight = 50;
+                mapChangeNotice.style.display = 'none';
+                toggleMapNoticeBtn.innerHTML = '<i class="fa-solid fa-eye"></i>';
+                toggleMapNoticeBtn.title = 'Mostrar aviso';
             }
+            updateWindowSize(); // Recalcular altura da janela
+        });
+    }
+});
 
-            // Adicionar altura do aviso de mapa se estiver visível
-            let mapNoticeHeight = 0;
-            if (mapChangeNotice && mapNoticeVisible && numPlayersCapped > 0) {
-                mapNoticeHeight = mapChangeNotice.offsetHeight || 45; // ~45px altura estimada
-            }
+// Garantir resize correto após carregamento total (imagens, fontes)
+window.addEventListener('load', () => {
+    // Forçar resize imediato após tudo carregar para corrigir altura inicial
+    updateWindowSize(true);
+});
 
-            // Calcular la altura total sin escalar, incluyendo la cabecera, aviso e un búfer
-            const totalContentHeightUnscaled = headerHeight + marginTop + borderWidth + barsHeight + mapNoticeHeight + 20; // Búfer de 20px
+function applyZoom() {
+    // Usar ZOOM NATIVO do Electron ao invés de CSS transform
+    if (window.electronAPI && window.electronAPI.setZoom) {
+        window.electronAPI.setZoom(currentZoom);
+        // AGUARDAR zoom ser aplicado completamente antes de redimensionar
+        // O zoom nativo leva alguns ms para ter efeito no DOM
+        setTimeout(() => {
+            updateWindowSize(true);
+        }, 100);
+    } else {
+        console.warn('[Zoom] electronAPI.setZoom não disponível');
+    }
+}
 
-            // Aplicar el zoom actual al ancho y alto de la ventana
-            const finalWidth = Math.round(baseWidth * currentZoom);
-            const finalHeight = Math.round(totalContentHeightUnscaled * currentZoom);
-            
-            window.electronAPI.resizeWindow(finalWidth, finalHeight);
-            
-            resizeThrottleTimeout = null;
-        }, 150); // 100ms de throttle para resposta mais rápida
+function updateWindowSize(immediate = false) {
+    const dpsMeter = document.querySelector('.dps-meter');
+    const container = document.getElementById('player-bars-container');
+    if (!dpsMeter || !container || !window.electronAPI) return;
+
+    // CRÍTICO: Usar número REAL de jogadores renderizados (incluindo lite-bar)
+    const numPlayers = container.querySelectorAll('.player-bar, .lite-bar').length;
+
+    // Só fazer resize se o número de players mudou (evita fundo preto em updates constantes)
+    // MAS se for immediate (zoom), ignora essa checagem
+    if (!immediate && numPlayers === lastPlayerCount && resizeThrottleTimeout) {
+        return;
     }
 
-    async function resetDpsMeter() {
-        try {
-            await fetch('/api/clear');
-            dpsTimerDiv.style.display = 'none';
-            dpsTimerDiv.innerText = '';
-            lastTotalDamage = 0;
-            lastDamageChangeTime = Date.now();
-            stopSyncTimer(); // Detener el temporizador de sincronización al reiniciar
-            
-            // Forçar atualização para limpar a interface
-            await fetchDataAndRender();
-        } catch (error) {
-            console.error('Erro ao resetar DPS Meter:', error);
+    lastPlayerCount = numPlayers;
+
+    // Throttle para evitar resize excessivo
+    if (resizeThrottleTimeout) {
+        clearTimeout(resizeThrottleTimeout);
+    }
+
+    const doResize = () => {
+        const baseWidth = 620; // Largura fixa base
+
+        // CRÍTICO: Com zoom nativo, offsetHeight retorna PIXELS LÓGICOS, não físicos!
+        // Por exemplo: se o conteúdo tem 600px e zoom é 1.1, offsetHeight retorna 600px
+        // mas visualmente o conteúdo ocupa 660px (600 * 1.1)
+        void dpsMeter.offsetHeight; // Força reflow
+
+        // APENAS offsetHeight e scrollHeight - eles retornam pixels LÓGICOS
+        // NÃO usar getBoundingClientRect que retorna pixels FÍSICOS (já com zoom)
+        const totalContentHeightLogical = Math.max(
+            dpsMeter.offsetHeight,
+            dpsMeter.scrollHeight
+        );
+
+        // MULTIPLICAR pela currentZoom para obter altura FÍSICA (visual)
+        const totalContentHeightPhysical = totalContentHeightLogical * currentZoom;
+
+        // A janela precisa ter o tamanho FÍSICO do conteúdo
+        // Adicionar buffer de 30px para garantir que não corte
+        const finalWidth = Math.ceil(baseWidth * currentZoom);
+        let finalHeight = Math.ceil(totalContentHeightPhysical) + 30;
+
+        // LIMITAÇÃO: Garantir que a janela não ultrapasse a altura da tela
+        const screenHeight = window.screen.availHeight;
+        const maxHeight = Math.floor(screenHeight * 0.90);
+
+        console.log(`[Resize Debug] Altura lógica: ${totalContentHeightLogical}px, Zoom: ${currentZoom}, Altura física: ${totalContentHeightPhysical}px, finalHeight: ${finalHeight}px, maxHeight: ${maxHeight}px`);
+
+        if (finalHeight > maxHeight) {
+            console.warn(`[Resize Warning] Altura ${finalHeight}px excede máximo ${maxHeight}px! Limitando...`);
+            finalHeight = maxHeight;
         }
+
+        window.electronAPI.resizeWindow(finalWidth, finalHeight);
+
+        resizeThrottleTimeout = null;
+    };
+
+    if (immediate) {
+        // Executar IMEDIATAMENTE sin throttle para zoom
+        doResize();
+    } else {
+        // Usar throttle para updates de dados
+        resizeThrottleTimeout = setTimeout(doResize, 150);
+    }
+}
+
+async function resetDpsMeter() {
+    try {
+        await fetch('/api/clear');
+        dpsTimerDiv.style.display = 'none';
+        dpsTimerDiv.innerText = '';
+        lastTotalDamage = 0;
+        lastDamageChangeTime = Date.now();
+        stopSyncTimer(); // Detener el temporizador de sincronización al reiniciar
+
+        // Forçar atualização para limpar a interface
+        await fetchDataAndRender();
+    } catch (error) {
+        console.error('Erro ao resetar DPS Meter:', error);
+    }
+}
+
+// La función syncData ya no se llama por un clic, pero se mantiene por si se usa internamente
+async function syncData() {
+    // No modificar el estado visual aquí, se gestiona en updateSyncButtonState
+    try {
+        await fetch('/api/sync', { method: 'POST' });
+    } catch (error) {
+        console.error('Error al sincronizar datos:', error);
+    }
+}
+
+// Función para actualizar el estado visual del indicador de sincronización
+function updateSyncButtonState() {
+    clearTimeout(syncTimerDisplayTimeout); // Limpiar cualquier timeout pendiente
+
+    // PRIORIDADE MÁXIMA: Se conectado ao jogo, NUNCA mostrar ícone de loading
+    // Também esconder se há timer ativo (significa que há dados/luta)
+    if (gameConnected) {
+        syncIcon.style.display = 'none';
+        syncIcon.classList.remove('spinning');
+        syncTimerSpan.style.display = 'none';
+        syncTimerSpan.innerText = '';
+        return; // PARAR AQUI - não processar mais nada
     }
 
-    // La función syncData ya no se llama por un clic, pero se mantiene por si se usa internamente
-    async function syncData() {
-        // No modificar el estado visual aquí, se gestiona en updateSyncButtonState
-        try {
-            await fetch('/api/sync', { method: 'POST' });
-        } catch (error) {
-            console.error('Error al sincronizar datos:', error);
-        }
-    }
-
-    // Función para actualizar el estado visual del indicador de sincronización
-    function updateSyncButtonState() {
-        clearTimeout(syncTimerDisplayTimeout); // Limpiar cualquier timeout pendiente
-
-        // PRIORIDADE MÁXIMA: Se conectado ao jogo, NUNCA mostrar ícone de loading
-        // Também esconder se há timer ativo (significa que há dados/luta)
-        if (gameConnected) {
+    // Só chega aqui se NÃO conectado ao jogo E sem jogadores
+    if (syncTimerInterval) { // Se o temporizador está ativo (há conta regresiva)
+        if (syncCountdown <= 60) {
+            // Mostrar temporizador, ocultar icono
             syncIcon.style.display = 'none';
             syncIcon.classList.remove('spinning');
-            syncTimerSpan.style.display = 'none';
-            syncTimerSpan.innerText = '';
-            return; // PARAR AQUI - não processar mais nada
-        }
-
-        // Só chega aqui se NÃO conectado ao jogo E sem jogadores
-        if (syncTimerInterval) { // Se o temporizador está ativo (há conta regresiva)
-            if (syncCountdown <= 60) {
-                // Mostrar temporizador, ocultar icono
-                syncIcon.style.display = 'none';
-                syncIcon.classList.remove('spinning');
-                syncTimerSpan.innerText = `${syncCountdown}s`;
-                syncTimerSpan.style.display = 'block';
-            } else {
-                // Mostrar icono girando, ocultar temporizador
-                syncIcon.style.display = 'block';
-                syncIcon.classList.add('spinning');
-                syncTimerSpan.style.display = 'none';
-            }
-        } else { // Si el temporizador no está activo
-            // Mostrar ícone girando quando desconectado e sem timer
+            syncTimerSpan.innerText = `${syncCountdown}s`;
+            syncTimerSpan.style.display = 'block';
+        } else {
+            // Mostrar icono girando, ocultar temporizador
             syncIcon.style.display = 'block';
             syncIcon.classList.add('spinning');
             syncTimerSpan.style.display = 'none';
-            syncTimerSpan.innerText = '';
         }
+    } else { // Si el temporizador no está activo
+        // Mostrar ícone girando quando desconectado e sem timer
+        syncIcon.style.display = 'block';
+        syncIcon.classList.add('spinning');
+        syncTimerSpan.style.display = 'none';
+        syncTimerSpan.innerText = '';
     }
+}
 
-    function startSyncTimer() {
-        if (syncTimerInterval) return; // Evitar múltiples temporizadores
-        syncCountdown = SYNC_RESET_TIME;
-        updateSyncButtonState(); // Establecer el estado inicial
+function startSyncTimer() {
+    if (syncTimerInterval) return; // Evitar múltiples temporizadores
+    syncCountdown = SYNC_RESET_TIME;
+    updateSyncButtonState(); // Establecer el estado inicial
 
-        syncTimerInterval = setInterval(() => {
-            syncCountdown--;
-            updateSyncButtonState(); // Actualizar el estado en cada tick
+    syncTimerInterval = setInterval(() => {
+        syncCountdown--;
+        updateSyncButtonState(); // Actualizar el estado en cada tick
 
-            if (syncCountdown <= 0) {
-                stopSyncTimer();
-                resetDpsMeter();
+        if (syncCountdown <= 0) {
+            stopSyncTimer();
+            resetDpsMeter();
+        }
+    }, 1000);
+}
+
+function stopSyncTimer() {
+    clearInterval(syncTimerInterval);
+    syncTimerInterval = null;
+    clearTimeout(syncTimerDisplayTimeout); // Limpiar el timeout si existe
+    updateSyncButtonState(); // Restablecer el estado del indicador
+}
+
+function formatTimer(ms) {
+    const s = Math.max(0, Math.ceil(ms / 1000));
+    const min = Math.floor(s / 60);
+    const sec = s % 60;
+    return `${min}:${sec.toString().padStart(2, '0')}`;
+}
+
+async function fetchLogs() {
+    const res = await fetch('/logs-dps');
+    return await res.json();
+}
+
+function renderLogs(logs) {
+    let html = '';
+    if (logs.length === 0) {
+        logsSection.style.display = 'none'; // Ocultar la sección si no hay logs
+        return;
+    } else {
+        logsSection.style.display = 'block'; // Mostrar la sección si hay logs
+        html = '<select id="logs-dropdown" style="width:100%;padding:6px 4px;border-radius:6px;font-size:1rem;">' +
+            `<option value="-1">LOG</option>` +
+            logs.map((log, i) => `<option value="${i}">${log.fecha}</option>`).join('') + '</select>';
+        html += '<div id="log-preview"></div>';
+    }
+    logsSection.innerHTML = html;
+    if (logs.length > 0) {
+        let lastValue = -1;
+        const dropdown = document.getElementById('logs-dropdown');
+        dropdown.onchange = function () {
+            if (this.value == lastValue || this.value == -1) {
+                showLogPreview(null);
+                this.value = -1;
+                lastValue = -1;
+            } else {
+                showLogPreview(logs[this.value]);
+                lastValue = this.value;
             }
-        }, 1000);
-    }
-
-    function stopSyncTimer() {
-        clearInterval(syncTimerInterval);
-        syncTimerInterval = null;
-        clearTimeout(syncTimerDisplayTimeout); // Limpiar el timeout si existe
-        updateSyncButtonState(); // Restablecer el estado del indicador
-    }
-
-    function formatTimer(ms) {
-        const s = Math.max(0, Math.ceil(ms / 1000));
-        const min = Math.floor(s / 60);
-        const sec = s % 60;
-        return `${min}:${sec.toString().padStart(2, '0')}`;
-    }
-
-    async function fetchLogs() {
-        const res = await fetch('/logs-dps');
-        return await res.json();
-    }
-
-    function renderLogs(logs) {
-        let html = '';
-        if (logs.length === 0) {
-            logsSection.style.display = 'none'; // Ocultar la sección si no hay logs
-            return;
-        } else {
-            logsSection.style.display = 'block'; // Mostrar la sección si hay logs
-            html = '<select id="logs-dropdown" style="width:100%;padding:6px 4px;border-radius:6px;font-size:1rem;">' +
-                `<option value="-1">LOG</option>` +
-                logs.map((log, i) => `<option value="${i}">${log.fecha}</option>`).join('') + '</select>';
-            html += '<div id="log-preview"></div>';
-        }
-        logsSection.innerHTML = html;
-        if (logs.length > 0) {
-            let lastValue = -1;
-            const dropdown = document.getElementById('logs-dropdown');
-            dropdown.onchange = function() {
-                if (this.value == lastValue || this.value == -1) {
-                    showLogPreview(null);
-                    this.value = -1;
-                    lastValue = -1;
-                } else {
-                    showLogPreview(logs[this.value]);
-                    lastValue = this.value;
-                }
-            };
-        }
-    }
-
-    function showLogPreview(log) {
-        const logPreview = document.getElementById('log-preview');
-        if (logPreviewTimeout) {
-            clearTimeout(logPreviewTimeout);
-        }
-
-        if (!log) {
-            logPreview.innerHTML = '';
-            return;
-        }
-
-        let prof = professionMap && log.icon ? Object.values(professionMap).find(p => p.icon === log.icon) : null;
-        let profName = prof ? prof.name : '';
-        logPreview.innerHTML = `<div class=\"player-bar\" style=\"margin-top:10px;\">\n            <div class=\"progress-fill\" style=\"width: 100%; background: #444b5a;\"></div>\n            <div class=\"bar-content\">\n                <div class=\"player-info\">\n                    <span class=\"player-name\">${log.nombre}</span>\n                    <span class=\"player-id\">ID: ${log.id}</span>\n                    <span class=\"player-id\">${profName}</span>\n                </div>\n                <div class=\"player-performance\">\n                    <div class=\"stats-list\">\n                        <span class=\"main-stat\">DPS ${formatStat(log.dps)}</span>\n                        <span class=\"secondary-stat\">HPS ${formatStat(log.hps)}</span>\n                        <span class=\"secondary-stat\">DTPS ${formatStat(log.dtps)}</span>\n                    </div>\n                    <img class=\"class-icon\" src=\"icons/${log.icon}\" alt=\"icon\">\n                </div>\n            </div>\n        </div>`;
-        logPreviewTimeout = setTimeout(() => { 
-            logPreview.innerHTML = '';
-        }, 7000);
-    }
-
-    async function updateLogsUI() {
-        const logs = await fetchLogs();
-        renderLogs(logs);
-    }
-
-    function getHealthColor(percentage) {
-        const r1 = 220, g1 = 53, b1 = 69; // Rojo para HP bajo (#dc3545)
-        const r2 = 40, g2 = 167, b2 = 69; // Verde para HP alto (#28a745)
-
-        const r = Math.round(r1 + (r2 - r1) * (percentage / 100));
-        const g = Math.round(g1 + (g2 - g1) * (percentage / 100));
-        const b = Math.round(b1 + (b2 - b1) * (percentage / 100));
-
-        return `rgb(${r}, ${g}, ${b})`;
-    }
-
-    function formatStat(value) {
-        if (value >= 1000000000000) {
-            return (value / 1000000000000).toFixed(1) + 'T';
-        }
-        if (value >= 1000000000) {
-            return (value / 1000000000).toFixed(1) + 'G';
-        }
-        if (value >= 1000000) {
-            return (value / 1000000).toFixed(1) + 'M';
-        }
-        if (value >= 1000) {
-            return (value / 1000).toFixed(1) + 'k';
-        }
-        return value.toFixed(0);
-    }
-
-    // Função para obter cor baseada na classe/especialização
-    function getClassColor(profession) {
-        if (!profession) return '#ffffff';
-        
-        const professionParts = profession.split('-');
-        const mainClass = professionParts[0];
-        const subClass = professionParts[1];
-        
-        // Mapa de cores por classe (usando nomes em chinês)
-        const classColors = {
-            // Heavy Guardian (涤罪恶火·战斧 e 巨刃守护者)
-            '涤罪恶火·战斧': '#eca41c',
-            '巨刃守护者': '#eca41c',
-            '防盾': '#eca41c',  // Recovery (especialização)
-            '光盾': '#eca41c',  // Shield (especialização)
-            '格挡': '#eca41c',  // Block (especialização)
-            '岩盾': '#eca41c',  // Earthfort (especialização)
-            
-            // Stormblade (雷影剑士)
-            '雷影剑士': '#8000bc',
-            '居合': '#8000bc',  // Iaido Slash (especialização)
-            '月刃': '#8000bc',  // MoonStrike (especialização)
-            
-            // Shield Knight (神盾骑士)
-            '神盾骑士': '#ece51c',
-            
-            // Wind Knight (青岚骑士)
-            '青岚骑士': '#00aeb8',
-            '空枪': '#00aeb8',  // Skyward (especialização)
-            '重装': '#00aeb8',  // Vanguard (especialização)
-            
-            // Frost Mage (冰魔导师)
-            '冰魔导师': '#1c91ec',
-            '冰矛': '#1c91ec',  // Icicle (especialização)
-            '射线': '#1c91ec',  // Frostbeam (especialização)
-            
-            // Marksmanship (神射手)
-            '神射手': '#ec1c29',
-            '狼弓': '#ec1c29',  // Wildpack (especialização)
-            '鹰弓': '#ec1c29',  // Falconry (especialização)
-            
-            // Verdant Oracle (森语者)
-            '森语者': '#00bc07',
-            '惩戒': '#00bc07',  // Smite (especialização)
-            '愈合': '#00bc07',  // Lifebind (especialização)
-            
-            // Beat Performer (灵魂乐手)
-            '灵魂乐手': '#017d06',
-            '协奏': '#017d06',  // Concerto (especialização)
-            '狂音': '#017d06'   // Dissonance (especialização)
         };
-        
-        // Se mainClass é "未知" (Unknown), SEMPRE usar especialização
-        if (mainClass === '未知' && subClass && classColors[subClass]) {
-            return classColors[subClass];
-        }
-        
-        // Priorizar especialização se existir, senão usar classe principal
-        if (subClass && classColors[subClass]) {
-            return classColors[subClass];
-        }
-        
-        return classColors[mainClass] || '#ffffff';
+    }
+}
+
+function showLogPreview(log) {
+    const logPreview = document.getElementById('log-preview');
+    if (logPreviewTimeout) {
+        clearTimeout(logPreviewTimeout);
     }
 
-    async function fetchDataAndRender() {
-        if (isFetchingData) return;
-        isFetchingData = true;
-        const container = document.getElementById('player-bars-container');
-        try {
-            const [dataRes, diccRes] = await Promise.all([
-                fetch('/api/data'),
-                fetch('/api/diccionario')
-            ]);
-            
-            // Verificar status das respostas
-            if (!dataRes.ok || !diccRes.ok) {
-                throw new Error(`Fetch failed: data=${dataRes.status}, dicc=${diccRes.status}`);
-            }
-            
-            const userData = await dataRes.json();
-            const diccionarioData = await diccRes.json();
+    if (!log) {
+        logPreview.innerHTML = '';
+        return;
+    }
 
-            let userArray = Object.values(userData.user);
-            userArray = userArray.filter(u => u.total_damage && u.total_damage.total > 0);
+    let prof = professionMap && log.icon ? Object.values(professionMap).find(p => p.icon === log.icon) : null;
+    let profName = prof ? prof.name : '';
+    logPreview.innerHTML = `<div class=\"player-bar\" style=\"margin-top:10px;\">\n            <div class=\"progress-fill\" style=\"width: 100%; background: #444b5a;\"></div>\n            <div class=\"bar-content\">\n                <div class=\"player-info\">\n                    <span class=\"player-name\">${log.nombre}</span>\n                    <span class=\"player-id\">ID: ${log.id}</span>\n                    <span class=\"player-id\">${profName}</span>\n                </div>\n                <div class=\"player-performance\">\n                    <div class=\"stats-list\">\n                        <span class=\"main-stat\">DPS ${formatStat(log.dps)}</span>\n                        <span class=\"secondary-stat\">HPS ${formatStat(log.hps)}</span>\n                        <span class=\"secondary-stat\">DTPS ${formatStat(log.dtps)}</span>\n                    </div>\n                    <img class=\"class-icon\" src=\"icons/${log.icon}\" alt=\"icon\">\n                </div>\n            </div>\n        </div>`;
+    logPreviewTimeout = setTimeout(() => {
+        logPreview.innerHTML = '';
+    }, 7000);
+}
 
-            if (!userArray || userArray.length === 0) {
-                // NUNCA mostrar loading se há jogadores ativos (mesmo que array vazio agora)
-                if (loadingIndicator) {
-                    loadingIndicator.style.display = 'none';
-                }
-                // CRÍTICO: Esconder E limpar container para evitar fundo preto
-                playerBarsContainer.style.display = 'none';
-                playerBarsContainer.innerHTML = ''; // Limpar HTML
-                updateSyncButtonState();
-                updateWindowSize(); // Atualizar para altura mínima
-                return;
-            }
+async function updateLogsUI() {
+    const logs = await fetchLogs();
+    renderLogs(logs);
+}
 
-            // Se chegou aqui, tem dados - SEMPRE esconder loading
+function getHealthColor(percentage) {
+    const r1 = 220, g1 = 53, b1 = 69; // Rojo para HP bajo (#dc3545)
+    const r2 = 40, g2 = 167, b2 = 69; // Verde para HP alto (#28a745)
+
+    const r = Math.round(r1 + (r2 - r1) * (percentage / 100));
+    const g = Math.round(g1 + (g2 - g1) * (percentage / 100));
+    const b = Math.round(b1 + (b2 - b1) * (percentage / 100));
+
+    return `rgb(${r}, ${g}, ${b})`;
+}
+
+function formatStat(value) {
+    if (value >= 1000000000000) {
+        return (value / 1000000000000).toFixed(1) + 'T';
+    }
+    if (value >= 1000000000) {
+        return (value / 1000000000).toFixed(1) + 'G';
+    }
+    if (value >= 1000000) {
+        return (value / 1000000).toFixed(1) + 'M';
+    }
+    if (value >= 1000) {
+        return (value / 1000).toFixed(1) + 'k';
+    }
+    return value.toFixed(0);
+}
+
+// Função para obter cor baseada na classe/especialização
+function getClassColor(profession) {
+    if (!profession) return '#ffffff';
+
+    const professionParts = profession.split('-');
+    const mainClass = professionParts[0];
+    const subClass = professionParts[1];
+
+    // Mapa de cores por classe (usando nomes em chinês)
+    const classColors = {
+        // Heavy Guardian (涤罪恶火·战斧 e 巨刃守护者)
+        '涤罪恶火·战斧': '#eca41c',
+        '巨刃守护者': '#eca41c',
+        '防盾': '#eca41c',  // Recovery (especialização)
+        '光盾': '#eca41c',  // Shield (especialização)
+        '格挡': '#eca41c',  // Block (especialização)
+        '岩盾': '#eca41c',  // Earthfort (especialização)
+
+        // Stormblade (雷影剑士)
+        '雷影剑士': '#8000bc',
+        '居合': '#8000bc',  // Iaido Slash (especialização)
+        '月刃': '#8000bc',  // MoonStrike (especialização)
+
+        // Shield Knight (神盾骑士)
+        '神盾骑士': '#ece51c',
+
+        // Wind Knight (青岚骑士)
+        '青岚骑士': '#00aeb8',
+        '空枪': '#00aeb8',  // Skyward (especialização)
+        '重装': '#00aeb8',  // Vanguard (especialização)
+
+        // Frost Mage (冰魔导师)
+        '冰魔导师': '#1c91ec',
+        '冰矛': '#1c91ec',  // Icicle (especialização)
+        '射线': '#1c91ec',  // Frostbeam (especialização)
+
+        // Marksmanship (神射手)
+        '神射手': '#ec1c29',
+        '狼弓': '#ec1c29',  // Wildpack (especialização)
+        '鹰弓': '#ec1c29',  // Falconry (especialização)
+
+        // Verdant Oracle (森语者)
+        '森语者': '#00bc07',
+        '惩戒': '#00bc07',  // Smite (especialização)
+        '愈合': '#00bc07',  // Lifebind (especialização)
+
+        // Beat Performer (灵魂乐手)
+        '灵魂乐手': '#017d06',
+        '协奏': '#017d06',  // Concerto (especialização)
+        '狂音': '#017d06'   // Dissonance (especialização)
+    };
+
+    // Se mainClass é "未知" (Unknown), SEMPRE usar especialização
+    if (mainClass === '未知' && subClass && classColors[subClass]) {
+        return classColors[subClass];
+    }
+
+    // Priorizar especialização se existir, senão usar classe principal
+    if (subClass && classColors[subClass]) {
+        return classColors[subClass];
+    }
+
+    return classColors[mainClass] || '#ffffff';
+}
+
+async function fetchDataAndRender() {
+    if (isFetchingData) return;
+    isFetchingData = true;
+    const container = document.getElementById('player-bars-container');
+    try {
+        const [dataRes, diccRes] = await Promise.all([
+            fetch('/api/data'),
+            fetch('/api/diccionario')
+        ]);
+
+        // Verificar status das respostas
+        if (!dataRes.ok || !diccRes.ok) {
+            throw new Error(`Fetch failed: data=${dataRes.status}, dicc=${diccRes.status}`);
+        }
+
+        const userData = await dataRes.json();
+        const diccionarioData = await diccRes.json();
+
+        let userArray = Object.values(userData.user);
+        userArray = userArray.filter(u => u.total_damage && u.total_damage.total > 0);
+
+        if (!userArray || userArray.length === 0) {
+            // NUNCA mostrar loading se há jogadores ativos (mesmo que array vazio agora)
             if (loadingIndicator) {
                 loadingIndicator.style.display = 'none';
             }
-            playerBarsContainer.style.display = 'flex'; // Mostrar el contenedor de barras
+            // CRÍTICO: Esconder E limpar container para evitar fundo preto
+            playerBarsContainer.style.display = 'none';
+            playerBarsContainer.innerHTML = ''; // Limpar HTML
+            updateSyncButtonState();
+            updateWindowSize(); // Atualizar para altura mínima
+            return;
+        }
 
-            // Verificar se há players com nome temporário (Player XXXXX)
-            const hasTemporaryNames = userArray.some(u => u.name && u.name.startsWith('Player '));
-            if (hasTemporaryNames && mapNoticeVisible && mapChangeNotice) {
-                mapChangeNotice.style.display = 'block';
-            } else if (mapChangeNotice) {
-                mapChangeNotice.style.display = 'none';
-            }
+        // Se chegou aqui, tem dados - SEMPRE esconder loading
+        if (loadingIndicator) {
+            loadingIndicator.style.display = 'none';
+        }
+        playerBarsContainer.style.display = 'flex'; // Mostrar el contenedor de barras
 
-            const sumaTotalDamage = userArray.reduce((acc, u) => acc + (u.total_damage && u.total_damage.total ? Number(u.total_damage.total) : 0), 0);
+        // Verificar se há players com nome temporário (Player XXXXX)
+        const hasTemporaryNames = userArray.some(u => u.name && u.name.startsWith('Player '));
+        if (hasTemporaryNames && mapNoticeVisible && mapChangeNotice) {
+            mapChangeNotice.style.display = 'block';
+        } else if (mapChangeNotice) {
+            mapChangeNotice.style.display = 'none';
+        }
 
-            if (sumaTotalDamage > 0) {
-                if (sumaTotalDamage !== lastTotalDamage) {
-                    lastTotalDamage = sumaTotalDamage;
-                    lastDamageChangeTime = Date.now();
-                    stopSyncTimer();
-                } else {
-                    if (Date.now() - lastDamageChangeTime > SYNC_RESET_TIME * 1000) {
-                        resetDpsMeter();
-                        return;
-                    }
-                    if (!syncTimerInterval) {
-                        startSyncTimer();
-                    }
-                }
-            } else {
-                lastTotalDamage = 0;
+        const sumaTotalDamage = userArray.reduce((acc, u) => acc + (u.total_damage && u.total_damage.total ? Number(u.total_damage.total) : 0), 0);
+
+        if (sumaTotalDamage > 0) {
+            if (sumaTotalDamage !== lastTotalDamage) {
+                lastTotalDamage = sumaTotalDamage;
                 lastDamageChangeTime = Date.now();
                 stopSyncTimer();
+            } else {
+                if (Date.now() - lastDamageChangeTime > SYNC_RESET_TIME * 1000) {
+                    resetDpsMeter();
+                    return;
+                }
+                if (!syncTimerInterval) {
+                    startSyncTimer();
+                }
             }
+        } else {
+            lastTotalDamage = 0;
+            lastDamageChangeTime = Date.now();
+            stopSyncTimer();
+        }
 
-            // Cálculo de damagePercent para todos los usuarios (base para Advanced y Lite DPS)
+        // Cálculo de damagePercent para todos los usuarios (base para Advanced y Lite DPS)
+        userArray.forEach(u => {
+            const userDamage = u.total_damage && u.total_damage.total ? Number(u.total_damage.total) : 0;
+            u.damagePercent = sumaTotalDamage > 0 ? Math.max(0, Math.min(100, (userDamage / sumaTotalDamage) * 100)) : 0;
+        });
+
+        if (isLiteMode && liteModeType === 'healer') {
+            const totalHealingContribution = userArray.reduce((acc, u) => acc + (u.total_healing && u.total_healing.total ? Number(u.total_healing.total) : 0), 0);
             userArray.forEach(u => {
-                const userDamage = u.total_damage && u.total_damage.total ? Number(u.total_damage.total) : 0;
-                u.damagePercent = sumaTotalDamage > 0 ? Math.max(0, Math.min(100, (userDamage / sumaTotalDamage) * 100)) : 0;
+                const userHealing = u.total_healing && u.total_healing.total ? Number(u.total_healing.total) : 0;
+                u.healingPercent = totalHealingContribution > 0 ? Math.max(0, Math.min(100, (userHealing / totalHealingContribution) * 100)) : 0;
             });
+            userArray.sort((a, b) => b.healingPercent - a.healingPercent);
+        } else { // Modo DPS (Lite o Advanced)
+            userArray.sort((a, b) => (b.total_damage && b.total_damage.total ? Number(b.total_damage.total) : 0) - (a.total_damage && a.total_damage.total ? Number(a.total_damage.total) : 0));
+        }
 
-            if (isLiteMode && liteModeType === 'healer') {
-                const totalHealingContribution = userArray.reduce((acc, u) => acc + (u.total_healing && u.total_healing.total ? Number(u.total_healing.total) : 0), 0);
-                userArray.forEach(u => {
-                    const userHealing = u.total_healing && u.total_healing.total ? Number(u.total_healing.total) : 0;
-                    u.healingPercent = totalHealingContribution > 0 ? Math.max(0, Math.min(100, (userHealing / totalHealingContribution) * 100)) : 0;
-                });
-                userArray.sort((a, b) => b.healingPercent - a.healingPercent);
-            } else { // Modo DPS (Lite o Advanced)
-                userArray.sort((a, b) => (b.total_damage && b.total_damage.total ? Number(b.total_damage.total) : 0) - (a.total_damage && a.total_damage.total ? Number(a.total_damage.total) : 0));
-            }
-            
-            userArray = userArray.slice(0, maxPlayersToShow);
+        userArray = userArray.slice(0, maxPlayersToShow);
 
-            if (isLiteMode) {
-                container.innerHTML = userArray.map((u, index) => {
-                    const professionParts = u.profession.split('-');
-                    const mainProfessionKey = professionParts[0];
-                    const subProfessionKey = professionParts[1];
-                    const mainProf = professionMap[mainProfessionKey] || defaultProfession;
-                    const subProf = professionMap[subProfessionKey];
-                    let prof = subProf || mainProf;
-                    const nombre = u.name || '';
-                    const color = getClassColor(u.profession);
-                    let barFillWidth, barFillBackground, value1, value2, iconHtml;
+        if (isLiteMode) {
+            container.innerHTML = userArray.map((u, index) => {
+                const professionParts = u.profession.split('-');
+                const mainProfessionKey = professionParts[0];
+                const subProfessionKey = professionParts[1];
+                const mainProf = professionMap[mainProfessionKey] || defaultProfession;
+                const subProf = professionMap[subProfessionKey];
+                let prof = subProf || mainProf;
+                const nombre = u.name || '';
+                const color = getClassColor(u.profession);
+                let barFillWidth, barFillBackground, value1, value2, iconHtml;
 
-                    if (liteModeType === 'dps') {
-                        barFillWidth = u.damagePercent;
-                        barFillBackground = u.total_dps > 0 ? `linear-gradient(90deg, transparent, ${color})` : 'none';
-                        iconHtml = "<span style='font-size:1.1em;margin-right:2px;'>🔥</span>";
-                        value1 = `${formatStat(u.total_dps || 0)}`; // DPS ao invés de dano total
-                        value2 = `${Math.round(u.damagePercent)}%`;
-                    } else { // liteModeType === 'healer'
-                        barFillWidth = u.healingPercent;
-                        barFillBackground = u.total_healing && u.total_healing.total > 0 ? `linear-gradient(90deg, transparent, #28a745)` : 'none'; // Verde para healer
-                        iconHtml = "<span style='font-size:1.1em;margin-right:2px; color: #28a745; text-shadow: 0 0 2px white, 0 0 2px white, 0 0 2px white, 0 0 2px white;'>⛨</span>"; // Icono verde con contorno blanco
-                        value1 = `${formatStat(u.total_hps || 0)}`; // HPS ao invés de heal total
-                        value2 = `${Math.round(u.healingPercent)}%`; // Porcentaje de contribución de heal
-                    }
+                if (liteModeType === 'dps') {
+                    barFillWidth = u.damagePercent;
+                    barFillBackground = u.total_dps > 0 ? `linear-gradient(90deg, transparent, ${color})` : 'none';
+                    iconHtml = "<span style='font-size:1.1em;margin-right:2px;'>🔥</span>";
+                    value1 = `${formatStat(u.total_dps || 0)}`; // DPS ao invés de dano total
+                    value2 = `${Math.round(u.damagePercent)}%`;
+                } else { // liteModeType === 'healer'
+                    barFillWidth = u.healingPercent;
+                    barFillBackground = u.total_healing && u.total_healing.total > 0 ? `linear-gradient(90deg, transparent, #28a745)` : 'none'; // Verde para healer
+                    iconHtml = "<span style='font-size:1.1em;margin-right:2px; color: #28a745; text-shadow: 0 0 2px white, 0 0 2px white, 0 0 2px white, 0 0 2px white;'>⛨</span>"; // Icono verde con contorno blanco
+                    value1 = `${formatStat(u.total_hps || 0)}`; // HPS ao invés de heal total
+                    value2 = `${Math.round(u.healingPercent)}%`; // Porcentaje de contribución de heal
+                }
 
-                    return `<div class="lite-bar" data-lite="true" data-rank="${u.rank}">
+                return `<div class="lite-bar" data-lite="true" data-rank="${u.rank}">
                         <div class="lite-bar-fill" style="width: ${barFillWidth}%; background: ${barFillBackground};"></div>
                         <div class="lite-bar-content" style="position: absolute; left: 0; top: 0; width: 100%; height: 100%; justify-content: space-between;">
                             <div class="skill-analysis-button" title="Análisis de Habilidades">
@@ -767,30 +786,30 @@ const professionMap = {
                             </div>
                         </div>
                     </div>`;
-                }).join('');
-            } else {
-                // ...renderizado original...
-                container.innerHTML = userArray.map((u, index) => {
-                    const professionParts = u.profession.split('-');
-                    const mainProfessionKey = professionParts[0];
-                    const subProfessionKey = professionParts[1];
-                    const mainProf = professionMap[mainProfessionKey] || defaultProfession;
-                    const subProf = professionMap[subProfessionKey];
-                    let prof = subProf || mainProf;
-                    let professionName = mainProf.name;
-                    if (subProf) {
-                        professionName += ` - ${subProf.name}`;
-                    }
-                    const dps = Number(u.total_dps) || 0;
-                    const totalHealing = u.total_healing ? (Number(u.total_healing.total) || 0) : 0;
-                    const color = getClassColor(u.profession);
-                    const dpsColor = dps > 0 ? `linear-gradient(90deg, transparent, ${color})` : 'none';
-                    const nombre = u.name || '';
-                    const totalHits = u.total_count.total || 0;
-                    const crit = (u.total_count.critical !== undefined && totalHits > 0) ? Math.round((u.total_count.critical / totalHits) * 100) : '0';
-                    const lucky = (u.total_count.lucky !== undefined && totalHits > 0) ? Math.round((u.total_count.lucky / totalHits) * 100) : '0';
-                    const peak = (u.realtime_dps_max !== undefined) ? u.realtime_dps_max : 0;
-                    return `<div class="player-bar" data-rank="${u.rank}">
+            }).join('');
+        } else {
+            // ...renderizado original...
+            container.innerHTML = userArray.map((u, index) => {
+                const professionParts = u.profession.split('-');
+                const mainProfessionKey = professionParts[0];
+                const subProfessionKey = professionParts[1];
+                const mainProf = professionMap[mainProfessionKey] || defaultProfession;
+                const subProf = professionMap[subProfessionKey];
+                let prof = subProf || mainProf;
+                let professionName = mainProf.name;
+                if (subProf) {
+                    professionName += ` - ${subProf.name}`;
+                }
+                const dps = Number(u.total_dps) || 0;
+                const totalHealing = u.total_healing ? (Number(u.total_healing.total) || 0) : 0;
+                const color = getClassColor(u.profession);
+                const dpsColor = dps > 0 ? `linear-gradient(90deg, transparent, ${color})` : 'none';
+                const nombre = u.name || '';
+                const totalHits = u.total_count.total || 0;
+                const crit = (u.total_count.critical !== undefined && totalHits > 0) ? Math.round((u.total_count.critical / totalHits) * 100) : '0';
+                const lucky = (u.total_count.lucky !== undefined && totalHits > 0) ? Math.round((u.total_count.lucky / totalHits) * 100) : '0';
+                const peak = (u.realtime_dps_max !== undefined) ? u.realtime_dps_max : 0;
+                return `<div class="player-bar" data-rank="${u.rank}">
                         <div class="progress-fill" style="width: ${u.damagePercent}%; background: ${dpsColor}"></div>
                         <div class="bar-content">
                             <div class="skill-analysis-button" title="Análisis de Habilidades">
@@ -855,329 +874,329 @@ const professionMap = {
                             </div>
                         </div>
                     </div>`;
-                }).join('');
-            }
-        } catch (err) {
-            if (container) {
-                container.innerHTML = '<div id="message-display">Error de conexión...</div>';
-            }
-        } finally {
-            isFetchingData = false;
-            updateSyncButtonState();
-            updateWindowSize();
+            }).join('');
         }
+    } catch (err) {
+        if (container) {
+            container.innerHTML = '<div id="message-display">Error de conexión...</div>';
+        }
+    } finally {
+        isFetchingData = false;
+        updateSyncButtonState();
+        updateWindowSize();
+    }
+}
+
+let isPaused = false;
+let updateInterval = null;
+
+async function setPauseState(paused) {
+    try {
+        const res = await fetch('/api/pause', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ paused }),
+        });
+        const data = await res.json();
+        isPaused = data.paused;
+        return isPaused;
+    } catch (err) {
+        console.error('Error al cambiar estado de pausa:', err);
+    }
+}
+
+function startUpdating() {
+    if (updateInterval) clearInterval(updateInterval);
+    updateInterval = setInterval(() => {
+        if (!isPaused) {
+            fetchDataAndRender();
+            updateLogsUI();
+        }
+    }, UPDATE_INTERVAL_MS);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const pauseButton = document.getElementById('pause-logs-button');
+    if (pauseButton) {
+        pauseButton.addEventListener('click', async () => {
+            const newState = !isPaused;
+            const result = await setPauseState(newState);
+            // result (isPaused) comes from the server. When paused === true we should show the PLAY icon
+            if (result) {
+                pauseButton.innerHTML = '<i class="fa-solid fa-play"></i>';
+                pauseButton.title = 'Reanudar Logs';
+            } else {
+                pauseButton.innerHTML = '<i class="fa-solid fa-pause"></i>';
+                pauseButton.title = 'Pausar Logs';
+            }
+        });
     }
 
-    let isPaused = false;
-    let updateInterval = null;
-
-    async function setPauseState(paused) {
-        try {
-            const res = await fetch('/api/pause', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ paused }),
-            });
-            const data = await res.json();
+    // Consultar estado inicial desde backend
+    fetch('/api/pause')
+        .then((res) => res.json())
+        .then((data) => {
             isPaused = data.paused;
-            return isPaused;
-        } catch (err) {
-            console.error('Error al cambiar estado de pausa:', err);
-        }
-    }
-
-    function startUpdating() {
-        if (updateInterval) clearInterval(updateInterval);
-        updateInterval = setInterval(() => {
-            if (!isPaused) {
-                fetchDataAndRender();
-                updateLogsUI();
-            }
-        }, UPDATE_INTERVAL_MS);
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-        const pauseButton = document.getElementById('pause-logs-button');
-        if (pauseButton) {
-            pauseButton.addEventListener('click', async () => {
-                const newState = !isPaused;
-                const result = await setPauseState(newState);
-                // result (isPaused) comes from the server. When paused === true we should show the PLAY icon
-                if (result) {
+            if (pauseButton) {
+                if (isPaused) {
                     pauseButton.innerHTML = '<i class="fa-solid fa-play"></i>';
                     pauseButton.title = 'Reanudar Logs';
                 } else {
                     pauseButton.innerHTML = '<i class="fa-solid fa-pause"></i>';
                     pauseButton.title = 'Pausar Logs';
                 }
-            });
-        }
-
-        // Consultar estado inicial desde backend
-        fetch('/api/pause')
-            .then((res) => res.json())
-            .then((data) => {
-                isPaused = data.paused;
-                if (pauseButton) {
-                    if (isPaused) {
-                        pauseButton.innerHTML = '<i class="fa-solid fa-play"></i>';
-                        pauseButton.title = 'Reanudar Logs';
-                    } else {
-                        pauseButton.innerHTML = '<i class="fa-solid fa-pause"></i>';
-                        pauseButton.title = 'Pausar Logs';
-                    }
-                }
-            })
-            .catch((err) => {
-                console.error('Error fetching pause state:', err);
-            });
-
-        startUpdating();
-        fetchDataAndRender();
-        updateLogsUI();
-    });
-
-
-    // Gerenciamento do histórico de lutas
-    // autoResetEnabled já declarado no topo do arquivo
-
-    // Abrir janela de histórico
-    function openHistoryWindow() {
-        if (window.electronAPI && window.electronAPI.openHistoryWindow) {
-            window.electronAPI.openHistoryWindow();
-        }
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-        // Botão de histórico de lutas - abre nova janela
-        const historyButton = document.getElementById('fight-history-button');
-        if (historyButton) {
-            historyButton.addEventListener('click', () => {
-                openHistoryWindow();
-            });
-        }
-
-        // Botão de configurações - abre nova janela
-        const settingsButton = document.getElementById('settings-button');
-        if (settingsButton) {
-            settingsButton.addEventListener('click', () => {
-                if (window.electronAPI && window.electronAPI.openSettingsWindow) {
-                    window.electronAPI.openSettingsWindow();
-                }
-            });
-        }
-
-        // Carregar configurações salvas
-        loadAndApplySettings().catch((err) => {
-            console.warn('Não foi possível carregar configurações iniciais:', err);
+            }
+        })
+        .catch((err) => {
+            console.error('Error fetching pause state:', err);
         });
 
-        // Escutar mudanças nas configurações
-        if (window.electronAPI && window.electronAPI.onSettingsChanged) {
-            window.electronAPI.onSettingsChanged((settings) => {
-                if (!settings) return;
-                localStorage.setItem('dpsMeterSettings', JSON.stringify(settings));
-                applySettings(settings);
-                applySavedMeterBackground();
-            });
-        }
+    startUpdating();
+    fetchDataAndRender();
+    updateLogsUI();
+});
+
+
+// Gerenciamento do histórico de lutas
+// autoResetEnabled já declarado no topo do arquivo
+
+// Abrir janela de histórico
+function openHistoryWindow() {
+    if (window.electronAPI && window.electronAPI.openHistoryWindow) {
+        window.electronAPI.openHistoryWindow();
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Botão de histórico de lutas - abre nova janela
+    const historyButton = document.getElementById('fight-history-button');
+    if (historyButton) {
+        historyButton.addEventListener('click', () => {
+            openHistoryWindow();
+        });
+    }
+
+    // Botão de configurações - abre nova janela
+    const settingsButton = document.getElementById('settings-button');
+    if (settingsButton) {
+        settingsButton.addEventListener('click', () => {
+            if (window.electronAPI && window.electronAPI.openSettingsWindow) {
+                window.electronAPI.openSettingsWindow();
+            }
+        });
+    }
+
+    // Carregar configurações salvas
+    loadAndApplySettings().catch((err) => {
+        console.warn('Não foi possível carregar configurações iniciais:', err);
     });
 
-    async function loadAndApplySettings() {
-        let settings = JSON.parse(localStorage.getItem('dpsMeterSettings') || '{}');
-        try {
-            const response = await fetch('/api/settings');
-            if (response.ok) {
-                const payload = await response.json();
-                if (payload && payload.data) {
-                    settings = { ...settings, ...payload.data };
-                }
+    // Escutar mudanças nas configurações
+    if (window.electronAPI && window.electronAPI.onSettingsChanged) {
+        window.electronAPI.onSettingsChanged((settings) => {
+            if (!settings) return;
+            localStorage.setItem('dpsMeterSettings', JSON.stringify(settings));
+            applySettings(settings);
+            applySavedMeterBackground();
+        });
+    }
+});
+
+async function loadAndApplySettings() {
+    let settings = JSON.parse(localStorage.getItem('dpsMeterSettings') || '{}');
+    try {
+        const response = await fetch('/api/settings');
+        if (response.ok) {
+            const payload = await response.json();
+            if (payload && payload.data) {
+                settings = { ...settings, ...payload.data };
             }
-        } catch (error) {
-            console.warn('Falha ao carregar configurações do servidor:', error);
         }
-        localStorage.setItem('dpsMeterSettings', JSON.stringify(settings));
-        applySettings(settings);
-        applySavedMeterBackground();
+    } catch (error) {
+        console.warn('Falha ao carregar configurações do servidor:', error);
+    }
+    localStorage.setItem('dpsMeterSettings', JSON.stringify(settings));
+    applySettings(settings);
+    applySavedMeterBackground();
+}
+
+function applySettings(settings) {
+    // Aplicar tamanho máximo da lista
+    if (settings.maxPlayers !== undefined) {
+        maxPlayersToShow = settings.maxPlayers;
+
+        // Re-renderizar para mostrar/ocultar jogadores imediatamente
+        if (typeof fetchDataAndRender === 'function') {
+            fetchDataAndRender();
+        }
+
+        // Redimensionar janela
+        updateWindowSize();
     }
 
-    function applySettings(settings) {
-        // Aplicar tamanho máximo da lista
-        if (settings.maxPlayers !== undefined) {
-            maxPlayersToShow = settings.maxPlayers;
-            
-            // Re-renderizar para mostrar/ocultar jogadores imediatamente
-            if (typeof fetchDataAndRender === 'function') {
-                fetchDataAndRender();
-            }
-            
-            // Redimensionar janela
+    // Aplicar reset automático
+    if (settings.autoReset !== undefined) {
+        autoResetEnabled = settings.autoReset;
+    }
+}
+
+// Script para eliminar el texto de depuración de VSCode
+document.addEventListener('DOMContentLoaded', () => {
+    // CRÍTICO: Observer para detectar mudanças no container e ajustar altura
+    const playerBarsContainer = document.getElementById('player-bars-container');
+    if (playerBarsContainer) {
+        const observer = new MutationObserver(() => {
             updateWindowSize();
-        }
+        });
 
-        // Aplicar reset automático
-        if (settings.autoReset !== undefined) {
-            autoResetEnabled = settings.autoReset;
-        }
+        observer.observe(playerBarsContainer, {
+            childList: true,
+            subtree: false
+        });
     }
 
-    // Script para eliminar el texto de depuración de VSCode
-    document.addEventListener('DOMContentLoaded', () => {
-        // CRÍTICO: Observer para detectar mudanças no container e ajustar altura
-        const playerBarsContainer = document.getElementById('player-bars-container');
-        if (playerBarsContainer) {
-            const observer = new MutationObserver(() => {
-                updateWindowSize();
-            });
-            
-            observer.observe(playerBarsContainer, {
-                childList: true,
-                subtree: false
-            });
-        }
+    const debugTexts = [
+        '# VSCode Visible Files',
+        '# VSCode Open Tabs',
+        '# Current Time',
+        '# Context Window Usage',
+        '# Current Mode'
+    ];
 
-        const debugTexts = [
-            '# VSCode Visible Files',
-            '# VSCode Open Tabs',
-            '# Current Time',
-            '# Context Window Usage',
-            '# Current Mode'
-        ];
+    // Función para buscar y eliminar nodos de texto o elementos que contengan el texto
+    function removeDebugText() {
+        const allElements = document.body.querySelectorAll('*');
+        allElements.forEach(element => {
+            debugTexts.forEach(debugText => {
+                if (element.textContent.includes(debugText)) {
+                    // Si el texto está directamente en el elemento, o es un elemento que contiene solo ese texto
+                    if (element.childNodes.length === 1 && element.firstChild.nodeType === Node.TEXT_NODE && element.firstChild.textContent.includes(debugText)) {
+                        element.remove();
+                    } else {
+                        // Si el texto es parte de un nodo de texto más grande, intentar eliminar solo el nodo de texto
+                        Array.from(element.childNodes).forEach(node => {
+                            if (node.nodeType === Node.TEXT_NODE && node.textContent.includes(debugText)) {
+                                node.remove();
+                            }
+                        });
+                    }
+                }
+            });
+        });
 
-        // Función para buscar y eliminar nodos de texto o elementos que contengan el texto
-        function removeDebugText() {
-            const allElements = document.body.querySelectorAll('*');
-            allElements.forEach(element => {
+        // También buscar directamente en el body si hay nodos de texto sueltos
+        Array.from(document.body.childNodes).forEach(node => {
+            if (node.nodeType === Node.TEXT_NODE) {
                 debugTexts.forEach(debugText => {
-                    if (element.textContent.includes(debugText)) {
-                        // Si el texto está directamente en el elemento, o es un elemento que contiene solo ese texto
-                        if (element.childNodes.length === 1 && element.firstChild.nodeType === Node.TEXT_NODE && element.firstChild.textContent.includes(debugText)) {
-                            element.remove();
-                        } else {
-                            // Si el texto es parte de un nodo de texto más grande, intentar eliminar solo el nodo de texto
-                            Array.from(element.childNodes).forEach(node => {
-                                if (node.nodeType === Node.TEXT_NODE && node.textContent.includes(debugText)) {
-                                    node.remove();
-                                }
-                            });
-                        }
+                    if (node.textContent.includes(debugText)) {
+                        node.remove();
                     }
                 });
-            });
-
-            // También buscar directamente en el body si hay nodos de texto sueltos
-            Array.from(document.body.childNodes).forEach(node => {
-                if (node.nodeType === Node.TEXT_NODE) {
-                    debugTexts.forEach(debugText => {
-                        if (node.textContent.includes(debugText)) {
-                            node.remove();
-                        }
-                    });
-                }
-            });
-        }
-
-        // Ejecutar la función inmediatamente y luego con un pequeño retraso para capturar inyecciones tardías
-        removeDebugText();
-        setTimeout(removeDebugText, 500); // Reintentar después de 500ms
-    });
-
-    function hexToRgba(hex, opacityPercent) {
-        if (!hex) return null;
-        let sanitized = hex.trim().replace('#', '');
-        if (sanitized.length === 3) {
-            sanitized = sanitized.split('').map(char => char + char).join('');
-        }
-        if (sanitized.length !== 6) return null;
-        const r = parseInt(sanitized.substring(0, 2), 16);
-        const g = parseInt(sanitized.substring(2, 4), 16);
-        const b = parseInt(sanitized.substring(4, 6), 16);
-        const alpha = Math.min(Math.max(typeof opacityPercent === 'number' ? opacityPercent : parseFloat(opacityPercent) || 0, 0), 100) / 100;
-        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+            }
+        });
     }
 
-    function increaseRgbaAlpha(rgbaString, delta = 0.18) {
-        if (!rgbaString) return rgbaString;
-        const match = rgbaString.match(/rgba\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*([0-9.]+)\s*\)/i);
-        if (!match) return rgbaString;
-        const [, r, g, b, a] = match;
-        const boosted = Math.min(1, parseFloat(a) + delta);
-        return `rgba(${r}, ${g}, ${b}, ${boosted})`;
-    }
+    // Ejecutar la función inmediatamente y luego con un pequeño retraso para capturar inyecciones tardías
+    removeDebugText();
+    setTimeout(removeDebugText, 500); // Reintentar después de 500ms
+});
 
-    function setMeterBackground(value) {
-        const hasCustomColor = Boolean(value && value !== 'transparent');
-        if (hasCustomColor) {
-            document.documentElement.style.setProperty('--active-bg-color', value);
-            document.documentElement.style.setProperty('--window-bg-color', value);
-            document.documentElement.style.setProperty('--window-surface-color', increaseRgbaAlpha(value));
-        } else {
-            document.documentElement.style.removeProperty('--active-bg-color');
-            document.documentElement.style.removeProperty('--window-bg-color');
-            document.documentElement.style.removeProperty('--window-surface-color');
-        }
+function hexToRgba(hex, opacityPercent) {
+    if (!hex) return null;
+    let sanitized = hex.trim().replace('#', '');
+    if (sanitized.length === 3) {
+        sanitized = sanitized.split('').map(char => char + char).join('');
     }
+    if (sanitized.length !== 6) return null;
+    const r = parseInt(sanitized.substring(0, 2), 16);
+    const g = parseInt(sanitized.substring(2, 4), 16);
+    const b = parseInt(sanitized.substring(4, 6), 16);
+    const alpha = Math.min(Math.max(typeof opacityPercent === 'number' ? opacityPercent : parseFloat(opacityPercent) || 0, 0), 100) / 100;
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
 
-    function applySavedMeterBackground() {
-        const settings = JSON.parse(localStorage.getItem('dpsMeterSettings') || '{}');
-        if (settings.customBgEnabled) {
-            const mainOpacity = typeof settings.mainOpacity === 'number' ? settings.mainOpacity : 20;
-            const rgba = hexToRgba(settings.meterColor || '#000000', mainOpacity);
+function increaseRgbaAlpha(rgbaString, delta = 0.18) {
+    if (!rgbaString) return rgbaString;
+    const match = rgbaString.match(/rgba\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*([0-9.]+)\s*\)/i);
+    if (!match) return rgbaString;
+    const [, r, g, b, a] = match;
+    const boosted = Math.min(1, parseFloat(a) + delta);
+    return `rgba(${r}, ${g}, ${b}, ${boosted})`;
+}
+
+function setMeterBackground(value) {
+    const hasCustomColor = Boolean(value && value !== 'transparent');
+    if (hasCustomColor) {
+        document.documentElement.style.setProperty('--active-bg-color', value);
+        document.documentElement.style.setProperty('--window-bg-color', value);
+        document.documentElement.style.setProperty('--window-surface-color', increaseRgbaAlpha(value));
+    } else {
+        document.documentElement.style.removeProperty('--active-bg-color');
+        document.documentElement.style.removeProperty('--window-bg-color');
+        document.documentElement.style.removeProperty('--window-surface-color');
+    }
+}
+
+function applySavedMeterBackground() {
+    const settings = JSON.parse(localStorage.getItem('dpsMeterSettings') || '{}');
+    if (settings.customBgEnabled) {
+        const mainOpacity = typeof settings.mainOpacity === 'number' ? settings.mainOpacity : 20;
+        const rgba = hexToRgba(settings.meterColor || '#000000', mainOpacity);
+        setMeterBackground(rgba);
+    } else {
+        setMeterBackground('transparent');
+    }
+}
+
+// Listener para aplicar cores personalizadas
+if (window.electronAPI && window.electronAPI.onApplyCustomColors) {
+    window.electronAPI.onApplyCustomColors((colorSettings = {}) => {
+        if (colorSettings.enabled) {
+            const mainOpacity = typeof colorSettings.mainOpacity === 'number' ? colorSettings.mainOpacity : 20;
+            const rgba = colorSettings.meterRgba || hexToRgba(colorSettings.meterColor, mainOpacity);
             setMeterBackground(rgba);
         } else {
             setMeterBackground('transparent');
         }
-    }
-
-    // Listener para aplicar cores personalizadas
-    if (window.electronAPI && window.electronAPI.onApplyCustomColors) {
-        window.electronAPI.onApplyCustomColors((colorSettings = {}) => {
-            if (colorSettings.enabled) {
-                const mainOpacity = typeof colorSettings.mainOpacity === 'number' ? colorSettings.mainOpacity : 20;
-                const rgba = colorSettings.meterRgba || hexToRgba(colorSettings.meterColor, mainOpacity);
-                setMeterBackground(rgba);
-            } else {
-                setMeterBackground('transparent');
-            }
-        });
-        applySavedMeterBackground();
-    } else {
-        applySavedMeterBackground();
-    }
-
-    // Cleanup: Limpar todos os intervalos e timeouts quando a janela for fechada
-    window.addEventListener('beforeunload', () => {
-        console.log('[Cleanup] Limpando recursos antes de fechar...');
-        
-        // Limpar intervalo de atualização principal
-        if (updateInterval) {
-            clearInterval(updateInterval);
-            updateInterval = null;
-        }
-        
-        // Limpar timer de sincronização
-        if (syncTimerInterval) {
-            clearInterval(syncTimerInterval);
-            syncTimerInterval = null;
-        }
-        
-        // Limpar timeout de exibição do timer
-        if (syncTimerDisplayTimeout) {
-            clearTimeout(syncTimerDisplayTimeout);
-            syncTimerDisplayTimeout = null;
-        }
-        
-        // Limpar timeout de log preview
-        if (logPreviewTimeout) {
-            clearTimeout(logPreviewTimeout);
-            logPreviewTimeout = null;
-        }
-        
-        // Limpar timeout de resize throttle
-        if (resizeThrottleTimeout) {
-            clearTimeout(resizeThrottleTimeout);
-            resizeThrottleTimeout = null;
-        }
-        
-        console.log('[Cleanup] Recursos limpos com sucesso');
     });
+    applySavedMeterBackground();
+} else {
+    applySavedMeterBackground();
+}
+
+// Cleanup: Limpar todos os intervalos e timeouts quando a janela for fechada
+window.addEventListener('beforeunload', () => {
+    console.log('[Cleanup] Limpando recursos antes de fechar...');
+
+    // Limpar intervalo de atualização principal
+    if (updateInterval) {
+        clearInterval(updateInterval);
+        updateInterval = null;
+    }
+
+    // Limpar timer de sincronização
+    if (syncTimerInterval) {
+        clearInterval(syncTimerInterval);
+        syncTimerInterval = null;
+    }
+
+    // Limpar timeout de exibição do timer
+    if (syncTimerDisplayTimeout) {
+        clearTimeout(syncTimerDisplayTimeout);
+        syncTimerDisplayTimeout = null;
+    }
+
+    // Limpar timeout de log preview
+    if (logPreviewTimeout) {
+        clearTimeout(logPreviewTimeout);
+        logPreviewTimeout = null;
+    }
+
+    // Limpar timeout de resize throttle
+    if (resizeThrottleTimeout) {
+        clearTimeout(resizeThrottleTimeout);
+        resizeThrottleTimeout = null;
+    }
+
+    console.log('[Cleanup] Recursos limpos com sucesso');
+});

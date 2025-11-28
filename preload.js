@@ -26,6 +26,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     onGlobalShortcutF10: (callback) => ipcRenderer.on('global-shortcut-f10', () => callback()),
     // Abrir URL externa no navegador padrão
     openExternal: (url) => ipcRenderer.send('open-external', url),
+    // Controlar zoom nativo do Electron
+    setZoom: (zoomFactor) => ipcRenderer.send('set-zoom', zoomFactor),
 });
 
 window.addEventListener('DOMContentLoaded', () => {

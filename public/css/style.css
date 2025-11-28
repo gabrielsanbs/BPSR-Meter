@@ -20,7 +20,6 @@ body {
     transition: none !important;
     isolation: isolate;
     will-change: transform;
-    contain: layout style paint;
     backface-visibility: hidden;
     transform-origin: top left;
     /* Para zoom funcionar corretamente */
@@ -176,24 +175,21 @@ body {
 }
 
 body {
-    /* CORREÇÃO: PNG 1x1 transparente força compositor correto, fundo fica transparente */
-    background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==');
-    background-repeat: repeat;
-    background-color: transparent;
-    /* Transparente para ver através */
+    background: transparent;
     color: var(--text-primary);
     font-family: var(--font-main);
     line-height: 1.4;
     margin: 0;
     padding: 0;
+    /* Eliminado el padding para evitar desbordamiento */
     overflow-x: hidden;
+    /* Ocultar solo la barra de desplazamiento horizontal */
     overflow-y: hidden;
+    /* Ocultar la barra de desplazamiento vertical */
     border: none;
+    /* Eliminado el borde de la ventana */
     -webkit-app-region: no-drag;
-
-    /* Melhorar renderização */
-    -webkit-backface-visibility: hidden;
-    backface-visibility: hidden;
+    /* Deshabilita el arrastre por defecto en el body */
 }
 
 body.locked {
@@ -301,17 +297,9 @@ input[type="text"] {
     height: 60px;
     width: 100%;
     position: relative;
-    overflow: visible;
-    /* CORREÇÃO: visible previne clipping da progress bar */
+    overflow: hidden;
     -webkit-backdrop-filter: blur(8px);
     backdrop-filter: blur(8px);
-
-    /* CORREÇÃO: Prevenir bordas pretas em cantos arredondados */
-    isolation: isolate;
-    transform: translateZ(0);
-    -webkit-transform: translateZ(0);
-    will-change: transform;
-    /* Força layer de GPU */
 }
 
 .progress-fill {
@@ -320,10 +308,6 @@ input[type="text"] {
     width: 0%;
     background: rgba(219, 104, 121, 0.2);
     transition: width 0.3s ease-out;
-    border-radius: 7px;
-    /* CORREÇÃO: Ligeiramente menor que o pai para evitar overflow */
-    transform: translateZ(0);
-    -webkit-transform: translateZ(0);
 }
 
 .bar-content {
@@ -841,20 +825,14 @@ input[type="text"] {
 }
 
 .player-bar {
-    background-color: rgba(32, 36, 51, 0.85);
+    background-color: transparent;
     border-radius: 8px;
     height: 55px;
     position: relative;
-    overflow: visible;
-    /* CORREÇÃO: previne clipping */
+    overflow: hidden;
     border: 1px solid rgba(255, 255, 255, 0.12);
     -webkit-backdrop-filter: blur(6px);
     backdrop-filter: blur(6px);
-    /* CORREÇÃO: Prevenir bordas pretas */
-    isolation: isolate;
-    transform: translateZ(0);
-    -webkit-transform: translateZ(0);
-    will-change: transform;
 }
 
 .progress-fill {
@@ -862,12 +840,9 @@ input[type="text"] {
     left: 0;
     top: 0;
     height: 100%;
-    border-radius: 7px;
+    border-radius: 8px;
     transition: width 0.4s ease-out;
     z-index: 1;
-    /* CORREÇÃO: Prevenir bordas pretas no progress bar */
-    transform: translateZ(0);
-    -webkit-transform: translateZ(0);
 }
 
 .player-bar[data-rank="1"] .progress-fill {
