@@ -83,25 +83,25 @@ logToFile('==== INÍCIO DO ELECTRON ====');
 // Funções para gerenciar polling de posição do mouse
 function startMousePositionPolling() {
     if (mouseCheckInterval) return;
-    
+
     mouseCheckInterval = setInterval(() => {
         if (!mainWindow || !isLocked) return;
-        
+
         try {
             const cursorPos = screen.getCursorScreenPoint();
             const windowBounds = mainWindow.getBounds();
-            
+
             // Verificar se cursor está dentro dos bounds da janela
-            const isInsideWindow = cursorPos.x >= windowBounds.x && 
-                                  cursorPos.x <= windowBounds.x + windowBounds.width &&
-                                  cursorPos.y >= windowBounds.y && 
-                                  cursorPos.y <= windowBounds.y + windowBounds.height;
-            
+            const isInsideWindow = cursorPos.x >= windowBounds.x &&
+                cursorPos.x <= windowBounds.x + windowBounds.width &&
+                cursorPos.y >= windowBounds.y &&
+                cursorPos.y <= windowBounds.y + windowBounds.height;
+
             if (isInsideWindow) {
                 // Cursor está sobre a janela
                 const relativeY = cursorPos.y - windowBounds.y;
                 const isOverHeader = relativeY <= HEADER_HEIGHT;
-                
+
                 if (isOverHeader) {
                     // Mouse sobre o header: permitir eventos
                     mainWindow.setIgnoreMouseEvents(false);
@@ -153,7 +153,7 @@ function promoteOverlayWindow(win, { focus = false } = {}) {
 // Prevenir efeitos de blur/focus que causam fundo preto
 function preventWindowBlur(win) {
     if (!win) return;
-    
+
     win.on('blur', () => {
         if (!win.isDestroyed()) {
             setTimeout(() => {
@@ -176,7 +176,7 @@ function preventWindowBlur(win) {
                 win.setBackgroundColor('#00000000');
                 return 0;
             });
-            
+
             // Hook WM_NCACTIVATE para prevenir efeitos na área não-cliente
             win.hookWindowMessage(0x0086, () => {
                 return 0;
@@ -200,7 +200,7 @@ function registerF10Shortcut() {
     } else {
         logToFile('Atalho global F10 registrado com sucesso');
     }
-    
+
     return ret;
 }
 
@@ -210,203 +210,203 @@ function ensureF10Registration() {
     if (!mainWindow || mainWindow.isDestroyed()) {
         return;
     }
-    
+
     if (!globalShortcut.isRegistered('F10')) {
         logToFile('F10 não está mais registrado, tentando re-registrar...');
         registerF10Shortcut();
     }
 }
 
-    // Função para verificar se uma porta está em uso
-    const checkPort = (port) => {
-        return new Promise((resolve) => {
-            const server = net.createServer();
-            server.once('error', () => resolve(false));
-            server.once('listening', () => {
-                server.close(() => resolve(true));
-            });
-            server.listen(port);
+// Função para verificar se uma porta está em uso
+const checkPort = (port) => {
+    return new Promise((resolve) => {
+        const server = net.createServer();
+        server.once('error', () => resolve(false));
+        server.once('listening', () => {
+            server.close(() => resolve(true));
         });
-    };
+        server.listen(port);
+    });
+};
 
-    async function findAvailablePort() {
-        let port = server_port;
-        while (true) {
-            if (await checkPort(port)) {
-                return port;
-            }
-            console.warn(`Porta ${port} já está em uso, tentando próxima...`);
-            port++;
+async function findAvailablePort() {
+    let port = server_port;
+    while (true) {
+        if (await checkPort(port)) {
+            return port;
         }
+        console.warn(`Porta ${port} já está em uso, tentando próxima...`);
+        port++;
     }
+}
 
-    // Função para matar o processo que está usando uma porta específica
-    async function killProcessUsingPort(port) {
-        return new Promise((resolve) => {
-            exec(`netstat -ano | findstr :${port}`, (error, stdout, stderr) => {
-                if (stdout) {
-                    const lines = stdout.split('\n').filter(line => line.includes('LISTENING'));
-                    if (lines.length > 0) {
-                        const pid = lines[0].trim().split(/\s+/).pop();
-                        if (pid) {
-                            console.log(`Matando processo ${pid} usando porta ${port}...`);
-                            exec(`taskkill /PID ${pid} /F`, (killError, killStdout, killStderr) => {
-                                if (killError) {
-                                    console.error(`Erro ao matar processo ${pid}: ${killError.message}`);
-                                } else {
-                                    console.log(`Processo ${pid} encerrado com sucesso.`);
-                                }
-                                resolve();
-                            });
-                        } else {
+// Função para matar o processo que está usando uma porta específica
+async function killProcessUsingPort(port) {
+    return new Promise((resolve) => {
+        exec(`netstat -ano | findstr :${port}`, (error, stdout, stderr) => {
+            if (stdout) {
+                const lines = stdout.split('\n').filter(line => line.includes('LISTENING'));
+                if (lines.length > 0) {
+                    const pid = lines[0].trim().split(/\s+/).pop();
+                    if (pid) {
+                        console.log(`Matando processo ${pid} usando porta ${port}...`);
+                        exec(`taskkill /PID ${pid} /F`, (killError, killStdout, killStderr) => {
+                            if (killError) {
+                                console.error(`Erro ao matar processo ${pid}: ${killError.message}`);
+                            } else {
+                                console.log(`Processo ${pid} encerrado com sucesso.`);
+                            }
                             resolve();
-                        }
+                        });
                     } else {
                         resolve();
                     }
                 } else {
                     resolve();
                 }
-            });
-        });
-    }
-
-    async function createWindow() {
-        logToFile('Tentando encerrar processos na porta 8989...');
-        await killProcessUsingPort(8989);
-
-        server_port = await findAvailablePort();
-        logToFile('Porta disponível encontrada: ' + server_port);
-
-        mainWindow = new BrowserWindow({
-            width: 620, // Ajustado para terminar no botão X
-            height: 600,
-            transparent: true,
-            frame: false,
-            alwaysOnTop: true,
-            resizable: false,
-            backgroundColor: '#00000000', // Transparente RGBA para evitar fundo preto
-            hasShadow: false, // Remover sombra que pode causar fundo preto
-            thickFrame: false, // Remove frame grosso do Windows
-            titleBarStyle: 'hidden', // Esconde barra de título
-            focusable: true, // SEMPRE true - nunca false
-            webPreferences: {
-                preload: path.join(__dirname, 'preload.js'),
-                nodeIntegration: false,
-                contextIsolation: true,
-                backgroundThrottling: false, // Evitar throttling que causa re-rendering
-                transparent: true, // Forçar transparência
-            },
-            icon: path.join(__dirname, 'icon.ico'),
-        });
-
-        // Remove menu bar para evitar bordas/fundos indesejados
-        mainWindow.setMenuBarVisibility(false);
-
-        // Configurar estado inicial: cadeado ABERTO = permite eventos (pode arrastar)
-        mainWindow.setIgnoreMouseEvents(false);
-        // REMOVIDO: setMovable() - drag será manual via JavaScript
-
-        promoteOverlayWindow(mainWindow);
-
-        // Prevenir efeitos de blur/focus
-        preventWindowBlur(mainWindow);
-
-        promoteOverlayWindow(mainWindow);
-
-        mainWindow.once('ready-to-show', () => {
-            promoteOverlayWindow(mainWindow, { focus: true });
-        });
-
-        mainWindow.on('show', () => {
-            promoteOverlayWindow(mainWindow);
-            if (lastColorSettings) {
-                sendCustomColorsToWindow(mainWindow, lastColorSettings);
+            } else {
+                resolve();
             }
-            // Tentar re-registrar F10 quando a janela for mostrada novamente
-            ensureF10Registration();
         });
-        mainWindow.on('focus', () => {
-            promoteOverlayWindow(mainWindow);
-            if (lastColorSettings) {
-                sendCustomColorsToWindow(mainWindow, lastColorSettings);
-            }
-            // Tentar re-registrar F10 quando a janela receber foco
-            ensureF10Registration();
-        });
-        mainWindow.on('restore', () => promoteOverlayWindow(mainWindow, { focus: true }));
+    });
+}
 
-        // Iniciar o servidor Node.js, passando a porta como argumento
+async function createWindow() {
+    logToFile('Tentando encerrar processos na porta 8989...');
+    await killProcessUsingPort(8989);
 
-        // Determinar caminho absoluto para server.js de acordo com ambiente
-        let serverPath;
-        if (process.defaultApp || process.env.NODE_ENV === 'development') {
-            // Modo desenvolvimento
-            serverPath = path.join(__dirname, 'server.js');
-        } else {
-            // Modo empacotado: usar app.getAppPath() para acessar dentro do asar
-            serverPath = path.join(app.getAppPath(), 'server.js');
+    server_port = await findAvailablePort();
+    logToFile('Porta disponível encontrada: ' + server_port);
+
+    mainWindow = new BrowserWindow({
+        width: 620,
+        height: 600,
+        transparent: true,
+        frame: false,
+        alwaysOnTop: true,
+        resizable: false,
+        backgroundColor: '#00000000', // Transparente - PNG no CSS resolve software rendering
+        hasShadow: false,
+        thickFrame: false, // Remove frame grosso do Windows
+        titleBarStyle: 'hidden', // Esconde barra de título
+        focusable: true, // SEMPRE true - nunca false
+        webPreferences: {
+            preload: path.join(__dirname, 'preload.js'),
+            nodeIntegration: false,
+            contextIsolation: true,
+            backgroundThrottling: false, // Evitar throttling que causa re-rendering
+            transparent: true, // Forçar transparência
+        },
+        icon: path.join(__dirname, 'icon.ico'),
+    });
+
+    // Remove menu bar para evitar bordas/fundos indesejados
+    mainWindow.setMenuBarVisibility(false);
+
+    // Configurar estado inicial: cadeado ABERTO = permite eventos (pode arrastar)
+    mainWindow.setIgnoreMouseEvents(false);
+    // REMOVIDO: setMovable() - drag será manual via JavaScript
+
+    promoteOverlayWindow(mainWindow);
+
+    // Prevenir efeitos de blur/focus
+    preventWindowBlur(mainWindow);
+
+    promoteOverlayWindow(mainWindow);
+
+    mainWindow.once('ready-to-show', () => {
+        promoteOverlayWindow(mainWindow, { focus: true });
+    });
+
+    mainWindow.on('show', () => {
+        promoteOverlayWindow(mainWindow);
+        if (lastColorSettings) {
+            sendCustomColorsToWindow(mainWindow, lastColorSettings);
         }
-        logToFile('Iniciando server.js na porta ' + server_port + ' com caminho: ' + serverPath);
-        logToFile('Node.js versão: ' + process.version);
-        logToFile('Electron versão: ' + process.versions.electron);
-        logToFile('Plataforma: ' + process.platform + ' ' + process.arch);
-        
-        // Verificar se o arquivo existe
-        if (!fs.existsSync(serverPath)) {
-            logToFile('ERRO CRÍTICO: server.js não encontrado em: ' + serverPath);
-            const errorHtml = `
+        // Tentar re-registrar F10 quando a janela for mostrada novamente
+        ensureF10Registration();
+    });
+    mainWindow.on('focus', () => {
+        promoteOverlayWindow(mainWindow);
+        if (lastColorSettings) {
+            sendCustomColorsToWindow(mainWindow, lastColorSettings);
+        }
+        // Tentar re-registrar F10 quando a janela receber foco
+        ensureF10Registration();
+    });
+    mainWindow.on('restore', () => promoteOverlayWindow(mainWindow, { focus: true }));
+
+    // Iniciar o servidor Node.js, passando a porta como argumento
+
+    // Determinar caminho absoluto para server.js de acordo com ambiente
+    let serverPath;
+    if (process.defaultApp || process.env.NODE_ENV === 'development') {
+        // Modo desenvolvimento
+        serverPath = path.join(__dirname, 'server.js');
+    } else {
+        // Modo empacotado: usar app.getAppPath() para acessar dentro do asar
+        serverPath = path.join(app.getAppPath(), 'server.js');
+    }
+    logToFile('Iniciando server.js na porta ' + server_port + ' com caminho: ' + serverPath);
+    logToFile('Node.js versão: ' + process.version);
+    logToFile('Electron versão: ' + process.versions.electron);
+    logToFile('Plataforma: ' + process.platform + ' ' + process.arch);
+
+    // Verificar se o arquivo existe
+    if (!fs.existsSync(serverPath)) {
+        logToFile('ERRO CRÍTICO: server.js não encontrado em: ' + serverPath);
+        const errorHtml = `
                 <h1 style="color:red;">Erro Crítico: Arquivo server.js não encontrado</h1>
                 <p>Caminho esperado: <code>${serverPath}</code></p>
                 <p>Reinstale o programa.</p>
             `;
-            mainWindow.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(errorHtml));
-            return;
-        }
+        mainWindow.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(errorHtml));
+        return;
+    }
 
-        // Usar fork para iniciar o servidor como processo filho
-        const { fork } = require('child_process');
-        logToFile('Iniciando fork do processo Node.js...');
-        
-        try {
-            // Passar userData via variável de ambiente para persistir entre updates
-            const userData = app.getPath('userData');
-            logToFile('Diretório userData (persistente): ' + userData);
-            
-            serverProcess = fork(serverPath, [server_port], {
-                stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
-                execArgv: [],
-                env: { 
-                    ...process.env, 
-                    ELECTRON_RUN_AS_NODE: '1',
-                    BPSR_USER_DATA_DIR: userData // Passa o userData para o server.js
-                }
-            });
-            logToFile('Processo fork iniciado com PID: ' + serverProcess.pid);
-        } catch (forkError) {
-            logToFile('ERRO CRÍTICO ao fazer fork: ' + forkError.message);
-            logToFile('Stack: ' + forkError.stack);
-            const errorHtml = `
+    // Usar fork para iniciar o servidor como processo filho
+    const { fork } = require('child_process');
+    logToFile('Iniciando fork do processo Node.js...');
+
+    try {
+        // Passar userData via variável de ambiente para persistir entre updates
+        const userData = app.getPath('userData');
+        logToFile('Diretório userData (persistente): ' + userData);
+
+        serverProcess = fork(serverPath, [server_port], {
+            stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
+            execArgv: [],
+            env: {
+                ...process.env,
+                ELECTRON_RUN_AS_NODE: '1',
+                BPSR_USER_DATA_DIR: userData // Passa o userData para o server.js
+            }
+        });
+        logToFile('Processo fork iniciado com PID: ' + serverProcess.pid);
+    } catch (forkError) {
+        logToFile('ERRO CRÍTICO ao fazer fork: ' + forkError.message);
+        logToFile('Stack: ' + forkError.stack);
+        const errorHtml = `
                 <h1 style="color:red;">Erro ao iniciar processo Node.js</h1>
                 <p>Erro: <code>${forkError.message}</code></p>
                 <p>Execute como Administrador e verifique se o antivírus não está bloqueando.</p>
             `;
-            mainWindow.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(errorHtml));
-            return;
-        }
+        mainWindow.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(errorHtml));
+        return;
+    }
 
-        // Carregar ícone como base64
-        let iconBase64 = '';
-        try {
-            const iconPath = path.join(__dirname, 'icon.png');
-            const iconBuffer = fs.readFileSync(iconPath);
-            iconBase64 = `data:image/png;base64,${iconBuffer.toString('base64')}`;
-        } catch (e) {
-            logToFile('Erro ao carregar ícone: ' + e.message);
-        }
+    // Carregar ícone como base64
+    let iconBase64 = '';
+    try {
+        const iconPath = path.join(__dirname, 'icon.png');
+        const iconBuffer = fs.readFileSync(iconPath);
+        iconBase64 = `data:image/png;base64,${iconBuffer.toString('base64')}`;
+    } catch (e) {
+        logToFile('Erro ao carregar ícone: ' + e.message);
+    }
 
-        // Mostrar tela de carregamento
-        const loadingHtml = `
+    // Mostrar tela de carregamento
+    const loadingHtml = `
             <html>
             <head>
                 <style>
@@ -470,15 +470,15 @@ function ensureF10Registration() {
             </body>
             </html>
         `;
-        mainWindow.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(loadingHtml));
-        
-        // Variables para controlar el arranque del servidor
-        if (typeof createWindow.serverLoaded === 'undefined') createWindow.serverLoaded = false;
-        if (typeof createWindow.serverTimeout === 'undefined') createWindow.serverTimeout = null;
-        createWindow.serverLoaded = false;
-        createWindow.serverTimeout = setTimeout(() => {
-            if (!createWindow.serverLoaded) {
-               const errorHtml = `
+    mainWindow.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(loadingHtml));
+
+    // Variables para controlar el arranque del servidor
+    if (typeof createWindow.serverLoaded === 'undefined') createWindow.serverLoaded = false;
+    if (typeof createWindow.serverTimeout === 'undefined') createWindow.serverTimeout = null;
+    createWindow.serverLoaded = false;
+    createWindow.serverTimeout = setTimeout(() => {
+        if (!createWindow.serverLoaded) {
+            const errorHtml = `
                     <h1 style="color:red; font-size:2em;">
                         Erro: Servidor não respondeu a tempo (15s)
                     </h1>
@@ -515,55 +515,55 @@ function ensureF10Registration() {
                         </p>
                     </h2>
                 `;
-                logToFile('ERRO: O servidor não respondeu a tempo após 15 segundos.');
-                logToFile('Possíveis causas: porta em uso, Npcap não instalado, falta de permissões, antivírus bloqueando.');
-                mainWindow.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(errorHtml)
-                );
-            }
-        }, 15000); // 15 segundos de espera (aumentado de 10s)
+            logToFile('ERRO: O servidor não respondeu a tempo após 15 segundos.');
+            logToFile('Possíveis causas: porta em uso, Npcap não instalado, falta de permissões, antivírus bloqueando.');
+            mainWindow.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(errorHtml)
+            );
+        }
+    }, 15000); // 15 segundos de espera (aumentado de 10s)
 
-        // Handler de erros não capturados do processo
-        serverProcess.on('error', (error) => {
-            logToFile('ERRO no processo do servidor: ' + error.message);
-            logToFile('Stack: ' + error.stack);
-            const errorHtml = `
+    // Handler de erros não capturados do processo
+    serverProcess.on('error', (error) => {
+        logToFile('ERRO no processo do servidor: ' + error.message);
+        logToFile('Stack: ' + error.stack);
+        const errorHtml = `
                 <h1 style="color:red;">Erro no processo do servidor</h1>
                 <p>Erro: <code>${error.message}</code></p>
                 <p>Verifique o log em <code>%AppData%\\bpsr-meter\\iniciar_log.txt</code></p>
             `;
-            mainWindow.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(errorHtml));
-        });
+        mainWindow.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(errorHtml));
+    });
 
-        serverProcess.stdout.on('data', (data) => {
-            const output = data.toString();
-            logToFile('server stdout: ' + output);
-            
-            // Detectar mensagem de sucesso
-            const match = output.match(/Servidor web iniciado en (http:\/\/localhost:\d+)/);
-            if (match && match[1]) {
-                serverUrl = match[1]; // Armazenar globalmente
-                logToFile('✓ Servidor iniciado com sucesso! Carregando URL: ' + serverUrl + '/index.html');
-                mainWindow.loadURL(`${serverUrl}/index.html`);
-                createWindow.serverLoaded = true;
-                clearTimeout(createWindow.serverTimeout);
-            }
-            
-            // Detectar outras mensagens importantes
-            if (output.includes('EADDRINUSE')) {
-                logToFile('⚠ DETECTADO: Porta já em uso!');
-            }
-            if (output.includes('Cannot find module')) {
-                logToFile('⚠ DETECTADO: Módulo faltando!');
-            }
-        });
-        serverProcess.stderr.on('data', (data) => {
-            const errorMsg = data.toString();
-            logToFile('server stderr: ' + errorMsg);
-            
-            // Detectar erros específicos
-            if (errorMsg.includes('EADDRINUSE')) {
-                logToFile(`ERRO CRÍTICO: Porta ${server_port} já está em uso por outro processo.`);
-                const errorHtml = `
+    serverProcess.stdout.on('data', (data) => {
+        const output = data.toString();
+        logToFile('server stdout: ' + output);
+
+        // Detectar mensagem de sucesso
+        const match = output.match(/Servidor web iniciado en (http:\/\/localhost:\d+)/);
+        if (match && match[1]) {
+            serverUrl = match[1]; // Armazenar globalmente
+            logToFile('✓ Servidor iniciado com sucesso! Carregando URL: ' + serverUrl + '/index.html');
+            mainWindow.loadURL(`${serverUrl}/index.html`);
+            createWindow.serverLoaded = true;
+            clearTimeout(createWindow.serverTimeout);
+        }
+
+        // Detectar outras mensagens importantes
+        if (output.includes('EADDRINUSE')) {
+            logToFile('⚠ DETECTADO: Porta já em uso!');
+        }
+        if (output.includes('Cannot find module')) {
+            logToFile('⚠ DETECTADO: Módulo faltando!');
+        }
+    });
+    serverProcess.stderr.on('data', (data) => {
+        const errorMsg = data.toString();
+        logToFile('server stderr: ' + errorMsg);
+
+        // Detectar erros específicos
+        if (errorMsg.includes('EADDRINUSE')) {
+            logToFile(`ERRO CRÍTICO: Porta ${server_port} já está em uso por outro processo.`);
+            const errorHtml = `
                     <h1 style="color:red; font-size:2em;">Erro: Porta ${server_port} em uso</h1>
                     <h2 style="color:orange; font-size:1.2em;">
                         <p>Outro programa já está usando esta porta.</p>
@@ -576,11 +576,11 @@ function ensureF10Registration() {
                         <p>Log: <code>%AppData%\\bpsr-meter\\iniciar_log.txt</code></p>
                     </h2>
                 `;
-                mainWindow.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(errorHtml));
-            } else if (errorMsg.includes('Cannot find module')) {
-                const moduleName = errorMsg.match(/Cannot find module '([^']+)'/)?.[1] || 'desconhecido';
-                logToFile(`ERRO CRÍTICO: Dependência faltando: ${moduleName}`);
-                const errorHtml = `
+            mainWindow.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(errorHtml));
+        } else if (errorMsg.includes('Cannot find module')) {
+            const moduleName = errorMsg.match(/Cannot find module '([^']+)'/)?.[1] || 'desconhecido';
+            logToFile(`ERRO CRÍTICO: Dependência faltando: ${moduleName}`);
+            const errorHtml = `
                     <h1 style="color:red; font-size:2em;">Erro: Dependência faltando</h1>
                     <h2 style="color:orange; font-size:1.2em;">
                         <p>Módulo não encontrado: <code>${moduleName}</code></p>
@@ -593,14 +593,14 @@ function ensureF10Registration() {
                         <p>Log: <code>%AppData%\\bpsr-meter\\iniciar_log.txt</code></p>
                     </h2>
                 `;
-                mainWindow.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(errorHtml));
-            }
-        });
-        serverProcess.on('close', (code) => {
-            logToFile('Processo do servidor encerrado com código ' + code);
-            if (code !== 0 && !createWindow.serverLoaded) {
-                logToFile('ERRO: O servidor terminou inesperadamente antes de iniciar.');
-                const errorHtml = `
+            mainWindow.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(errorHtml));
+        }
+    });
+    serverProcess.on('close', (code) => {
+        logToFile('Processo do servidor encerrado com código ' + code);
+        if (code !== 0 && !createWindow.serverLoaded) {
+            logToFile('ERRO: O servidor terminou inesperadamente antes de iniciar.');
+            const errorHtml = `
                     <h1 style="color:red; font-size:2em;">Erro: Servidor fechou inesperadamente</h1>
                     <h2 style="color:orange; font-size:1.2em;">
                         <p>Código de saída: ${code}</p>
@@ -619,58 +619,58 @@ function ensureF10Registration() {
                         <p>Log completo: <code>%AppData%\\bpsr-meter\\iniciar_log.txt</code></p>
                     </h2>
                 `;
-                mainWindow.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(errorHtml));
-            }
-        });
+            mainWindow.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(errorHtml));
+        }
+    });
 
-        /* Simplificado: agora usamos variáveis estáticas na função createWindow
-        let serverLoaded = false;
-        let serverTimeout = setTimeout(() => {
-            if (!serverLoaded) {
-                logToFile('ERRO: O servidor não respondeu a tempo.');
-                mainWindow.loadURL('data:text/html;charset=utf-8,' +
-                encodeURIComponent('<h2 style="color:red">Erro: O servidor não respondeu a tempo.<br>Revise iniciar_log.txt para mais detalhes.</h2>')
-                );
+    /* Simplificado: agora usamos variáveis estáticas na função createWindow
+    let serverLoaded = false;
+    let serverTimeout = setTimeout(() => {
+        if (!serverLoaded) {
+            logToFile('ERRO: O servidor não respondeu a tempo.');
+            mainWindow.loadURL('data:text/html;charset=utf-8,' +
+            encodeURIComponent('<h2 style="color:red">Erro: O servidor não respondeu a tempo.<br>Revise iniciar_log.txt para mais detalhes.</h2>')
+            );
 
-            }
-        }, 10000); // 10 segundos de espera
-        */
-        serverProcess.stdout.on('data', (data) => {
-            logToFile('server stdout: ' + data);
-            const match = data.toString().match(/Servidor web iniciado en (http:\/\/localhost:\d+)/);
-            if (match && match[1]) {
-                const serverUrl = match[1];
-                logToFile('Cargando URL en ventana: ' + serverUrl + '/index.html');
-                mainWindow.loadURL(`${serverUrl}/index.html`);
-                createWindow.serverLoaded = true;
-                clearTimeout(createWindow.serverTimeout);
-            }
-        });
+        }
+    }, 10000); // 10 segundos de espera
+    */
+    serverProcess.stdout.on('data', (data) => {
+        logToFile('server stdout: ' + data);
+        const match = data.toString().match(/Servidor web iniciado en (http:\/\/localhost:\d+)/);
+        if (match && match[1]) {
+            const serverUrl = match[1];
+            logToFile('Cargando URL en ventana: ' + serverUrl + '/index.html');
+            mainWindow.loadURL(`${serverUrl}/index.html`);
+            createWindow.serverLoaded = true;
+            clearTimeout(createWindow.serverTimeout);
+        }
+    });
 
-        serverProcess.stderr.on('data', (data) => {
-            logToFile('server stderr: ' + data);
-        });
+    serverProcess.stderr.on('data', (data) => {
+        logToFile('server stderr: ' + data);
+    });
 
-        serverProcess.on('close', (code) => {
-            logToFile('server process exited with code ' + code);
-        });
+    serverProcess.on('close', (code) => {
+        logToFile('server process exited with code ' + code);
+    });
 
-        mainWindow.on('closed', () => {
-            // Limpar intervalo de verificação de posição do mouse
-            stopMousePositionPolling();
-            
-            mainWindow = null;
-            if (serverProcess) {
-                // Enviar SIGTERM para un cierre limpio
-                serverProcess.kill('SIGTERM');
-                // Forzar la terminación si no se cierra después de un tiempo
-                setTimeout(() => {
-                    if (!serverProcess.killed) {
-                        serverProcess.kill('SIGKILL');
-                    }
-                }, 5000);
-            }
-        });
+    mainWindow.on('closed', () => {
+        // Limpar intervalo de verificação de posição do mouse
+        stopMousePositionPolling();
+
+        mainWindow = null;
+        if (serverProcess) {
+            // Enviar SIGTERM para un cierre limpio
+            serverProcess.kill('SIGTERM');
+            // Forzar la terminación si no se cierra después de un tiempo
+            setTimeout(() => {
+                if (!serverProcess.killed) {
+                    serverProcess.kill('SIGKILL');
+                }
+            }, 5000);
+        }
+    });
 
     // Manejar el evento para hacer la ventana movible/no movible
     ipcMain.on('set-window-movable', (event, movable) => {
@@ -693,11 +693,11 @@ function ensureF10Registration() {
         if (win && !isLocked) {
             // Obter posição atual da janela
             const bounds = win.getBounds();
-            
+
             // Calcular nova posição adicionando o delta
             const newX = bounds.x + deltaX;
             const newY = bounds.y + deltaY;
-            
+
             // Mover janela para nova posição
             win.setPosition(newX, newY, false); // false = sem animação para movimento suave
         }
@@ -721,10 +721,10 @@ function ensureF10Registration() {
             if (width === lastWidth && height === lastHeight) {
                 return;
             }
-            
+
             lastWidth = width;
             lastHeight = height;
-            
+
             // Debounce agressivo para evitar fundo preto durante resize constante
             clearTimeout(resizeTimeout);
             resizeTimeout = setTimeout(() => {
@@ -738,7 +738,7 @@ function ensureF10Registration() {
     ipcMain.on('toggle-lock-state', () => {
         if (mainWindow) {
             isLocked = !isLocked;
-            
+
             if (isLocked) {
                 // Quando TRAVADO: começar ignorando eventos (cliques passam pro jogo)
                 mainWindow.setIgnoreMouseEvents(true, { forward: true });
@@ -748,7 +748,7 @@ function ensureF10Registration() {
                 mainWindow.setIgnoreMouseEvents(false);
                 // REMOVIDO: setFocusable(true) e focus() - não são necessários
             }
-            
+
             promoteOverlayWindow(mainWindow);
             mainWindow.webContents.send('lock-state-changed', isLocked);
             console.log(`Candado: ${isLocked ? 'Cerrado (TRAVADO)' : 'Abierto (PODE ARRASTAR)'}`);
@@ -768,7 +768,7 @@ function ensureF10Registration() {
             startMousePositionPolling();
         }
     });
-    
+
     ipcMain.on('stop-mouse-polling', () => {
         stopMousePositionPolling();
     });
@@ -850,21 +850,21 @@ function ensureF10Registration() {
         // Calcular posição: à direita da janela principal com espaçamento
         let x = 100;
         let y = 100;
-        
+
         if (mainWindow) {
             const mainBounds = mainWindow.getBounds();
             const displays = screen.getAllDisplays();
             const primaryDisplay = screen.getPrimaryDisplay();
-            
+
             // Posicionar à direita da janela principal com 20px de espaço
             x = mainBounds.x + mainBounds.width + 20;
             y = mainBounds.y;
-            
+
             // Verificar se a janela caberia na tela
             if (x + 600 > primaryDisplay.workArea.x + primaryDisplay.workArea.width) {
                 // Se não couber à direita, colocar à esquerda
                 x = mainBounds.x - 600 - 20;
-                
+
                 // Se ainda não couber, centralizar na tela
                 if (x < primaryDisplay.workArea.x) {
                     x = Math.floor((primaryDisplay.workArea.width - 600) / 2) + primaryDisplay.workArea.x;
@@ -954,7 +954,7 @@ app.whenReady().then(() => {
     // Aguardar a janela estar completamente pronta para evitar conflitos
     setTimeout(() => {
         registerF10Shortcut();
-        
+
         // Verificar a cada 30 segundos se F10 ainda está registrado
         f10CheckInterval = setInterval(ensureF10Registration, 30000);
     }, 1000);
@@ -978,10 +978,10 @@ app.on('will-quit', () => {
         clearInterval(f10CheckInterval);
         f10CheckInterval = null;
     }
-    
+
     // Limpar intervalo de polling do mouse
     stopMousePositionPolling();
-    
+
     // Desregistrar todos os atalhos globais
     globalShortcut.unregisterAll();
     logToFile('Atalhos globais desregistrados');
