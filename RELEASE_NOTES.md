@@ -19,6 +19,36 @@ Esta atualização foca em resolver problemas de estabilidade de conexão e cont
 
 ---
 
+## English
+
+**✨ WHAT'S NEW v3.2.6:**
+
+### 🛠️ Critical Sniffer Fixes (ExitLag & VPNs)
+This update focuses on resolving connection stability and damage counting issues, especially for VPN users like ExitLag.
+
+- **Connection-Aware TCP Reassembly:** The packet capture system has been rewritten to separate traffic by connection. This resolves the issue where packets from other applications (Discord, Browser) interfered with game reading, causing DPS freezes.
+- **ExitLag Fix:** Implemented a specific filter for "Keep-Alive" packets (41/53 bytes) injected by ExitLag, which previously corrupted the data buffer and froze the meter after 1-3 hits.
+- **Protocol Validation:** Added rigorous verification on Blue Protocol packet headers to discard corrupted data before it affects counting.
+- **Auto-Recovery:** New timeout system (5s) per connection that automatically detects and recovers from freezes caused by lag spikes or packet loss.
+- **Overflow Fix:** Technical adjustment in TCP sequence calculation to avoid mathematical errors in long gaming sessions.
+
+---
+
+## Español
+
+**✨ NOVEDADES v3.2.6:**
+
+### 🛠️ Correcciones Críticas en el Sniffer (ExitLag y VPNs)
+Esta actualización se centra en resolver problemas de estabilidad de conexión y conteo de daño, especialmente para usuarios de VPNs como ExitLag.
+
+- **Connection-Aware TCP Reassembly:** El sistema de captura de paquetes ha sido reescrito para separar el tráfico por conexión. Esto resuelve el problema donde paquetes de otras aplicaciones (Discord, Navegador) interferían con la lectura del juego, causando congelamientos en el DPS.
+- **Corrección para ExitLag:** Implementado filtro específico para paquetes "Keep-Alive" (41/53 bytes) inyectados por ExitLag, que anteriormente corrompían el búfer de datos y congelaban el medidor después de 1-3 golpes.
+- **Validación de Protocolo:** Añadida verificación rigurosa en los encabezados de los paquetes de Blue Protocol para descartar datos corruptos antes de que afecten el conteo.
+- **Auto-Recuperación:** Nuevo sistema de tiempo de espera (5s) por conexión que detecta y recupera automáticamente congelamientos causados por picos de lag o pérdida de paquetes.
+- **Corrección de Overflow:** Ajuste técnico en el cálculo de secuencia TCP para evitar errores matemáticos en sesiones largas de juego.
+
+---
+
 # 🎯 BPSR Meter v3.2.5
 
 [[Português](#português)] | [[English](#english)] | [[Español](#español)]
