@@ -1,3 +1,36 @@
+# 🎯 BPSR Meter v3.2.7
+
+[[Português](#português)] | [[English](#english)] | [[Español](#español)]
+
+---
+
+## Português
+
+**✨ NOVIDADES v3.2.7:**
+
+### 🛠️ BPTimer Patch (Suporte multi-região)
+Esta atualização adiciona suporte para envios multi-região no BPTimer para o lançamento SEA/JPKR de Blue Protocol: Star Resonance.
+
+---
+
+## English
+
+**✨ WHAT'S NEW v3.2.7:**
+
+### 🛠️ BPTimer Patch (Multi-region support)
+This update adds support for Multi-region submissions to BPTimer for the upcoming SEA/JPKR release of Blue Protocol: Star Resonance.
+
+---
+
+## Español
+
+**✨ NOVEDADES v3.2.7:**
+
+### 🛠️ BPTimer Parche (Soporte multirregión)
+Esta actualización agrega soporte para envíos multirregión en BPTimer para el próximo lanzamiento SEA/JPKR de Blue Protocol: Star Resonance.
+
+---
+
 # 🎯 BPSR Meter v3.2.6
 
 [[Português](#português)] | [[English](#english)] | [[Español](#español)]

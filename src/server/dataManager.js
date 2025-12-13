@@ -1084,7 +1084,8 @@ class UserDataManager {
 
             // Obter account_id do jogador atual (para detecção de região)
             // O BPTimer usa isso para determinar automaticamente a região do servidor
-            const account_id = playerUid || this.currentPlayerUid;
+            const uid = playerUid || this.currentPlayerUid;
+            const account_id = this.getUser(uid)?.attr?.account_id;
 
             const sendReport = async () => {
                 this.pendingBPTimerReports.add(reportKey);
@@ -1105,6 +1106,11 @@ class UserDataManager {
                     // Adicionar account_id se disponível (para detecção de região)
                     if (account_id) {
                         reportParams.account_id = account_id;
+                    }
+
+                    // Adicionar uid se disponível (para vincular usuários à conta do site)
+                    if (uid) {
+                        reportParams.uid = uid;
                     }
 
                     const result = await this.bpTimerClient.reportHP(reportParams);
