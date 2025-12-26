@@ -85,7 +85,7 @@ function startMousePositionPolling() {
     if (mouseCheckInterval) return;
 
     mouseCheckInterval = setInterval(() => {
-        if (!mainWindow || !isLocked) return;
+        if (!mainWindow || mainWindow.isDestroyed() || !isLocked) return;
 
         try {
             const cursorPos = screen.getCursorScreenPoint();
@@ -157,6 +157,7 @@ function preventWindowBlur(win) {
     win.on('blur', () => {
         if (!win.isDestroyed()) {
             setTimeout(() => {
+                if (!win || win.isDestroyed()) return;
                 win.setAlwaysOnTop(true, 'screen-saver', 1);
             }, 10);
         }
@@ -173,12 +174,14 @@ function preventWindowBlur(win) {
         try {
             // Hook WM_ACTIVATE para prevenir efeitos de ativação/desativação
             win.hookWindowMessage(0x0006, () => {
+                if (win.isDestroyed()) return 0;
                 win.setBackgroundColor('#00000000');
                 return 0;
             });
 
             // Hook WM_NCACTIVATE para prevenir efeitos na área não-cliente
             win.hookWindowMessage(0x0086, () => {
+                if (win.isDestroyed()) return 0;
                 return 0;
             });
         } catch (e) {
@@ -826,6 +829,8 @@ async function createWindow() {
         historyWindow.loadURL(`${serverUrl}/history.html`);
 
         historyWindow.webContents.on('did-finish-load', () => {
+            // Garantir que history SEMPRE tenha zoom 1.0, não herdando da janela principal
+            historyWindow.webContents.setZoomFactor(1.0);
             if (lastColorSettings) {
                 sendCustomColorsToWindow(historyWindow, lastColorSettings);
             }
@@ -912,6 +917,8 @@ async function createWindow() {
         settingsWindow.loadURL(`${serverUrl}/settings.html`);
 
         settingsWindow.webContents.on('did-finish-load', () => {
+            // Garantir que settings SEMPRE tenha zoom 1.0, não herdando da janela principal
+            settingsWindow.webContents.setZoomFactor(1.0);
             if (lastColorSettings) {
                 sendCustomColorsToWindow(settingsWindow, lastColorSettings);
             }

@@ -1,3 +1,51 @@
+# 🎯 BPSR Meter v3.2.7
+
+[[Português](#português)] | [[English](#english)] | [[Español](#español)]
+
+---
+
+## Português
+
+**✨ NOVIDADES v3.2.7:**
+
+### 🛠️ Correções
+- **Fix "Object has been destroyed":** Corrigido erro que ocorria ao fechar o app e causava múltiplas janelas "zumbis" ao reabrir.
+
+### 🔄 BPTimer API Client 0.2.2
+- **Mobs dinâmicos:** Agora carrega lista de bosses diretamente do servidor bptimer.com
+- **Novos mobs:** Suporte para Nappos (Golden, Silver) e Boarlets com location tracking
+- **Player UID:** Envia identificador do jogador nos reports para melhor rastreamento
+
+---
+
+## English
+
+**✨ WHAT'S NEW v3.2.7:**
+
+### 🛠️ Fixes
+- **Fix "Object has been destroyed":** Fixed error when closing app that caused multiple "zombie" windows on reopen.
+
+### 🔄 BPTimer API Client 0.2.2
+- **Dynamic mobs:** Now loads boss list directly from bptimer.com server
+- **New mobs:** Support for Nappos (Golden, Silver) and Boarlets with location tracking
+- **Player UID:** Sends player identifier in reports for better tracking
+
+---
+
+## Español
+
+**✨ NOVEDADES v3.2.7:**
+
+### 🛠️ Correcciones
+- **Fix "Object has been destroyed":** Corregido error al cerrar la app que causaba múltiples ventanas "zombis" al reabrir.
+
+### 🔄 BPTimer API Client 0.2.2
+- **Mobs dinámicos:** Ahora carga lista de jefes directamente del servidor bptimer.com
+- **Nuevos mobs:** Soporte para Nappos (Golden, Silver) y Boarlets con location tracking
+- **Player UID:** Envía identificador del jugador en los reportes para mejor seguimiento
+
+---
+
 # 🎯 BPSR Meter v3.2.6
 
 [[Português](#português)] | [[English](#english)] | [[Español](#español)]

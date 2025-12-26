@@ -77,8 +77,10 @@ const defaultProfession = { name: 'Unknown', icon: 'desconocido.png', role: 'dps
 let lastTotalDamage = 0;
 let lastDamageChangeTime = Date.now();
 
-// Carregar zoom salvo do localStorage (padrão 1.0)
-let currentZoom = parseFloat(localStorage.getItem('dpsMeterZoom')) || 1.0;
+// Carregar zoom salvo APENAS se estivermos na janela principal (index.html)
+// History e Settings não devem ter zoom aplicado
+const isMainWindow = window.location.pathname.includes('index.html') || window.location.pathname === '/';
+let currentZoom = isMainWindow ? (parseFloat(localStorage.getItem('dpsMeterZoom')) || 1.0) : 1.0;
 
 
 let syncTimerInterval;
@@ -152,8 +154,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Aplicar zoom salvo ao carregar a página
-    applyZoom();
+    // Aplicar zoom salvo APENAS na janela principal
+    if (isMainWindow) {
+        applyZoom();
+    }
 
     // Botón Advanced/Lite
     const advLiteBtn = document.getElementById('advanced-lite-btn');

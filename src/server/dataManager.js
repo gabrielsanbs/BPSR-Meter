@@ -527,6 +527,7 @@ class UserDataManager {
                 api_url: 'https://db.bptimer.com',
                 api_key: apiKey,
                 enabled: enabled,
+                user_agent: 'BPSR-Meter/3.2.7',
                 logger: {
                     info: (message) => this.logger.info(`[BPTimer] ${message}`),
                     debug: (message) => this.logger.debug(`[BPTimer] ${message}`)
@@ -535,6 +536,16 @@ class UserDataManager {
             });
 
             this.logger.info(`BPTimer client inicializado (${enabled ? 'habilitado' : 'desabilitado'})`);
+
+            // Pré-carregar mobs do servidor para mapeamento dinâmico
+            try {
+                const prefetchResult = await this.bpTimerClient.prefetchMobs();
+                if (prefetchResult.success && prefetchResult.data) {
+                    this.logger.info(`[BPTimer] Mobs pré-carregados: ${prefetchResult.data.mobs} (${prefetchResult.data.locationTracked} com location tracking)`);
+                }
+            } catch (prefetchError) {
+                this.logger.debug('[BPTimer] Falha ao pré-carregar mobs:', prefetchError.message);
+            }
         } catch (error) {
             this.logger.error('Erro ao inicializar BPTimer client:', error);
             this.bpTimerClient = null;
@@ -1105,6 +1116,11 @@ class UserDataManager {
                     // Adicionar account_id se disponível (para detecção de região)
                     if (account_id) {
                         reportParams.account_id = account_id;
+                    }
+
+                    // Adicionar UID do jogador se disponível (novo em v0.2.2)
+                    if (playerUid) {
+                        reportParams.uid = playerUid;
                     }
 
                     const result = await this.bpTimerClient.reportHP(reportParams);
