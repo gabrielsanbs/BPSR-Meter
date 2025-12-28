@@ -157,6 +157,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // Aplicar zoom salvo APENAS na janela principal
     if (isMainWindow) {
         applyZoom();
+
+        // Re-aplicar zoom quando a janela ganha foco (corrige reset ao abrir outras janelas)
+        window.addEventListener('focus', () => {
+            // Re-ler do localStorage caso tenha sido alterado
+            currentZoom = parseFloat(localStorage.getItem('dpsMeterZoom')) || 1.0;
+            applyZoom();
+        });
     }
 
     // Botón Advanced/Lite

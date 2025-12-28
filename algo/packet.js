@@ -535,7 +535,8 @@ class PacketProcessor {
             }
 
             if (charBase.AccountId) {
-                this.userDataManager.setAttrKV(playerUid, 'account_id', charBase.AccountId);
+                // Salvar no nível do dataManager para persistir entre mudanças de mapa/servidor
+                this.userDataManager.currentPlayerAccountId = charBase.AccountId;
             }
 
             if (charBase.FightPoint) this.userDataManager.setFightPoint(playerUid, charBase.FightPoint);

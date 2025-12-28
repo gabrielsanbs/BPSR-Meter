@@ -473,6 +473,7 @@ class UserDataManager {
         this.pendingBPTimerReports = new Set();
         this.currentServerLine = 1; // Canal atual
         this.currentPlayerUid = null; // UID do jogador atual (para detecção de região no BPTimer)
+        this.currentPlayerAccountId = null; // Account ID do jogador local (para BPTimer multi-region)
         this.lineSetBySceneData = false; // Flag para indicar se Line veio do SceneData
         this.linePriorityExpiration = 0;
         this.SCENE_LINE_PRIORITY_MS = 10000;
@@ -1093,10 +1094,11 @@ class UserDataManager {
             const pos_y = position?.y;
             const pos_z = position?.z;
 
-            // Obter account_id do jogador atual (para detecção de região)
+            // Obter account_id do jogador LOCAL (armazenado no dataManager para persistir entre mudanças de mapa)
             // O BPTimer usa isso para determinar automaticamente a região do servidor
             const uid = playerUid || this.currentPlayerUid;
-            const account_id = this.getUser(uid)?.attr?.account_id;
+            const account_id = this.currentPlayerAccountId;
+
 
             const sendReport = async () => {
                 this.pendingBPTimerReports.add(reportKey);

@@ -7,24 +7,26 @@ const VIRTUAL_KEYWORDS = ['zerotier', 'vmware', 'hyper-v', 'virtual', 'loopback'
 // VPNs de jogos permitidas (usam TAP/TUN adapters)
 const GAMING_VPN_KEYWORDS = [
     'exitlag',
-    'noping', 
+    'noping',
     'wtfast',
     'mudfish',
     'pingzapper',
     'pingenhancer',
     'haste',
     'outfox',
-    'battleping'
+    'battleping',
+    'wintun',
+    'gamestc'
 ];
 
 function isVirtual(name) {
     const lower = name.toLowerCase();
-    
+
     // Permitir VPNs de jogos explicitamente (mesmo com TAP)
     if (GAMING_VPN_KEYWORDS.some(vpn => lower.includes(vpn))) {
         return false;
     }
-    
+
     // PERMITIR TAP adapters por padrão (para compatibilidade com VPNs de jogos)
     // Apenas bloquear se for TAP + outros keywords virtuais
     if (lower.includes('tap')) {
@@ -32,7 +34,7 @@ function isVirtual(name) {
         const isObviousVirtual = ['vmware', 'hyper-v', 'virtualbox', 'zerotier'].some(k => lower.includes(k));
         return isObviousVirtual; // Permitir TAP a menos que seja claramente virtual
     }
-    
+
     return VIRTUAL_KEYWORDS.some((keyword) => lower.includes(keyword));
 }
 
@@ -47,7 +49,7 @@ function detectTraffic(deviceIndex, devices) {
             const cleanup = () => {
                 try {
                     c.close();
-                } catch (e) {}
+                } catch (e) { }
             };
 
             setTimeout(() => {
