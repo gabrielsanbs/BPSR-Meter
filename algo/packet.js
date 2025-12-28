@@ -534,6 +534,10 @@ class PacketProcessor {
                 this.userDataManager.setName(playerUid, charBase.Name);
             }
 
+            if (charBase.AccountId) {
+                this.userDataManager.setAttrKV(playerUid, 'account_id', charBase.AccountId);
+            }
+
             if (charBase.FightPoint) this.userDataManager.setFightPoint(playerUid, charBase.FightPoint);
 
             if (vData.SceneData) {

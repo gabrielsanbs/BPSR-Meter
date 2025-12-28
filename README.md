@@ -1,7 +1,7 @@
 <div align="center">
   <img src="portada_v31.png" alt="BPSR Meter splash" width="820" />
 
-  # BPSR Meter (by gabrielsanbs) v3.2.6
+  # BPSR Meter (by gabrielsanbs) v3.2.7
 
 
 [![Release](https://img.shields.io/github/v/release/gabrielsanbs/BPSR-Meter?style=for-the-badge)](https://github.com/gabrielsanbs/BPSR-Meter/releases)
@@ -9,7 +9,7 @@
 
 Overlay de DPS para Blue Protocol.
 
-[**Download da Última Versão (v3.2.6)**](https://github.com/gabrielsanbs/BPSR-Meter/releases/latest)
+[**Download da Última Versão (v3.2.7)**](https://github.com/gabrielsanbs/BPSR-Meter/releases/latest)
 </div>
 
 ---
