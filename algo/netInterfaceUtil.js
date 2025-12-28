@@ -134,8 +134,8 @@ async function findDefaultNetworkDevice(devices) {
         if (gamingVpnAdapter) {
             const vpnIndex = parseInt(gamingVpnAdapter[0]);
             const vpnResult = results.find(r => r.index === vpnIndex);
-            // Use gaming VPN if it has ANY traffic or if it has a valid IP
-            if (vpnResult && vpnResult.packets >= 0) {
+            // Use gaming VPN only if it has ACTUAL traffic (VPN is active and being used)
+            if (vpnResult && vpnResult.packets > 0) {
                 return vpnIndex;
             }
         }
