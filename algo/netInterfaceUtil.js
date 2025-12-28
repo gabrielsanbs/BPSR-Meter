@@ -57,7 +57,10 @@ function detectTraffic(deviceIndex, devices) {
                 resolve(count);
             }, 3000);
 
-            if (c.open(devices[deviceIndex].name, 'ip and tcp', 1024 * 1024, buffer) === 'ETHERNET') {
+            const linkType = c.open(devices[deviceIndex].name, 'ip and tcp', 1024 * 1024, buffer);
+
+            // Aceitar ETHERNET e RAW (alguns adaptadores TUN retornam RAW)
+            if (linkType === 'ETHERNET' || linkType === 'RAW') {
                 c.setMinBytes && c.setMinBytes(0);
                 c.on('packet', () => count++);
             } else {
@@ -118,18 +121,35 @@ async function findDefaultNetworkDevice(devices) {
             })),
         );
 
-        // Select adapter with most traffic
+        // Check for gaming VPN with valid IP (prioritize if connected)
+        const gamingVpnAdapter = physical.find(([, device]) => {
+            const name = (device.description || device.name || '').toLowerCase();
+            const hasValidIp = device.addresses?.some(addr =>
+                addr.addr && !addr.addr.startsWith('169.254') && !addr.addr.startsWith('fe80')
+            );
+            const isGamingVpn = GAMING_VPN_KEYWORDS.some(vpn => name.includes(vpn));
+            return isGamingVpn && hasValidIp;
+        });
+
+        if (gamingVpnAdapter) {
+            const vpnIndex = parseInt(gamingVpnAdapter[0]);
+            const vpnResult = results.find(r => r.index === vpnIndex);
+            // Use gaming VPN if it has ANY traffic or if it has a valid IP
+            if (vpnResult && vpnResult.packets >= 0) {
+                return vpnIndex;
+            }
+        }
+
+        // Select adapter with most traffic (fallback)
         const best = results.filter((r) => r.packets > 0).sort((a, b) => b.packets - a.packets)[0];
 
         if (best) {
-            console.log(`Using adapter with most traffic: ${best.index} - ${devices[best.index].description} (${best.packets} packets)`);
             return best.index;
         }
 
         // Fallback to route table
         const routeIndex = await findByRoute(devices);
         if (routeIndex !== undefined && devices[routeIndex] && isVirtual(devices[routeIndex].description || '')) {
-            console.log('Route table selected virtual adapter, using first physical adapter instead');
             return parseInt(physical[0][0]);
         }
 

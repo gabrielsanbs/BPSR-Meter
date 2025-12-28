@@ -104,6 +104,9 @@ class Sniffer {
 
         // Intervalo de limpeza de fragmentos
         this.fragmentCleanupInterval = null;
+
+        // Tipo de link do adaptador (ETHERNET ou RAW para TUN/VPN)
+        this.linkType = 'ETHERNET';
     }
 
     /**
@@ -439,15 +442,26 @@ class Sniffer {
     async processEthPacket(frameBuffer) {
         if (this.isPaused) return;
 
-        var ethPacket = decoders.Ethernet(frameBuffer);
+        let ipPacket;
+        let ipOffset; // Offset onde começa o header IP
 
-        if (ethPacket.info.type !== PROTOCOL.ETHERNET.IPV4) return;
-
-        const ipPacket = decoders.IPV4(frameBuffer, ethPacket.offset);
+        // RAW mode (TUN/VPN adapters like Wintun): pacote começa direto com IP header
+        if (this.linkType === 'RAW') {
+            // Verificar se é IPv4 (primeiro nibble = 4)
+            if ((frameBuffer[0] >> 4) !== 4) return;
+            ipOffset = 0;
+            ipPacket = decoders.IPV4(frameBuffer, ipOffset);
+        } else {
+            // ETHERNET mode: pacote tem header Ethernet antes do IP
+            var ethPacket = decoders.Ethernet(frameBuffer);
+            if (ethPacket.info.type !== PROTOCOL.ETHERNET.IPV4) return;
+            ipOffset = ethPacket.offset;
+            ipPacket = decoders.IPV4(frameBuffer, ipOffset);
+        }
         const srcaddr = ipPacket.info.srcaddr;
         const dstaddr = ipPacket.info.dstaddr;
 
-        const tcpBuffer = this.getTCPPacket(frameBuffer, ethPacket.offset);
+        const tcpBuffer = this.getTCPPacket(frameBuffer, ipOffset);
         if (tcpBuffer === null) return;
         const tcpPacket = decoders.TCP(tcpBuffer);
 
@@ -670,8 +684,9 @@ class Sniffer {
         const buffer = Buffer.alloc(65535);
         this.capInstance = new Cap();
         const linkType = this.capInstance.open(device, filter, bufSize, buffer);
-        if (linkType !== 'ETHERNET') {
-            this.logger.error('The device seems to be WRONG! Please check the device! Device type: ' + linkType);
+        this.linkType = linkType; // Armazenar para uso no processamento de pacotes
+        if (linkType !== 'ETHERNET' && linkType !== 'RAW') {
+            this.logger.error('Unsupported device type: ' + linkType);
         }
         this.capInstance.setMinBytes && this.capInstance.setMinBytes(0);
         this.capInstance.on('packet', async (nbytes, trunc) => {

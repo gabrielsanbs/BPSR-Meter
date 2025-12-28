@@ -158,11 +158,21 @@ document.addEventListener('DOMContentLoaded', () => {
     if (isMainWindow) {
         applyZoom();
 
-        // Re-aplicar zoom quando a janela ganha foco (corrige reset ao abrir outras janelas)
+        // Re-aplicar zoom quando a janela ganha foco (corrige reset ao fechar outras janelas)
+        // Usamos debounce para evitar múltiplas aplicações de zoom em sequência rápida
+        let focusDebounceTimer = null;
         window.addEventListener('focus', () => {
-            // Re-ler do localStorage caso tenha sido alterado
-            currentZoom = parseFloat(localStorage.getItem('dpsMeterZoom')) || 1.0;
-            applyZoom();
+            // Cancelar timer anterior se existir
+            if (focusDebounceTimer) {
+                clearTimeout(focusDebounceTimer);
+            }
+            // Aplicar zoom com pequeno delay para evitar race conditions
+            focusDebounceTimer = setTimeout(() => {
+                // Usa o valor atual já em memória, não re-lê do localStorage
+                // porque currentZoom já está sincronizado
+                applyZoom();
+                focusDebounceTimer = null;
+            }, 50);
         });
     }
 
